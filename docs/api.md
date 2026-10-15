@@ -1,6 +1,6 @@
 # Contrat d'API — Coffee QR
 
-> Brouillon v1.6 (15 octobre 2026). À relire ensemble. Toute modification passe par une PR dédiée, annoncée à l'autre.
+> Brouillon v1.7 (15 octobre 2026). À relire ensemble. Toute modification passe par une PR dédiée, annoncée à l'autre.
 
 ## 1. Règles générales
 
@@ -45,7 +45,7 @@ Un compte désactivé est refusé partout (`ACCOUNT_DISABLED`) et ses connexions
 | 409 | `ITEM_UNAVAILABLE` | Article en rupture |
 | 409 | `OUTSIDE_HOURS` | Article hors de ses horaires |
 | 409 | `INVALID_STATUS` | Action impossible dans l'état actuel (ex. commande déjà confirmée par un autre serveur, ou expirée) |
-| 409 | `NO_WAITER_ON_SHIFT` | Commande QR refusée : aucun serveur en shift |
+| 409 | `NO_WAITER_ON_SHIFT` | Commande QR ou vente directe refusée : aucun serveur en shift |
 | 409 | `NO_FREE_VIRTUAL_TABLE` | Vente directe impossible : aucune table fictive libre |
 | 409 | `CANCEL_WAITING` | Encaissement impossible : une annulation attend encore d'être saisie en caisse (voir PosJob `waiting`) |
 | 413 | `FILE_TOO_LARGE` | Photo > 5 Mo |
@@ -125,17 +125,18 @@ Limites anti-abus (valeurs de départ, réglables dans `.env`) : 5 commandes QR 
       "choices": [ { "group": "hot_drink", "menuItemId": 57, "name": { "fr": "Capuccino", "en": "Cappuccino" } } ] }
   ],
   "total": 37000,
-  "createdAt": "...", "confirmedAt": null, "confirmedBy": null,
+  "createdAt": "...", "confirmedAt": null, "confirmedBy": null, "waiterId": null,
   "pos": { "status": "not_sent", "error": null }
 }
 ```
 - `source` : `qr` (client), `waiter` (saisie serveur) ou `direct` (vente directe au comptoir, sur une table fictive).
+- `waiterId` : serveur à qui la vente compte pour la clôture (celui qui a saisi ou confirmé ; pour une vente directe, le serveur en shift choisi). `null` tant que la commande QR est `pending`.
 - `status` : `pending` → `confirmed` | `rejected` | `expired`. Une commande `waiter` ou `direct` est créée directement `confirmed`.
 - `expired` : commande `pending` non traitée après `ORDER_PENDING_TTL_SECONDS` (300 s par défaut). La table en est informée (`order:updated`).
 - `tableSessionId` : `null` tant que la commande est `pending` (ou si elle est rejetée ou expirée). C'est la **confirmation** qui rattache la commande à la session de la table, et l'ouvre si la table était libre.
 - `choices` : présent sur les lignes d'articles ayant des `choiceGroups`, un choix par groupe. Les choix valent pour toute la quantité de la ligne ; pour des choix différents, le client ajoute une autre ligne.
-- Ligne `status` : `active`, `cancelled` (annulée, avec note), `transferred` (déplacée vers une autre table), `gifted` (offerte, jamais en caisse).
-- `discountPercent` : 0 ou 20 (remise staff). `lineTotal = quantity × unitPrice × (100 − discountPercent) / 100`, arrondi au millime. Les lignes `cancelled`, `transferred` et `gifted` comptent 0 dans `total`.
+- Ligne `status` : `active`, `cancelled` (annulée, avec note), `transferred` (déplacée vers une autre table). Un offert n'est **jamais** une ligne de commande (voir Gift).
+- `discountPercent` : 0 ou 20 (remise staff). `lineTotal = quantity × unitPrice × (100 − discountPercent) / 100`, arrondi au millime. Les lignes `cancelled` et `transferred` comptent 0 dans `total`.
 - `pos.status` : `not_sent` → `queued` → `entered` | `failed` | `manual` (saisie à la main au comptoir).
 - Les prix sont copiés dans la commande à sa création.
 
@@ -156,6 +157,40 @@ Limites anti-abus (valeurs de départ, réglables dans `.env`) : 5 commandes QR 
 - `state` : `free` ou `occupied`. Une commande `pending` ne rend pas la table `occupied` : elle compte seulement dans `pendingOrders`.
 - `openTotal` : seulement les commandes confirmées.
 - `layout` : position sur le plan de la salle, en cases d'une grille (`shape` : `square` ou `round`) ; `null` pour une table `virtual`.
+
+### Gift (offert, jamais tapé en caisse)
+```json
+{ "id": 12, "tableId": 7, "menuItemId": 41, "name": { "fr": "Cookie chocolat", "en": "Chocolate cookie" },
+  "quantity": 1, "choices": [], "reason": "unhappy_customer", "beneficiary": null, "note": "attente trop longue",
+  "givenBy": { "id": 4, "name": "Amira" }, "createdAt": "..." }
+```
+- Enregistré **seulement** comme Gift, jamais comme ligne de commande : il ne peut pas partir en caisse et compte 0 dans les totaux. Il sort du stock.
+- `tableId` : `null` pour une offre sans table (staff, patrons).
+
+### Expense (dépense payée en espèces pendant un shift)
+```json
+{ "id": 5, "shiftId": 31, "amount": 18000, "reason": "supplies", "note": "boîtes takeaway",
+  "photoUrl": null, "createdBy": { "id": 4, "name": "Amira" }, "createdAt": "..." }
+```
+- `reason` : `supplier` (fournisseur), `extra_staff` (extra payé en espèces), `supplies` (achat courant : boîtes, papier…), `other`.
+
+### ShiftClosure (clôture d'un shift, un par serveur)
+```json
+{ "id": 31, "waiter": { "id": 4, "name": "Amira" }, "slot": 1,
+  "startedAt": "2026-10-20T07:02:00Z", "endedAt": "2026-10-20T14:21:00Z",
+  "sales": 412500, "cash": 251000, "card": 140500, "expenses": 18000,
+  "expectedCash": 233000, "countedCash": 232000, "cashDifference": -1000,
+  "items": [ { "menuItemId": 57, "name": { "fr": "Capuccino", "en": "Cappuccino" }, "quantity": 23, "amount": 207000 } ],
+  "gifts": [Gift], "cancelledLines": [ { "orderLineId": 950, "menuItemId": 3, "quantity": 1, "note": "erreur de saisie" } ],
+  "expenseList": [Expense], "openTables": [ { "id": 7, "number": 7, "openTotal": 37000 } ],
+  "pdfUrl": "/api/closures/31/pdf" }
+```
+- `slot` : `1` si le shift a démarré avant 15h00 (Africa/Tunis), sinon `2`.
+- `sales` (CA) : lignes des commandes comptées pour ce serveur (`waiterId`) pendant son shift, remises déduites, annulations déduites, offerts exclus.
+- `cash` / `card` : encaissements faits **par ce serveur** pendant son shift (y compris les ventes directes faites pour son compte).
+- `expectedCash = cash − expenses` (pas de fond de caisse) ; `cashDifference = countedCash − expectedCash`.
+- `openTables` : tables encore ouvertes à la clôture ; elles passent au shift suivant.
+- Le PDF reprend ces informations ; il est archivé et n'est jamais modifié.
 
 ### PosJob (file caisse)
 ```json
@@ -217,22 +252,24 @@ Règles `POST /orders` :
 | POST | `/auth/logout` | — | 204 |
 | GET | `/me` | — | `{ id, name, role, onShift }` |
 
-## 5. Serveur (rôle `waiter`, sauf mention)
+## 5. Serveur (rôle `waiter` en shift, sauf mention)
 
-Toutes les actions de cette section qui modifient quelque chose exigent d'être **en shift** (`NOT_ON_SHIFT`), sauf démarrer le shift, les ruptures et l'abonnement push.
+Le plan des tables et les commandes sont gérés **seulement par les serveurs en shift**, lecture comprise : tous les endpoints de cette section exigent le rôle `waiter` (sinon `FORBIDDEN`) et d'être **en shift** (sinon `NOT_ON_SHIFT`), sauf mention : `POST /shifts/start`, `GET /shifts/current`, les ruptures, `/direct-sales` (barista aussi) et l'abonnement push. La manager n'y a pas accès : elle a ses rapports (§ 6).
 
 | Méthode | Chemin | Corps | Réponse |
 | --- | --- | --- | --- |
 | POST | `/shifts/start` | — | `{ shiftId, startedAt }` |
-| POST | `/shifts/end` | — | 204 |
+| POST | `/shifts/end` | `{ countedCash }` (espèces comptées, millimes) | 201 ShiftClosure (clôture : termine le shift et génère le PDF) |
+| POST | `/expenses` | `{ clientRequestId, amount, reason, note, photoUrl? }` | 201 Expense (comptée dans le shift en cours du serveur) |
+| GET | `/expenses?shiftId=current` | — | `{ items: [Expense] }` (dépenses de son shift) |
 | GET | `/shifts/current` | — | `{ waiters: [ { id, name, startedAt } ] }` (tout le staff) |
 | GET | `/tables` | — | `{ tables: [Table] }` (tables `real`, pour le plan de la salle) |
-| GET | `/tables/:id/session` | — | `{ session: TableSession, orders: [Order] }` (session ouverte) |
+| GET | `/tables/:id/session` | — | `{ session: TableSession, orders: [Order], gifts: [Gift] }` (session ouverte) |
 | GET | `/orders?status=pending` | — | `{ items: [Order], nextCursor }` |
 | POST | `/orders/:id/confirm` | — | Order (409 `INVALID_STATUS` si déjà traitée ou expirée) |
 | POST | `/orders/:id/reject` | `{ reason? }` | Order |
 | POST | `/staff-orders` | `{ clientRequestId, tableId, lines: [ { menuItemId, quantity, note, choices? } ] }` | 201 Order (`source: "waiter"`, `confirmed`) |
-| POST | `/direct-sales` | `{ clientRequestId, lines: [ { menuItemId, quantity, note, choices? } ], method: "cash" \| "card" }` | 201 Order (`source: "direct"`, `confirmed`) — serveur en shift ou barista |
+| POST | `/direct-sales` | `{ clientRequestId, lines: [ { menuItemId, quantity, note, choices? } ], method: "cash" \| "card", waiterId? }` | 201 Order (`source: "direct"`, `confirmed`) — serveur en shift (pour son compte) ou barista (pour le compte de `waiterId`, un serveur en shift ; facultatif s'il n'y en a qu'un) ; aucun serveur en shift → 409 `NO_WAITER_ON_SHIFT` |
 | PATCH | `/menu-items/:id/availability` | `{ available }` | MenuItem — serveur, manager : tout article ; barista : `station` `bar` ou `both` ; chef : `kitchen` ou `both` ; sinon `FORBIDDEN` |
 | POST | `/push/subscribe` | abonnement Web Push | 204 (tout le staff) |
 
@@ -246,14 +283,14 @@ Vente directe (`/direct-sales`) : le serveur attribue une **table fictive libre*
 | POST | `/order-lines/:id/cancel` | `{ quantity?, note }` (note obligatoire) | tâche `cancel_line` (`waiting` si c'est le dernier article de la table en caisse) |
 | POST | `/order-lines/:id/transfer` | `{ toTableId, quantity? }` | tâche `transfer_line` |
 | POST | `/tables/:id/move` | `{ toTableId }` | tâche `move_table` |
-| POST | `/gifts` | `{ clientRequestId, tableId?, menuItemId, quantity, choices?, reason: "unhappy_customer" \| "staff" \| "owner", beneficiary?, note }` | **aucune** (jamais tapé en caisse) |
+| POST | `/gifts` | `{ clientRequestId, tableId?, menuItemId, quantity, choices?, reason: "unhappy_customer" \| "staff" \| "owner", beneficiary?, note }` | **aucune** (jamais tapé en caisse) ; 201 Gift |
 | POST | `/tables/:id/pay` | `{ method: "cash" \| "card" }` | tâche `pay_table` ; la session est fermée tout de suite dans l'app ; 409 `CANCEL_WAITING` si une annulation de la table est `waiting` |
 | POST | `/tables/:id/print-bill` | — | tâche `print_bill` |
 
-- **Offrir** : un article est offert **dès le départ**, jamais après avoir été tapé en caisse. L'offert crée une ligne `gifted` (dans la session de la table si `tableId`), qui sort du stock. Rôles : serveur, barista (offres staff), manager. La raison `owner` veut dire « offert à un patron » : ce n'est pas un rôle.
+- **Offrir** : un article est offert **dès le départ**, jamais après avoir été tapé en caisse. L'offert crée un Gift (rattaché à la session ouverte de la table si `tableId`), jamais une ligne de commande ; il sort du stock. Rôles : serveur, barista (offres staff), manager. La raison `owner` veut dire « offert à un patron » : ce n'est pas un rôle.
 - Toutes ces actions sont écrites dans le journal d'actions.
 
-### Échecs caisse (serveur, manager)
+### Échecs caisse (serveur en shift)
 
 | Méthode | Chemin | Corps | Effet |
 | --- | --- | --- | --- |
@@ -275,6 +312,10 @@ Vente directe (`/direct-sales`) : le serveur attribue une **table fictive libre*
 | POST | `/admin/tables/:id/rotate-token` | nouveau jeton QR (l'ancien QR ne marche plus) → `{ tableToken }` ; 409 `INVALID_STATUS` pour une table `virtual` |
 | POST | `/uploads` | photo (jpg/png ≤ 5 Mo) → `{ photoUrl }` (redimensionnée 800 px, WebP) |
 | GET | `/audit-log` | journal d'actions, paginé |
+| GET | `/reports/sales?date=YYYY-MM-DD&slot=1\|2` | rapport d'une journée (Africa/Tunis), ou d'un créneau avec `slot` ; sans `date` : aujourd'hui → `{ sales, cash, card, expenses, items: [ { menuItemId, name, quantity, amount } ], gifts: [ { menuItemId, name, quantity, reason } ] }` (temps réel : recharger sur `report:updated`) |
+| GET | `/closures?date=YYYY-MM-DD` | `{ items: [ShiftClosure], nextCursor }` (sans `date` : toutes, de la plus récente à la plus ancienne) |
+| GET | `/closures/:id` | ShiftClosure |
+| GET | `/closures/:id/pdf` | le PDF de clôture (`application/pdf`) |
 
 Comptes (`/users`) :
 - Le **serveur génère** le mot de passe temporaire (aléatoire, 10 caractères faciles à taper : minuscules et chiffres, sans `0 o 1 l i`). Il est renvoyé **une seule fois**, dans la réponse ; il n'est jamais stocké en clair. Changement obligatoire à la connexion suivante (`mustChangePassword: true`).
@@ -283,6 +324,8 @@ Comptes (`/users`) :
 - Réinitialiser le mot de passe débloque le compte (`locked: false`) et coupe toutes ses sessions.
 - On ne peut pas se désactiver soi-même ni retirer son propre rôle `manager`, et il reste toujours au moins un manager actif → 409 `INVALID_STATUS`.
 - Toutes ces actions sont écrites dans le journal d'actions.
+
+Statistiques (articles les plus / moins vendus, ventes d'un article sur une période, courbes) : endpoints ajoutés plus tard.
 
 Rôles barista / chef : endpoints ajoutés avec le stock (achats, arrivages, avaries, inventaire, besoins, offres staff, rapports d'écarts).
 
@@ -302,20 +345,21 @@ Rôles barista / chef : endpoints ajoutés avec le stock (achats, arrivages, ava
 | Qui | Authentification | Reçoit |
 | --- | --- | --- |
 | Client (menu QR) | `auth: { tableToken }` | seulement les événements de **sa** table + `menu:updated` |
-| Staff | `auth: { token }` | selon son rôle ; déconnecté si compte désactivé |
+| Staff | `auth: { token }` | selon son rôle et son shift ; déconnecté si compte désactivé |
 | Agent | `auth: { agentKey }` | `pos:job` |
 
 ### Événements
 | Événement | Destinataires | Données |
 | --- | --- | --- |
 | `order:new` | serveurs en shift | Order |
-| `order:updated` | staff (+ la table concernée : `{ orderId, status }`, y compris `expired`) | Order |
-| `table:updated` | staff | Table |
+| `order:updated` | serveurs en shift (+ la table concernée : `{ orderId, status }`, y compris `expired`) | Order |
+| `table:updated` | serveurs en shift | Table |
 | `menu:updated` | staff, clients | `{ menuItemId, available, unavailableReason }` |
 | `pos:job` | agent | `{ jobId }` |
-| `pos:failed` | staff | `{ jobId, orderId, error }` |
+| `pos:failed` | serveurs en shift | `{ jobId, orderId, error }` |
 | `pos:waiting` | serveurs en shift | `{ jobId, tableNumber, orderLineId }` (annulation en attente : dernier article de la table) |
 | `pos:status` | manager | `{ state, lastSeenAt }` |
+| `report:updated` | manager | `{}` (une vente, un encaissement, une dépense ou une clôture a changé les chiffres du jour : recharger `/reports/sales`) |
 | `session:revoked` | staff concerné | `{ reason: "ACCOUNT_DISABLED" \| "LOGGED_OUT" }` |
 
 Après reconnexion, chaque client recharge via REST.
@@ -330,6 +374,7 @@ Après reconnexion, chaque client recharge via REST.
 
 | Version | Date | Changement |
 | --- | --- | --- |
+| v1.7 brouillon | 2026-10-15 | Plan des tables, commandes, échecs caisse et leurs événements réservés aux serveurs **en shift** (lecture comprise) ; clôture de shift (`POST /shifts/end` avec `countedCash` → ShiftClosure, PDF) ; dépenses (`/expenses`, Expense) ; `Order.waiterId` ; `/direct-sales` pour le compte d'un serveur en shift (`waiterId`) ; rapports de la manager (`/reports/sales`, `/closures`, `report:updated`) ; offerts : forme Gift, plus de ligne `gifted` |
 | v1.6 brouillon | 2026-10-15 | Forme `User` ; corps et réponses de `/users` ; mot de passe temporaire généré par le serveur et renvoyé une seule fois ; règles de désactivation (pas soi-même, toujours un manager actif) |
 | v1.5 brouillon | 2026-10-15 | Quatre rôles : `manager`, `waiter`, `barista`, `chef` (affiché « Cuisinier ») ; rôle `owner` supprimé (la raison `owner` de `POST /gifts` reste : offert à un patron) |
 | v1.4 brouillon | 2026-10-15 | `VALIDATION_ERROR` : format de `details` précisé (`{ fields: [{ field, message }] }`) |

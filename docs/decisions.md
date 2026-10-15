@@ -2,6 +2,14 @@
 
 Une ligne par décision, la plus récente en haut. Format : `AAAA-MM-JJ — décision — pourquoi`.
 
+- 2026-10-15 — Plan des tables et commandes gérés seulement par les serveurs en shift, lecture comprise ; la manager n'y a pas accès mais a des rapports (CA, espèces / carte, dépenses, articles sortis en temps réel, par shift ou par date, PDF de clôture ; statistiques et courbes plus tard) — chacun son rôle ; la manager pilote par les chiffres
+- 2026-10-15 — Clôture de shift : chaque serveur clôture son shift (compte ses espèces) et un PDF par serveur est archivé (CA tapé, espèces / carte, dépenses, offerts, annulations, espèces attendues / comptées / écart) ; pas de fond de caisse ; tables ouvertes passées au shift suivant ; Shift 1 = démarré avant 15h, Shift 2 après — usage du café
+- 2026-10-15 — Attribution : la vente compte pour le serveur qui l'a saisie ou confirmée, l'argent pour celui qui a encaissé ; une vente directe du barista compte pour un serveur en shift qu'il choisit ; sans serveur en shift, pas de vente directe — chaque serveur répond de sa caisse
+- 2026-10-15 — Dépenses payées en espèces pendant le shift (fournisseur, extra, achats courants) saisies par le serveur en shift, déduites de ses espèces attendues — la clôture doit tomber juste
+- 2026-10-15 — Offert enregistré seulement dans `gifts`, jamais comme ligne de commande (plus de statut `gifted`) — impossible qu'il parte en caisse
+- 2026-10-15 — Changement de table : la session et ses commandes passent à la nouvelle table (ancienne table dans le journal) — une commande est toujours sur la table où elle se trouve
+- 2026-10-15 — Transfert d'article : la ligne d'origine passe `transferred`, une nouvelle ligne liée à l'originale est créée sur la table d'arrivée, jamais renvoyée en saisie caisse — garder la trace des deux tables
+- 2026-10-15 — Remise et annulation : bénéficiaire, notes, auteur et date stockés en colonnes (migration), en plus du journal — affichés dans l'app et le PDF de clôture
 - 2026-10-15 — Comptes : mot de passe temporaire généré par le serveur et montré une seule fois ; pas de désactivation de soi-même ni de retrait de son propre rôle manager, toujours au moins un manager actif ; rapports de stock et d'écarts donnés à la manager — ne jamais perdre l'accès à la gestion des comptes
 - 2026-10-15 — Quatre rôles : manager, serveur (`waiter`), barista, cuisinier (`chef`, affiché « Cuisinier ») ; le rôle Patron (`owner`) est supprimé, les offres des patrons restent une raison d'offert — remplace la décision Chef / Patron ci-dessous
 - 2026-10-15 — Migrations avec node-pg-migrate, écrites en SQL pur (`server/migrations/`), client `pg` ; `npm run migrate` chaque matin via `scripts/start-day.sh` — outil maintenu, SQL lisible par toute l'équipe, pas d'ORM imposé

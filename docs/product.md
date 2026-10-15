@@ -2,7 +2,7 @@
 
 Ce que nous construisons et quand une fonctionnalité est « terminée ». Si quelque chose manque ou n'est pas clair : demander, ne pas inventer.
 
-Version 2 — refonte du 15 octobre 2026.
+Version 2 — refonte du 15 octobre 2026. Clôture de shift et rapports de la manager ajoutés le 15 octobre 2026 (v1.7 du contrat).
 
 ## 1. Contexte
 
@@ -85,16 +85,41 @@ Version 2 — refonte du 15 octobre 2026.
 ### Rôles (privilèges détaillés au fur et à mesure)
 | Rôle | Privilèges connus |
 | --- | --- |
-| Serveur | Plan des tables, commandes, confirmer/rejeter les commandes QR, saisir une commande, encaisser n'importe quelle table (s'il est en shift), imprimer l'addition, remise staff 20 %, annulation, transfert d'article, changement de table, offrir un article, marquer n'importe quel article en rupture |
-| Barista | Saisir et encaisser une vente directe (comptoir), ruptures des articles du bar (+ articles `both`), achats, pointer l'arrivage de marchandise, déclarer les avaries, enregistrer les offres café du staff et des patrons |
+| Serveur | **En shift seulement** : plan des tables, commandes, confirmer/rejeter les commandes QR, saisir une commande, encaisser n'importe quelle table, imprimer l'addition, remise staff 20 %, annulation, transfert d'article, changement de table, offrir un article, saisir les dépenses du shift, clôturer son shift. À tout moment : démarrer son shift, marquer n'importe quel article en rupture |
+| Barista | Saisir et encaisser une vente directe (comptoir) pour le compte d'un serveur en shift, ruptures des articles du bar (+ articles `both`), achats, pointer l'arrivage de marchandise, déclarer les avaries, enregistrer les offres café du staff et des patrons |
 | Cuisinier | Ruptures des articles de la cuisine (+ articles `both`), pointer les arrivages de la cuisine, déclarer les avaries de la cuisine, saisir l'inventaire de la cuisine, signaler les besoins (ce qu'il faut racheter) |
-| Manager | Comptes et rôles, édition du menu (articles, photos, prix, codes, horaires, Plat de la semaine, jus de saison), ruptures, rapports de stock et d'écarts, tout voir |
+| Manager | Comptes et rôles, édition du menu (articles, photos, prix, codes, horaires, Plat de la semaine, jus de saison), ruptures, rapports (CA, articles sortis, clôtures, statistiques), rapports de stock et d'écarts. **Pas** d'accès au plan des tables ni aux commandes |
 
 Tout le monde a la PWA sur son téléphone et peut y accéder à tout moment ; ce qu'il voit dépend de son rôle.
 
+Le plan des tables et les commandes sont gérés **entièrement par les serveurs en shift**, consultation comprise : ni la manager, ni le barista, ni le cuisinier, ni un serveur hors shift n'y ont accès. Un serveur hors shift voit seulement « Démarrer mon shift ».
+
 ### Shifts et notifications
-- Le serveur **démarre son shift** dans l'app et le termine en fin de service. 1 ou 2 serveurs par shift.
+- Le serveur **démarre son shift** dans l'app en arrivant et le termine par la **clôture**. 1 ou 2 serveurs en même temps.
+- Deux créneaux : **Shift 1** (8h–15h) et **Shift 2** (15h–22h). Un shift réel va du démarrage à la clôture du serveur ; il est rangé en Shift 1 s'il démarre avant 15h, sinon en Shift 2. Si le serveur du Shift 2 arrive en retard, celui du Shift 1 continue : tout ce qu'il fait jusqu'à sa clôture compte dans son shift.
 - Les nouvelles commandes QR sont notifiées (son + notification push) **uniquement aux serveurs en shift**.
+
+### Clôture de shift
+- Le serveur appuie sur **Clôturer**, compte ses espèces et saisit le montant compté. Son shift se termine.
+- Un **PDF de clôture par serveur** est généré et archivé. Il contient, pour son shift :
+  - les articles tapés en caisse (quantités et montants) et le **CA** : tout ce qui a été tapé en caisse, remises staff déduites, annulations déduites ;
+  - les encaissements **espèces** et **carte** ;
+  - les **dépenses** payées pendant le shift ;
+  - les articles **offerts** (clients mécontents, staff, patrons), mentionnés à 0 DT : ils ne comptent pas dans le CA mais sortent du stock ;
+  - les articles **annulés**, avec leur note ;
+  - les **espèces attendues** (espèces encaissées − dépenses ; pas de fond de caisse), les **espèces comptées** et l'**écart** ;
+  - les tables encore ouvertes, qui **passent au shift suivant**.
+- Attribution avec 2 serveurs : une vente compte pour le serveur qui l'a **saisie ou confirmée** ; l'argent compte pour le serveur qui a **encaissé**. Une vente directe du barista compte pour le serveur en shift qu'il choisit (automatique s'il n'y en a qu'un) ; sans serveur en shift, pas de vente directe.
+
+### Dépenses du shift
+- Le serveur en shift saisit chaque dépense payée en espèces pendant son shift : montant, motif (fournisseur, extra payé en espèces, achat courant comme les boîtes takeaway ou le papier, autre), note, photo du ticket facultative.
+- Elle est déduite des espèces attendues de son shift et inscrite au journal d'actions.
+
+### Rapports de la manager
+- **En temps réel** : CA, espèces / carte, dépenses et articles sortis (combien de jus, cafés…), pour le service en cours, le Shift 1 ou le Shift 2 du jour.
+- **Par date** : les mêmes chiffres pour hier ou n'importe quel jour.
+- **Clôtures** : tous les PDF de clôture, anciens compris.
+- **Statistiques** (plus tard) : articles les plus et les moins vendus sur une période, ventes d'un article sur une période (ex. fondants vendus la semaine dernière), courbes.
 
 ### Écrans du serveur (mini-caisse)
 - **Plan des tables** : reproduit la **disposition de la salle** ; état de chaque table (libre / occupée), montant en cours. Les tables fictives (ventes directes) n'y figurent pas ; l'app en attribue une libre automatiquement à chaque vente directe et affiche son numéro.
@@ -106,7 +131,7 @@ Tout le monde a la PWA sur son téléphone et peut y accéder à tout moment ; c
 - **Annuler un article** — **note obligatoire** (raison). En caisse, l'agent commande **−1** de l'article (un bon « −1 » s'imprime en cuisine). **Jamais sur le dernier article d'une table** : LegacyPOS plante. Dans ce cas, l'annulation reste **en attente** jusqu'à ce que la table ait d'autres articles, et l'app le montre au serveur.
 - **Transférer un article** d'une table à une autre. Saisi en caisse par l'agent.
 - **Changer de table** (déplacer toute la table vers une autre). Saisi en caisse par l'agent.
-- **Offrir un article** : enregistré **uniquement dans l'app**, **jamais tapé en caisse**. Un article est offert **dès le départ** : on n'offre jamais un article déjà tapé. Cas : client mécontent, offres du staff, offres des patrons. Qui, quoi, à qui, pourquoi (note). L'article offert **sort du stock**.
+- **Offrir un article** : enregistré **uniquement dans l'app**, à part des commandes, **jamais tapé en caisse**. Un article est offert **dès le départ** : on n'offre jamais un article déjà tapé. Cas : client mécontent, offres du staff, offres des patrons. Qui, quoi, à qui, pourquoi (note). L'article offert **sort du stock**.
 
 Toutes ces actions sont inscrites au journal d'actions (qui, quand, quelle table, quelle note).
 - Une commande en échec côté caisse est signalée clairement pour être terminée à la main.
@@ -122,7 +147,7 @@ Toutes ces actions sont inscrites au journal d'actions (qui, quand, quelle table
 
 Commande tapée par un serveur : on démarre directement à l'étape 4.
 
-**Vente directe (client pressé au comptoir)** : il ne scanne pas le QR. Le barista ou le serveur saisit la commande dans l'app comme **vente directe** (étape 4). En caisse, elle est tapée sur une **table fictive** (LegacyPOS en a beaucoup, ex. table 333). On prend l'argent et on appuie sur **Espèces** ou **Carte** dans l'app, sans attendre la caisse ; l'agent saisit puis encaisse, dans l'ordre de la file.
+**Vente directe (client pressé au comptoir)** : il ne scanne pas le QR. Le barista ou le serveur saisit la commande dans l'app comme **vente directe** (étape 4), pour le compte d'un serveur en shift (voir Clôture de shift). En caisse, elle est tapée sur une **table fictive** (LegacyPOS en a beaucoup, ex. table 333). On prend l'argent et on appuie sur **Espèces** ou **Carte** dans l'app, sans attendre la caisse ; l'agent saisit puis encaisse, dans l'ordre de la file.
 
 **Rien n'est jamais tapé directement en caisse** : toutes les ventes passent par l'app, ce qui est indispensable au calcul du stock.
 
