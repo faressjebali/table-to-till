@@ -1,98 +1,98 @@
-category,name_fr,name_en,description_fr,description_en,price_dt,pos_code,availability,suggested_extras,note_hint,choice_groups,photo,station
-Formules petit-déjeuner,Early Bird,,"Café ou thé, pain toasté, confiture, miel, Eau 0,5L",,8.5,,until 12:00,,,hot_drink,,both
-Formules petit-déjeuner,Classic Start,,"Café ou thé, مرطبات اليوم, pain toasté, confiture, miel, Eau 0,5L",,14.5,,until 12:00,,,hot_drink,,both
-Formules petit-déjeuner,Sunrise Plate,,"Café ou thé, pain toasté, confiture, miel, omelette ou œufs brouillés, Eau 0,5L",,20.5,,until 12:00,,,hot_drink;eggs,,both
-Formules petit-déjeuner,Full Morning,,"Café ou thé, pain toasté, confiture, miel, omelette ou œufs brouillés, Jus de saison, Eau 1L",,32,,until 12:00,,,hot_drink;eggs;seasonal_juice,,both
-Formules petit-déjeuner,Boost Start,,"Café ou thé, pain toasté, confiture, miel, œufs Bénédicte, Jus de saison, Eau 1L",,43,,until 12:00,,,hot_drink;seasonal_juice,,both
-Formules petit-déjeuner,Sweet Start,,"Café ou thé, pain toasté, confiture, miel, omelette ou œufs brouillés ou œufs Bénédicte, pancakes au caramel beurre salé, Jus de saison, Eau 1L",,31.5,,until 12:00,,,hot_drink;eggs_with_benedict;seasonal_juice,,both
-Œufs,Œufs brouillés,,"Œufs (4), salade classique, pickles maison",,9,,until 15:00,Épinards;Champignons;Avocat;Gouda;Cheddar;Gruyère;Feta;Poulet;Bacon de bœuf,,,,kitchen
-Œufs,Omelette nature,,"Œufs (4), salade classique, pickles maison",,13.5,,until 15:00,Épinards;Champignons;Avocat;Gouda;Cheddar;Gruyère;Feta;Poulet;Bacon de bœuf,,,,kitchen
-Œufs,Œufs Bénédicte,,"Pain brioché, œufs pochés, sauce hollandaise, salade classique, pickles maison",,14.5,,until 15:00,Épinards;Champignons;Avocat;Gouda;Cheddar;Gruyère;Feta;Poulet;Bacon de bœuf,,,,kitchen
-Extras,Épinards,,,,6,,,,,,,kitchen
-Extras,Champignons,,,,6,,,,,,,kitchen
-Extras,Avocat,,,,7,,,,,,,kitchen
-Extras,Frites maison,,,,8,,,,,,,kitchen
-Extras,Gouda,,,,6.5,,,,,,,kitchen
-Extras,Cheddar,,,,6,,,,,,,kitchen
-Extras,Gruyère,,,,4.5,,,,,,,kitchen
-Extras,Feta,,,,6,,,,,,,kitchen
-Extras,Anchois,,,,7.5,,,,,,,kitchen
-Extras,Thon,,,,7.5,,,,,,,kitchen
-Extras,Poulet,,,,6,,,,,,,kitchen
-Extras,Bacon de bœuf,,,,8.5,,,,,,,kitchen
-Extras,Œuf,,,,2.5,,,,,,,kitchen
-Extras,Steak,,,,7.5,,,,,,,kitchen
-Salades,Salade classique,,"Laitue, tomates cerises, graines de courge, vinaigrette maison, pickles",,11.5,,,,,,,kitchen
-Salades,Salade César,,"Romaine, poulet cuit à basse température, tomates cerises, croûtons, Grana, sauce César",,31.5,,,,,,,kitchen
-Salades,Salade bourghoul,,"Bourghoul, tomate, concombre, poivron, herbes fraîches, citron, huile d'olive, sauce tahini, feta, pickles",,17,,,,,,,kitchen
-Plats,Power Bowl,,"Poulet cuit à basse température, bourghoul, champignons, épinards, Grana, œuf poché, salade classique, sauce César",,31.5,,,,,,,kitchen
-Plats,VG Power Bowl,,"Falafel, salade bourghoul, salade classique, sauce tahini",,22,,,,,,,kitchen
-Plats,Spiced Lentil Bowl,,"Riz Masala, œufs brouillés, Crispy chicken, avocat, sauce Général Tao, sweet chili sauce, pickles",,36.5,,,,,,,kitchen
-Starters,"Sardines à l'huile, pan con tomato",,"Sardines à l'huile, Pan con tomato, salade classique",,11,,,,,,,kitchen
-Starters,"Filet de poulet, sauce César",,"Poulet cuit à basse température, salade classique",,15.5,,,,,,,kitchen
-Starters,Falafel,,"Falafel, hommous, sauce tahini, salade classique",,19.5,,,,,,,kitchen
-Starters,Chicken Tenders,,"Poulet Crispy, sauce Général Tao, graines de sésame, herbes fraîches, pickles",,15,,,,,,,kitchen
-Starters,Chakchouka,,"Tomate, oignon, poivron, œufs mollets",,16,,,,,,,kitchen
-Accompagnements,Salade de boulghour,,,,10.5,,,,,,,kitchen
-Accompagnements,Boulghour sauté aux champignons et épinards,,,,21,,,,,,,kitchen
-Accompagnements,Masala rice,,"Riz Basmati parfumé (ail, gingembre, laurier, clou de girofle, cardamome, anis étoilé, graines de nigelle)",,8,,,,,,,kitchen
-Sandwichs,Cheese Burger,,"Steak haché de bœuf, sauce maison, cheddar, frites et salade classique",,28.5,,,Bacon de bœuf;Œuf;Gouda;Cheddar;Steak;Gruyère,,,,kitchen
-Sandwichs,Club sandwich poulet,,"Laitue, tomate, blanc de poulet grillé, gouda, œuf, mayonnaise maison, salade classique",,21.5,,,Bacon de bœuf;Frites maison,,,,kitchen
-Sandwichs,Club sandwich thon,,"Laitue, tomate, thon, gouda, œuf, mayonnaise maison, salade classique",,21,,,Frites maison,,,,kitchen
-Sandwichs,Crispy Chicken Burger,,"Crispy chicken, laitue, tomate, oignon, sweet chili sauce, cheddar, frites, salade classique et pickles",,22,,,Bacon de bœuf;Gouda;Cheddar;Gruyère,,,,kitchen
-Cakes & Sweets,Fondant au chocolat,,"Chocolat noir, poudre d'amande, sucre brun",,11.5,,,,,,,both
-Cakes & Sweets,Carrot cake,,"Carotte, noix, cannelle, noix de muscade, sucre brun, cream cheese",,9.5,,,,,,,both
-Cakes & Sweets,Pancakes au caramel beurre salé,,"Caramel beurre salé, chantilly, amandes effilées",,20,,,Pommes cannelle caramélisées,,,,kitchen
-Cakes & Sweets,Pain perdu,,"Caramel beurre salé, chantilly, noisettes pralinées",,13.5,,,Pommes cannelle caramélisées,,,,kitchen
-Cakes & Sweets,Granola,,"Yaourt grec, granola aux fruits secs, dattes, sirop de dattes",,19,,,,,,,kitchen
-Cakes & Sweets,Cookie chocolat,,,,5,,,,,,,both
-Cakes & Sweets,Cookie pomme cannelle,,,,4.5,,,,,,,both
-Cakes & Sweets,Fruits,,Fruits de saison,,12,,,,,,,kitchen
-Extras sucrés,Amandes effilées,,,,5.5,,,,,,,kitchen
-Extras sucrés,Caramel,,,,3,,,,,,,kitchen
-Extras sucrés,Chantilly,,,,3.5,,,,,,,kitchen
-Extras sucrés,Pommes cannelle caramélisées,,,,4.5,,,,,,,kitchen
-Kids Menu,Kids Menu (Cookie),,Mini Burger + Cookie + Jus de saison,,30.5,,,,,seasonal_juice,,both
-Kids Menu,Kids Menu (Pancakes),,Mini Burger + Pancakes + Jus de saison,,27,,,,,seasonal_juice,,both
-Plat de la semaine,Plat de la semaine,,À définir chaque semaine,,,,mon-fri 08:00-15:00,,,,,kitchen
-Jus,Grenade,,,,13,,,,,,,bar
-Jus,Fraise,,,,9.5,,,,,,,bar
-Jus,Mangue,,,,11,,,,,,,bar
-Jus,Fruit de la passion,,,,14.5,,,,,,,bar
-Jus,Fruits rouges,,,,16.5,,,,,,,bar
-Jus,Mangue Passion,,,,13.5,,,,,,,bar
-Fresh Blends,Citrus Boost,,"Pomme, carotte, gingembre, orange",,10.5,,,,,,,bar
-Fresh Blends,Mint Lemonade,,"Citron, menthe, lait d'amande",,12.5,,,,,,,bar
-Fresh Blends,Beetroot,,"Betterave, pomme, carotte, gingembre, citron",,14.5,,,,,,,bar
-Fresh Blends,Green Detox,,"Pomme, concombre, céleri",,14.5,,,,,,,bar
-Thé & Infusion,Iced black tea,,,,7.5,,,,,,,bar
-Thé & Infusion,Iced green tea,,,,10.5,,,,,,,bar
-Thé & Infusion,Hibiscus,,"Pomme, hibiscus, gingembre, pétales de rose",,14,,,,,,,bar
-Thé & Infusion,Lemon grove,,"Thé noir, fenouil, bâton de cannelle, anis étoilé, citron",,6.5,,,,,,,bar
-Thé & Infusion,Ginger calm,,"Gingembre, camomille, menthe, citron",,6.5,,,,,,,bar
-Thé & Infusion,Chai Latte,,"Thé noir, lait d'amande vanillé, cannelle, gingembre, miel, cardamome, anis étoilé",,14.5,,,,,,,bar
-Thé & Infusion,Golden Latte,,"Lait d'amande, curcuma, cannelle, miel, écorce d'orange, gingembre, fenouil, poivre noir, anis étoilé",,19,,,,,,,bar
-Thé & Infusion,Verveine,,"Verveine, menthe, citron",,6.5,,,,,,,bar
-Thé & Infusion,Camomille,,,,6.5,,,,,,,bar
-Cafés,Espresso,,,,6.5,,,,,,,bar
-Cafés,Espresso premium,,,,9.5,,,,,,,bar
-Cafés,Décaféiné premium,,,,9.5,,,,,,,bar
-Cafés,Espresso macchiato,,"Shot express, mousse de lait",,7.5,,,,,,,bar
-Cafés,Latte macchiato,,"Lait, shot express",,6.5,,,,,,,bar
-Cafés,Iced Latte,,"Double shot express, lait",,10.5,,,,,,,bar
-Cafés,Capuccino,,"Shot express, chocolat, lait",,8.5,,,,,,,bar
-Cafés,Americano,,,,7,,,,,,,bar
-Cafés,Iced Americano,,Double shot express,,12,,,,,,,bar
-Cafés,Mochaccino,,,,11,,,,,,,bar
-Cafés,Flat white,,"Double shot express, lait, mousse de lait",,11.5,,,,,,,bar
-Cafés,Macchiato Caramel,,"Lait, shot express, caramel",,14.5,,,,,,,bar
-Cafés,Iced Macchiato Caramel,,"Lait, double shot express, caramel",,11.5,,,,,,,bar
-Matcha,Matcha Latte,,,,14.5,,,,,,,bar
-Matcha,Iced Matcha Latte,,,,13.5,,,,,,,bar
-Matcha,Matcha Mangue,,"Matcha, mangue, lait d'amande",,13.5,,,,,,,bar
-Matcha,Matcha fruits rouges,,"Matcha, fruits rouges, lait d'amande",,16,,,,,,,bar
-Healthy Shots,Ginger shot,,"Gingembre, citron, miel",,7,,,,,,,bar
-Healthy Shots,Beet shot,,"Betterave, pomme, menthe",,5.5,,,,,,,bar
-Healthy Shots,Green shot,,"Concombre, persil, citron, miel",,5,,,,,,,bar
-Eau,Carafe eau 1L,,,,5.5,,,,,,,bar
-Eau,"Carafe eau 0,5L",,,,2.5,,,,,,,bar
+category,category_en,name_fr,name_en,description_fr,description_en,price_dt,pos_code,availability,suggested_extras,note_hint,choice_groups,photo,station
+Formules petit-déjeuner,Breakfast sets,Early Bird,Early Bird,"Café ou thé, pain toasté, confiture, miel, Eau 0,5L","Coffee or tea, toasted bread, jam, honey, 0.5L water",8.5,,until 12:00,,,hot_drink,,both
+Formules petit-déjeuner,Breakfast sets,Classic Start,Classic Start,"Café ou thé, مرطبات اليوم, pain toasté, confiture, miel, Eau 0,5L","Coffee or tea, مرطبات اليوم, toasted bread, jam, honey, 0.5L water",14.5,,until 12:00,,,hot_drink,,both
+Formules petit-déjeuner,Breakfast sets,Sunrise Plate,Sunrise Plate,"Café ou thé, pain toasté, confiture, miel, omelette ou œufs brouillés, Eau 0,5L","Coffee or tea, toasted bread, jam, honey, omelette or scrambled eggs, 0.5L water",20.5,,until 12:00,,,hot_drink;eggs,,both
+Formules petit-déjeuner,Breakfast sets,Full Morning,Full Morning,"Café ou thé, pain toasté, confiture, miel, omelette ou œufs brouillés, Jus de saison, Eau 1L","Coffee or tea, toasted bread, jam, honey, omelette or scrambled eggs, seasonal juice, 1L water",32,,until 12:00,,,hot_drink;eggs;seasonal_juice,,both
+Formules petit-déjeuner,Breakfast sets,Boost Start,Boost Start,"Café ou thé, pain toasté, confiture, miel, œufs Bénédicte, Jus de saison, Eau 1L","Coffee or tea, toasted bread, jam, honey, eggs Benedict, seasonal juice, 1L water",43,,until 12:00,,,hot_drink;seasonal_juice,,both
+Formules petit-déjeuner,Breakfast sets,Sweet Start,Sweet Start,"Café ou thé, pain toasté, confiture, miel, omelette ou œufs brouillés ou œufs Bénédicte, pancakes au caramel beurre salé, Jus de saison, Eau 1L","Coffee or tea, toasted bread, jam, honey, omelette or scrambled eggs or eggs Benedict, salted caramel pancakes, seasonal juice, 1L water",31.5,,until 12:00,,,hot_drink;eggs_with_benedict;seasonal_juice,,both
+Œufs,Eggs,Œufs brouillés,Scrambled eggs,"Œufs (4), salade classique, pickles maison","Eggs (4), classic salad, homemade pickles",9,,until 15:00,Épinards;Champignons;Avocat;Gouda;Cheddar;Gruyère;Feta;Poulet;Bacon de bœuf,,,,kitchen
+Œufs,Eggs,Omelette nature,Plain omelette,"Œufs (4), salade classique, pickles maison","Eggs (4), classic salad, homemade pickles",13.5,,until 15:00,Épinards;Champignons;Avocat;Gouda;Cheddar;Gruyère;Feta;Poulet;Bacon de bœuf,,,,kitchen
+Œufs,Eggs,Œufs Bénédicte,Eggs Benedict,"Pain brioché, œufs pochés, sauce hollandaise, salade classique, pickles maison","Brioche bread, poached eggs, hollandaise sauce, classic salad, homemade pickles",14.5,,until 15:00,Épinards;Champignons;Avocat;Gouda;Cheddar;Gruyère;Feta;Poulet;Bacon de bœuf,,,,kitchen
+Extras,Extras,Épinards,Spinach,,,6,,,,,,,kitchen
+Extras,Extras,Champignons,Mushrooms,,,6,,,,,,,kitchen
+Extras,Extras,Avocat,Avocado,,,7,,,,,,,kitchen
+Extras,Extras,Frites maison,Homemade fries,,,8,,,,,,,kitchen
+Extras,Extras,Gouda,Gouda,,,6.5,,,,,,,kitchen
+Extras,Extras,Cheddar,Cheddar,,,6,,,,,,,kitchen
+Extras,Extras,Gruyère,Gruyère,,,4.5,,,,,,,kitchen
+Extras,Extras,Feta,Feta,,,6,,,,,,,kitchen
+Extras,Extras,Anchois,Anchovies,,,7.5,,,,,,,kitchen
+Extras,Extras,Thon,Tuna,,,7.5,,,,,,,kitchen
+Extras,Extras,Poulet,Chicken,,,6,,,,,,,kitchen
+Extras,Extras,Bacon de bœuf,Beef bacon,,,8.5,,,,,,,kitchen
+Extras,Extras,Œuf,Egg,,,2.5,,,,,,,kitchen
+Extras,Extras,Steak,Steak,,,7.5,,,,,,,kitchen
+Salades,Salads,Salade classique,Classic salad,"Laitue, tomates cerises, graines de courge, vinaigrette maison, pickles","Lettuce, cherry tomatoes, pumpkin seeds, house vinaigrette, pickles",11.5,,,,,,,kitchen
+Salades,Salads,Salade César,Caesar salad,"Romaine, poulet cuit à basse température, tomates cerises, croûtons, Grana, sauce César","Romaine, slow-cooked chicken, cherry tomatoes, croutons, Grana, Caesar sauce",31.5,,,,,,,kitchen
+Salades,Salads,Salade bourghoul,Bulgur salad,"Bourghoul, tomate, concombre, poivron, herbes fraîches, citron, huile d'olive, sauce tahini, feta, pickles","Bulgur, tomato, cucumber, bell pepper, fresh herbs, lemon, olive oil, tahini sauce, feta, pickles",17,,,,,,,kitchen
+Plats,Mains,Power Bowl,Power Bowl,"Poulet cuit à basse température, bourghoul, champignons, épinards, Grana, œuf poché, salade classique, sauce César","Slow-cooked chicken, bulgur, mushrooms, spinach, Grana, poached egg, classic salad, Caesar sauce",31.5,,,,,,,kitchen
+Plats,Mains,VG Power Bowl,VG Power Bowl,"Falafel, salade bourghoul, salade classique, sauce tahini","Falafel, bulgur salad, classic salad, tahini sauce",22,,,,,,,kitchen
+Plats,Mains,Spiced Lentil Bowl,Spiced Lentil Bowl,"Riz Masala, œufs brouillés, Crispy chicken, avocat, sauce Général Tao, sweet chili sauce, pickles","Masala rice, scrambled eggs, Crispy chicken, avocado, General Tso sauce, sweet chili sauce, pickles",36.5,,,,,,,kitchen
+Starters,Starters,"Sardines à l'huile, pan con tomato","Sardines in oil, pan con tomato","Sardines à l'huile, Pan con tomato, salade classique","Sardines in oil, pan con tomato, classic salad",11,,,,,,,kitchen
+Starters,Starters,"Filet de poulet, sauce César","Chicken fillet, Caesar sauce","Poulet cuit à basse température, salade classique","Slow-cooked chicken, classic salad",15.5,,,,,,,kitchen
+Starters,Starters,Falafel,Falafel,"Falafel, hommous, sauce tahini, salade classique","Falafel, hummus, tahini sauce, classic salad",19.5,,,,,,,kitchen
+Starters,Starters,Chicken Tenders,Chicken Tenders,"Poulet Crispy, sauce Général Tao, graines de sésame, herbes fraîches, pickles","Crispy chicken, General Tso sauce, sesame seeds, fresh herbs, pickles",15,,,,,,,kitchen
+Starters,Starters,Chakchouka,Shakshuka,"Tomate, oignon, poivron, œufs mollets","Tomato, onion, bell pepper, soft-boiled eggs",16,,,,,,,kitchen
+Accompagnements,Sides,Salade de boulghour,Bulgur salad,,,10.5,,,,,,,kitchen
+Accompagnements,Sides,Boulghour sauté aux champignons et épinards,Sautéed bulgur with mushrooms and spinach,,,21,,,,,,,kitchen
+Accompagnements,Sides,Masala rice,Masala rice,"Riz Basmati parfumé (ail, gingembre, laurier, clou de girofle, cardamome, anis étoilé, graines de nigelle)","Fragrant basmati rice (garlic, ginger, bay leaf, clove, cardamom, star anise, nigella seeds)",8,,,,,,,kitchen
+Sandwichs,Sandwiches,Cheese Burger,Cheese Burger,"Steak haché de bœuf, sauce maison, cheddar, frites et salade classique","Beef patty, house sauce, cheddar, fries and classic salad",28.5,,,Bacon de bœuf;Œuf;Gouda;Cheddar;Steak;Gruyère,,,,kitchen
+Sandwichs,Sandwiches,Club sandwich poulet,Chicken club sandwich,"Laitue, tomate, blanc de poulet grillé, gouda, œuf, mayonnaise maison, salade classique","Lettuce, tomato, grilled chicken breast, gouda, egg, homemade mayonnaise, classic salad",21.5,,,Bacon de bœuf;Frites maison,,,,kitchen
+Sandwichs,Sandwiches,Club sandwich thon,Tuna club sandwich,"Laitue, tomate, thon, gouda, œuf, mayonnaise maison, salade classique","Lettuce, tomato, tuna, gouda, egg, homemade mayonnaise, classic salad",21,,,Frites maison,,,,kitchen
+Sandwichs,Sandwiches,Crispy Chicken Burger,Crispy Chicken Burger,"Crispy chicken, laitue, tomate, oignon, sweet chili sauce, cheddar, frites, salade classique et pickles","Crispy chicken, lettuce, tomato, onion, sweet chili sauce, cheddar, fries, classic salad and pickles",22,,,Bacon de bœuf;Gouda;Cheddar;Gruyère,,,,kitchen
+Cakes & Sweets,Cakes & Sweets,Fondant au chocolat,Chocolate fondant,"Chocolat noir, poudre d'amande, sucre brun","Dark chocolate, almond flour, brown sugar",11.5,,,,,,,both
+Cakes & Sweets,Cakes & Sweets,Carrot cake,Carrot cake,"Carotte, noix, cannelle, noix de muscade, sucre brun, cream cheese","Carrot, walnuts, cinnamon, nutmeg, brown sugar, cream cheese",9.5,,,,,,,both
+Cakes & Sweets,Cakes & Sweets,Pancakes au caramel beurre salé,Salted caramel pancakes,"Caramel beurre salé, chantilly, amandes effilées","Salted caramel, whipped cream, flaked almonds",20,,,Pommes cannelle caramélisées,,,,kitchen
+Cakes & Sweets,Cakes & Sweets,Pain perdu,French toast,"Caramel beurre salé, chantilly, noisettes pralinées","Salted caramel, whipped cream, praline hazelnuts",13.5,,,Pommes cannelle caramélisées,,,,kitchen
+Cakes & Sweets,Cakes & Sweets,Granola,Granola,"Yaourt grec, granola aux fruits secs, dattes, sirop de dattes","Greek yogurt, dried fruit granola, dates, date syrup",19,,,,,,,kitchen
+Cakes & Sweets,Cakes & Sweets,Cookie chocolat,Chocolate cookie,,,5,,,,,,,both
+Cakes & Sweets,Cakes & Sweets,Cookie pomme cannelle,Apple cinnamon cookie,,,4.5,,,,,,,both
+Cakes & Sweets,Cakes & Sweets,Fruits,Fruit,Fruits de saison,Seasonal fruit,12,,,,,,,kitchen
+Extras sucrés,Sweet extras,Amandes effilées,Flaked almonds,,,5.5,,,,,,,kitchen
+Extras sucrés,Sweet extras,Caramel,Caramel,,,3,,,,,,,kitchen
+Extras sucrés,Sweet extras,Chantilly,Whipped cream,,,3.5,,,,,,,kitchen
+Extras sucrés,Sweet extras,Pommes cannelle caramélisées,Caramelized cinnamon apples,,,4.5,,,,,,,kitchen
+Kids Menu,Kids Menu,Kids Menu (Cookie),Kids Menu (Cookie),Mini Burger + Cookie + Jus de saison,Mini burger + cookie + seasonal juice,30.5,,,,,seasonal_juice,,both
+Kids Menu,Kids Menu,Kids Menu (Pancakes),Kids Menu (Pancakes),Mini Burger + Pancakes + Jus de saison,Mini burger + pancakes + seasonal juice,27,,,,,seasonal_juice,,both
+Plat de la semaine,Dish of the week,Plat de la semaine,Dish of the week,À définir chaque semaine,Changes every week,,,mon-fri 08:00-15:00,,,,,kitchen
+Jus,Juices,Grenade,Pomegranate,,,13,,,,,,,bar
+Jus,Juices,Fraise,Strawberry,,,9.5,,,,,,,bar
+Jus,Juices,Mangue,Mango,,,11,,,,,,,bar
+Jus,Juices,Fruit de la passion,Passion fruit,,,14.5,,,,,,,bar
+Jus,Juices,Fruits rouges,Red berries,,,16.5,,,,,,,bar
+Jus,Juices,Mangue Passion,Mango Passion,,,13.5,,,,,,,bar
+Fresh Blends,Fresh Blends,Citrus Boost,Citrus Boost,"Pomme, carotte, gingembre, orange","Apple, carrot, ginger, orange",10.5,,,,,,,bar
+Fresh Blends,Fresh Blends,Mint Lemonade,Mint Lemonade,"Citron, menthe, lait d'amande","Lemon, mint, almond milk",12.5,,,,,,,bar
+Fresh Blends,Fresh Blends,Beetroot,Beetroot,"Betterave, pomme, carotte, gingembre, citron","Beetroot, apple, carrot, ginger, lemon",14.5,,,,,,,bar
+Fresh Blends,Fresh Blends,Green Detox,Green Detox,"Pomme, concombre, céleri","Apple, cucumber, celery",14.5,,,,,,,bar
+Thé & Infusion,Tea & Infusions,Iced black tea,Iced black tea,,,7.5,,,,,,,bar
+Thé & Infusion,Tea & Infusions,Iced green tea,Iced green tea,,,10.5,,,,,,,bar
+Thé & Infusion,Tea & Infusions,Hibiscus,Hibiscus,"Pomme, hibiscus, gingembre, pétales de rose","Apple, hibiscus, ginger, rose petals",14,,,,,,,bar
+Thé & Infusion,Tea & Infusions,Lemon grove,Lemon grove,"Thé noir, fenouil, bâton de cannelle, anis étoilé, citron","Black tea, fennel, cinnamon stick, star anise, lemon",6.5,,,,,,,bar
+Thé & Infusion,Tea & Infusions,Ginger calm,Ginger calm,"Gingembre, camomille, menthe, citron","Ginger, chamomile, mint, lemon",6.5,,,,,,,bar
+Thé & Infusion,Tea & Infusions,Chai Latte,Chai Latte,"Thé noir, lait d'amande vanillé, cannelle, gingembre, miel, cardamome, anis étoilé","Black tea, vanilla almond milk, cinnamon, ginger, honey, cardamom, star anise",14.5,,,,,,,bar
+Thé & Infusion,Tea & Infusions,Golden Latte,Golden Latte,"Lait d'amande, curcuma, cannelle, miel, écorce d'orange, gingembre, fenouil, poivre noir, anis étoilé","Almond milk, turmeric, cinnamon, honey, orange peel, ginger, fennel, black pepper, star anise",19,,,,,,,bar
+Thé & Infusion,Tea & Infusions,Verveine,Verbena,"Verveine, menthe, citron","Verbena, mint, lemon",6.5,,,,,,,bar
+Thé & Infusion,Tea & Infusions,Camomille,Chamomile,,,6.5,,,,,,,bar
+Cafés,Coffees,Espresso,Espresso,,,6.5,,,,,,,bar
+Cafés,Coffees,Espresso premium,Espresso premium,,,9.5,,,,,,,bar
+Cafés,Coffees,Décaféiné premium,Decaf premium,,,9.5,,,,,,,bar
+Cafés,Coffees,Espresso macchiato,Espresso macchiato,"Shot express, mousse de lait","Espresso shot, milk foam",7.5,,,,,,,bar
+Cafés,Coffees,Latte macchiato,Latte macchiato,"Lait, shot express","Milk, espresso shot",6.5,,,,,,,bar
+Cafés,Coffees,Iced Latte,Iced Latte,"Double shot express, lait","Double espresso shot, milk",10.5,,,,,,,bar
+Cafés,Coffees,Capuccino,Cappuccino,"Shot express, chocolat, lait","Espresso shot, chocolate, milk",8.5,,,,,,,bar
+Cafés,Coffees,Americano,Americano,,,7,,,,,,,bar
+Cafés,Coffees,Iced Americano,Iced Americano,Double shot express,Double espresso shot,12,,,,,,,bar
+Cafés,Coffees,Mochaccino,Mochaccino,,,11,,,,,,,bar
+Cafés,Coffees,Flat white,Flat white,"Double shot express, lait, mousse de lait","Double espresso shot, milk, milk foam",11.5,,,,,,,bar
+Cafés,Coffees,Macchiato Caramel,Macchiato Caramel,"Lait, shot express, caramel","Milk, espresso shot, caramel",14.5,,,,,,,bar
+Cafés,Coffees,Iced Macchiato Caramel,Iced Macchiato Caramel,"Lait, double shot express, caramel","Milk, double espresso shot, caramel",11.5,,,,,,,bar
+Matcha,Matcha,Matcha Latte,Matcha Latte,,,14.5,,,,,,,bar
+Matcha,Matcha,Iced Matcha Latte,Iced Matcha Latte,,,13.5,,,,,,,bar
+Matcha,Matcha,Matcha Mangue,Mango Matcha,"Matcha, mangue, lait d'amande","Matcha, mango, almond milk",13.5,,,,,,,bar
+Matcha,Matcha,Matcha fruits rouges,Red berry Matcha,"Matcha, fruits rouges, lait d'amande","Matcha, red berries, almond milk",16,,,,,,,bar
+Healthy Shots,Healthy Shots,Ginger shot,Ginger shot,"Gingembre, citron, miel","Ginger, lemon, honey",7,,,,,,,bar
+Healthy Shots,Healthy Shots,Beet shot,Beet shot,"Betterave, pomme, menthe","Beetroot, apple, mint",5.5,,,,,,,bar
+Healthy Shots,Healthy Shots,Green shot,Green shot,"Concombre, persil, citron, miel","Cucumber, parsley, lemon, honey",5,,,,,,,bar
+Eau,Water,Carafe eau 1L,Water carafe 1L,,,5.5,,,,,,,bar
+Eau,Water,"Carafe eau 0,5L",Water carafe 0.5L,,,2.5,,,,,,,bar

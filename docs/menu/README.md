@@ -6,7 +6,7 @@
 
 | Colonne | Contenu |
 | --- | --- |
-| `category` | Catégorie (ordre d'affichage = ordre du fichier) |
+| `category` / `category_en` | Catégorie en français / en anglais (ordre d'affichage = ordre du fichier) |
 | `name_fr` / `name_en` | Nom en français / en anglais |
 | `description_fr` / `description_en` | Description en français / en anglais |
 | `price_dt` | Prix en dinars (`5.5` = 5,5 DT) — converti en millimes au chargement |
@@ -21,7 +21,7 @@
 ## À compléter
 
 - [ ] `pos_code` pour **chaque** article (visite au café)
-- [ ] `name_en` et `description_en` (menu anglais)
+- [x] `name_en` et `description_en` (menu anglais) : traduits le 15/10/2026 ; les noms propres ou déjà anglais (Early Bird, Cheese Burger…) et « مرطبات اليوم » restent tels quels — à faire relire par la manager
 - [ ] `photo` pour chaque article
 - [ ] **Plat de la semaine** : absent du menu papier, la manager le met à jour chaque semaine dans l'app
 - [x] Extras suggérés sous les **Œufs** : confirmés
