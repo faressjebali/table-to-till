@@ -1,16 +1,15 @@
 import express, { type ErrorRequestHandler, type Express } from 'express';
+import { authRoutes } from './auth/routes.js';
+import type { Config } from './config.js';
+import type { Db } from './db.js';
+import { errorBody, HttpError } from './errors.js';
 
-// Format d'erreur défini dans docs/api.md (§ Erreurs).
-function errorBody(code: string, message: string) {
-  return { error: { code, message } };
-}
-
-export function createApp(): Express {
+export function createApp({ db, config }: { db: Db; config: Config }): Express {
   const app = express();
   app.use(express.json());
 
   const api = express.Router();
-  // Les routes de docs/api.md seront montées ici.
+  api.use(authRoutes(db, config));
   app.use('/api', api);
 
   app.use((_req, res) => {
@@ -18,6 +17,10 @@ export function createApp(): Express {
   });
 
   const onError: ErrorRequestHandler = (err: unknown, _req, res, _next) => {
+    if (err instanceof HttpError) {
+      res.status(err.status).json(errorBody(err.code, err.message, err.details));
+      return;
+    }
     // JSON mal formé envoyé par le client
     if (err instanceof SyntaxError && 'body' in err) {
       res.status(400).json(errorBody('VALIDATION_ERROR', 'Invalid JSON'));
