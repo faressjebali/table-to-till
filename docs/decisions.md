@@ -2,6 +2,7 @@
 
 Une ligne par décision, la plus récente en haut. Format : `AAAA-MM-JJ — décision — pourquoi`.
 
+- 2026-10-15 — Œufs des formules : deux groupes de choix, `eggs` (omelette ou brouillés : Sunrise, Full) et `eggs_with_benedict` (+ Bénédicte : Sweet) ; Boost Start a ses Bénédicte imposés — les options diffèrent selon la formule sur le menu papier
 - 2026-10-15 — Le calcul du stock est une fonctionnalité principale : tout calculer pour minimiser les écarts inexpliqués — besoin principal du café
 - 2026-10-15 — Annulation = commander −1 ; jamais sur le dernier article d'une table (l'annulation attend d'autres articles) — LegacyPOS plante sinon
 - 2026-10-15 — Remise staff 20 % exactement, par tout serveur en shift, sur toute la table ou des articles, note « pour qui » obligatoire — usage actuel du café
