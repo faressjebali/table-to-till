@@ -1,0 +1,35 @@
+# Dépendances
+node_modules/
+.venv/
+__pycache__/
+*.pyc
+
+# Builds
+dist/
+build/
+*.tsbuildinfo
+bin/
+obj/
+
+# Secrets et réglages locaux
+.env
+.env.*
+!.env.example
+
+# Uploads, logs, enregistrements
+server/uploads/
+*.log
+pos-agent/logs/
+pos-emulator/logs/
+
+# Vidéos (trop lourdes pour Git — les partager autrement)
+*.mp4
+*.mov
+
+# OS / éditeur
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
