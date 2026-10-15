@@ -7,14 +7,14 @@ import { resetTestDatabase, testUrl } from './helpers/db.js';
 
 const csv = readFileSync(new URL('../../docs/menu/menu.csv', import.meta.url), 'utf8');
 const header =
-  'category,category_en,name_fr,name_en,description_fr,description_en,price_dt,pos_code,availability,suggested_extras,note_hint,choice_groups,photo,station';
+  'category,category_en,name_fr,name_en,description_fr,description_en,price_dt,pos_code,availability,suggested_extras,note_hint_fr,note_hint_en,choice_groups,photo,station';
 // Le minimum pour que les groupes de choix trouvent leurs options.
 const baseRows = [
-  'Œufs,Eggs,Omelette nature,Plain omelette,,,12,,,,,,,kitchen',
-  'Œufs,Eggs,Œufs brouillés,Scrambled eggs,,,12,,,,,,,kitchen',
-  'Œufs,Eggs,Œufs Bénédicte,Eggs Benedict,,,18,,,,,,,kitchen',
-  'Jus,Juices,Grenade,Pomegranate,,,12,,,,,,,bar',
-  'Cafés,Coffees,Espresso,Espresso,,,6,,,,,,,bar',
+  'Œufs,Eggs,Omelette nature,Plain omelette,,,12,,,,,,,,kitchen',
+  'Œufs,Eggs,Œufs brouillés,Scrambled eggs,,,12,,,,,,,,kitchen',
+  'Œufs,Eggs,Œufs Bénédicte,Eggs Benedict,,,18,,,,,,,,kitchen',
+  'Jus,Juices,Grenade,Pomegranate,,,12,,,,,,,,bar',
+  'Cafés,Coffees,Espresso,Espresso,,,6,,,,,,,,bar',
 ];
 const csvWith = (...rows: string[]) => [header, ...baseRows, ...rows].join('\n');
 
@@ -119,29 +119,50 @@ describe('parseMenuCsv sur docs/menu/menu.csv', () => {
 describe('parseMenuCsv refuse un CSV incohérent', () => {
   it('extra suggéré inconnu', () => {
     expect(() =>
-      parseMenuCsv(csvWith('Plats,Mains,Burger,Burger,,,20,,,Ketchup,,,,kitchen')),
+      parseMenuCsv(csvWith('Plats,Mains,Burger,Burger,,,20,,,Ketchup,,,,,kitchen')),
     ).toThrow('ligne 7 : extra suggéré inconnu « Ketchup »');
   });
 
   it('groupe de choix inconnu', () => {
     expect(() =>
-      parseMenuCsv(csvWith('Plats,Mains,Burger,Burger,,,20,,,,,dessert,,kitchen')),
+      parseMenuCsv(csvWith('Plats,Mains,Burger,Burger,,,20,,,,,,dessert,,kitchen')),
     ).toThrow('groupe de choix inconnu');
   });
 
   it('article en double', () => {
-    expect(() => parseMenuCsv(csvWith('Jus,Juices,Grenade,Pomegranate,,,12,,,,,,,bar'))).toThrow(
+    expect(() => parseMenuCsv(csvWith('Jus,Juices,Grenade,Pomegranate,,,12,,,,,,,,bar'))).toThrow(
       'article en double',
     );
   });
 
   it('station inconnue ou nom anglais manquant', () => {
-    expect(() => parseMenuCsv(csvWith('Plats,Mains,Burger,Burger,,,20,,,,,,,salle'))).toThrow(
+    expect(() => parseMenuCsv(csvWith('Plats,Mains,Burger,Burger,,,20,,,,,,,,salle'))).toThrow(
       'station inconnue',
     );
-    expect(() => parseMenuCsv(csvWith('Plats,Mains,Burger,,,,20,,,,,,,kitchen'))).toThrow(
+    expect(() => parseMenuCsv(csvWith('Plats,Mains,Burger,,,,20,,,,,,,,kitchen'))).toThrow(
       'colonne name_en vide',
     );
+  });
+
+  it('aide de note sans traduction', () => {
+    expect(() =>
+      parseMenuCsv(csvWith('Plats,Mains,Burger,Burger,,,20,,,,Sans oignon ?,,,,kitchen')),
+    ).toThrow('ligne 7 : note_hint_fr et note_hint_en');
+    expect(() =>
+      parseMenuCsv(csvWith('Plats,Mains,Burger,Burger,,,20,,,,,No onion?,,,kitchen')),
+    ).toThrow(MenuCsvError);
+  });
+});
+
+describe('parseMenuCsv lit l’aide de note', () => {
+  it('en français et en anglais', () => {
+    const menu = parseMenuCsv(
+      csvWith('Plats,Mains,Burger,Burger,,,20,,,,Sans oignon ?,No onion?,,,kitchen'),
+    );
+    expect(menu.items.at(-1)).toMatchObject({
+      noteHintFr: 'Sans oignon ?',
+      noteHintEn: 'No onion?',
+    });
   });
 });
 
@@ -203,6 +224,20 @@ describe('seedMenu (base de test)', () => {
       "SELECT sold_out FROM menu_items WHERE name_fr = 'Avocat'",
     );
     expect(rows).toEqual([{ sold_out: true }]);
+  });
+
+  it('écrit l’aide de note dans les deux langues', async () => {
+    const withHint = {
+      ...menu,
+      items: menu.items.map((i) =>
+        i.nameFr === 'Espresso' ? { ...i, noteHintFr: 'Sucre ?', noteHintEn: 'Sugar?' } : i,
+      ),
+    };
+    await seedMenu(client, withHint);
+    const { rows } = await client.query<{ note_hint_fr: string; note_hint_en: string }>(
+      "SELECT note_hint_fr, note_hint_en FROM menu_items WHERE name_fr = 'Espresso'",
+    );
+    expect(rows).toEqual([{ note_hint_fr: 'Sucre ?', note_hint_en: 'Sugar?' }]);
   });
 
   it('n’écrit rien si une étape échoue', async () => {

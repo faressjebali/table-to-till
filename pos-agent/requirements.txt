@@ -1,0 +1,2 @@
+# Dépendances de l'agent caisse. Installer avec : pip install -r requirements.txt
+# Ajoutées avec l'agent : pywinauto, client HTTP, etc.

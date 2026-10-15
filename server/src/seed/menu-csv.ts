@@ -32,6 +32,7 @@ export interface SeedItem {
   /** "HH:MM" ; null = jusqu'à la fermeture du café. */
   availableUntil: string | null;
   noteHintFr: string | null;
+  noteHintEn: string | null;
   /** Noms français des extras suggérés, dans l'ordre. */
   suggestedExtras: string[];
   choiceGroups: string[];
@@ -111,7 +112,8 @@ const COLUMNS = [
   'pos_code',
   'availability',
   'suggested_extras',
-  'note_hint',
+  'note_hint_fr',
+  'note_hint_en',
   'choice_groups',
   'photo',
   'station',
@@ -214,6 +216,11 @@ export function parseMenuCsv(text: string): SeedMenu {
       throw new MenuCsvError(line, `catégorie « ${row.category} » traduite de deux façons`);
     }
 
+    // Texte client : en français et en anglais, ou pas du tout.
+    if ((row.note_hint_fr === '') !== (row.note_hint_en === '')) {
+      throw new MenuCsvError(line, 'note_hint_fr et note_hint_en : remplir les deux ou aucun');
+    }
+
     // Les noms d'articles servent de référence (extras, choix) : uniques dans tout le menu.
     if (seen.has(row.name_fr)) throw new MenuCsvError(line, `article en double « ${row.name_fr} »`);
     seen.add(row.name_fr);
@@ -229,7 +236,8 @@ export function parseMenuCsv(text: string): SeedMenu {
       posCode: orNull(row.pos_code),
       station: row.station as Station,
       ...parseAvailability(row.availability, line),
-      noteHintFr: orNull(row.note_hint),
+      noteHintFr: orNull(row.note_hint_fr),
+      noteHintEn: orNull(row.note_hint_en),
       suggestedExtras: splitList(row.suggested_extras),
       choiceGroups: splitList(row.choice_groups),
       sortOrder: items.filter((i) => i.categoryFr === row.category).length + 1,

@@ -1,5 +1,5 @@
 // Données factices au format de `GET /menu` (docs/api.md), en attendant le serveur.
-// Extrait de docs/menu/menu.csv ; ids arbitraires. Anglais provisoire.
+// Extrait de docs/menu/menu.csv ; ids arbitraires.
 import type { MenuItem, MenuResponse } from '../api/types';
 
 const allDay: MenuItem['availability'] = { days: [1, 2, 3, 4, 5, 6, 7], from: null, until: null };

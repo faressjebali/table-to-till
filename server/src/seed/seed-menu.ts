@@ -47,6 +47,7 @@ export async function seedMenu(client: ClientBase, menu: SeedMenu): Promise<Seed
         item.availableFrom,
         item.availableUntil,
         item.noteHintFr,
+        item.noteHintEn,
         item.sortOrder,
       ];
 
@@ -60,8 +61,8 @@ export async function seedMenu(client: ClientBase, menu: SeedMenu): Promise<Seed
       if (existingId === undefined) {
         const { rows } = await client.query<{ id: number }>(
           `INSERT INTO menu_items (category_id, name_fr, name_en, description_fr, description_en, price,
-             pos_code, station, days, available_from, available_until, note_hint_fr, sort_order)
-           VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
+             pos_code, station, days, available_from, available_until, note_hint_fr, note_hint_en, sort_order)
+           VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
            RETURNING id`,
           values,
         );
@@ -71,9 +72,9 @@ export async function seedMenu(client: ClientBase, menu: SeedMenu): Promise<Seed
         await client.query(
           `UPDATE menu_items SET category_id = $1, name_fr = $2, name_en = $3, description_fr = $4,
              description_en = $5, price = $6, pos_code = $7, station = $8, days = $9,
-             available_from = $10, available_until = $11, note_hint_fr = $12, sort_order = $13,
-             updated_at = now()
-           WHERE id = $14`,
+             available_from = $10, available_until = $11, note_hint_fr = $12, note_hint_en = $13,
+             sort_order = $14, updated_at = now()
+           WHERE id = $15`,
           [...values, existingId],
         );
         itemIds.set(item.nameFr, existingId);

@@ -5,7 +5,7 @@ Une ligne par décision, la plus récente en haut. Format : `AAAA-MM-JJ — déc
 - 2026-10-15 — Comptes : mot de passe temporaire généré par le serveur et montré une seule fois ; pas de désactivation de soi-même ni de retrait de son propre rôle manager, toujours au moins un manager actif ; rapports de stock et d'écarts donnés à la manager — ne jamais perdre l'accès à la gestion des comptes
 - 2026-10-15 — Quatre rôles : manager, serveur (`waiter`), barista, cuisinier (`chef`, affiché « Cuisinier ») ; le rôle Patron (`owner`) est supprimé, les offres des patrons restent une raison d'offert — remplace la décision Chef / Patron ci-dessous
 - 2026-10-15 — Migrations avec node-pg-migrate, écrites en SQL pur (`server/migrations/`), client `pg` ; `npm run migrate` chaque matin via `scripts/start-day.sh` — outil maintenu, SQL lisible par toute l'équipe, pas d'ORM imposé
-- 2026-10-15 — Offerts dans une table `gifts` : sans table (offres staff, patrons) seulement dans `gifts` ; article déjà commandé et offert = `gifts` liée à la ligne, qui passe `gifted` — traçabilité du stock
+- 2026-10-15 — Offerts dans une table `gifts` : un article est offert dès le départ, jamais après avoir été tapé en caisse ; sans table (offres staff, patrons) seulement dans `gifts` ; sur une table, `gifts` liée à une ligne `gifted` jamais envoyée en caisse — traçabilité du stock (modèle revu dans)
 - 2026-10-15 — Œufs des formules : deux groupes de choix, `eggs` (omelette ou brouillés : Sunrise, Full) et `eggs_with_benedict` (+ Bénédicte : Sweet) ; Boost Start a ses Bénédicte imposés — les options diffèrent selon la formule sur le menu papier
 - 2026-10-15 — Le calcul du stock est une fonctionnalité principale : tout calculer pour minimiser les écarts inexpliqués — besoin principal du café
 - 2026-10-15 — Annulation = commander −1 ; jamais sur le dernier article d'une table (l'annulation attend d'autres articles) — LegacyPOS plante sinon
@@ -13,7 +13,7 @@ Une ligne par décision, la plus récente en haut. Format : `AAAA-MM-JJ — déc
 - 2026-10-15 — Encaissement en une fois (ni division ni paiement mixte) par tout serveur en shift ; addition imprimée depuis l'app par l'agent — usage actuel
 - 2026-10-15 — Offert déclaré dès le départ, jamais après saisie en caisse ; il sort du stock — éviter les annulations, stock exact
 - 2026-10-15 — Plan des tables de l'app : disposition de la salle ; tables fictives attribuées automatiquement aux ventes directes — demande de l'équipe
-- 2026-10-15 — Chef : ruptures, arrivages, avaries, inventaire et besoins de la cuisine ; Patron : droits de la manager + rapports de stock et d'écarts — rôles réels
+- 2026-10-15 — ~~Chef : ruptures, arrivages, avaries, inventaire et besoins de la cuisine ; Patron : droits de la manager + rapports de stock et d'écarts — rôles réels~~ (remplacée : quatre rôles, plus de Patron, voir plus haut)
 - 2026-10-15 — Vente directe : le barista ou le serveur la saisit dans l'app, l'agent la tape sur une table fictive (ex. 333) ; rien n'est jamais tapé directement en caisse — toutes les ventes passent par l'app pour le stock
 - 2026-10-15 — Encaissement depuis l'app : bouton Espèces / Carte, l'agent encaisse dans LegacyPOS — on prend l'argent sans attendre la caisse
 - 2026-10-15 — Kids Menu (Cookie / Pancakes) et Cookie (chocolat / pomme cannelle) en deux articles chacun, comme en caisse ; note libre gardée sur chaque ligne, non tapée en caisse pour une formule — reflète la caisse
@@ -32,7 +32,7 @@ Une ligne par décision, la plus récente en haut. Format : `AAAA-MM-JJ — déc
 - 2026-10-15 — Un seul PIN caisse dédié pour l'agent, stocké seulement sur le PC de caisse — plus simple
 - 2026-10-15 — L'agent saisit par code produit, pas par nom — plus fiable ; les boutons LegacyPOS ont des noms visibles
 - 2026-10-15 — Pas de tailles ; les extras sont des articles normaux, saisis comme lignes séparées — reflète la caisse actuelle
-- 2026-10-15 — Formules et articles à choix : le choix va dans la note — c'est ainsi que la caisse fonctionne aujourd'hui
+- 2026-10-15 — ~~Formules et articles à choix : le choix va dans la note — c'est ainsi que la caisse fonctionne aujourd'hui~~ (remplacée : choix dans des listes, jamais tapés en caisse, voir plus haut)
 - 2026-10-15 — Horaires automatiques : formules jusqu'à 12h, œufs jusqu'à 15h, plat de la semaine lun–ven 8h–15h
 - 2026-10-15 — Menu complet en français et en anglais, avec une photo par article
 - 2026-10-15 — Chaque membre du staff a son compte (identifiant + mot de passe, session 30 jours) et un rôle ; la manager crée les comptes

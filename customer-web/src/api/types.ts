@@ -1,4 +1,4 @@
-// Formes de données de docs/api.md (v1.3) utilisées par le menu QR.
+// Formes de données de docs/api.md utilisées par le menu QR.
 
 export type Lang = 'fr' | 'en';
 
