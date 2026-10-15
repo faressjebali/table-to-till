@@ -2,6 +2,8 @@
 
 Une ligne par décision, la plus récente en haut. Format : `AAAA-MM-JJ — décision — pourquoi`.
 
+- 2026-10-15 — Migrations avec node-pg-migrate, écrites en SQL pur (`server/migrations/`), client `pg` ; `npm run migrate` chaque matin via `scripts/start-day.sh` — outil maintenu, SQL lisible par toute l'équipe, pas d'ORM imposé
+- 2026-10-15 — Offerts dans une table `gifts` : sans table (offres staff, patrons) seulement dans `gifts` ; article déjà commandé et offert = `gifts` liée à la ligne, qui passe `gifted` — traçabilité du stock
 - 2026-10-15 — Œufs des formules : deux groupes de choix, `eggs` (omelette ou brouillés : Sunrise, Full) et `eggs_with_benedict` (+ Bénédicte : Sweet) ; Boost Start a ses Bénédicte imposés — les options diffèrent selon la formule sur le menu papier
 - 2026-10-15 — Le calcul du stock est une fonctionnalité principale : tout calculer pour minimiser les écarts inexpliqués — besoin principal du café
 - 2026-10-15 — Annulation = commander −1 ; jamais sur le dernier article d'une table (l'annulation attend d'autres articles) — LegacyPOS plante sinon
