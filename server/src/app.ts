@@ -3,6 +3,7 @@ import { authRoutes } from './auth/routes.js';
 import type { Config } from './config.js';
 import type { Db } from './db.js';
 import { errorBody, HttpError } from './errors.js';
+import { menuRoutes } from './menu/routes.js';
 import { userRoutes } from './users/routes.js';
 
 export function createApp({ db, config }: { db: Db; config: Config }): Express {
@@ -12,6 +13,7 @@ export function createApp({ db, config }: { db: Db; config: Config }): Express {
   const api = express.Router();
   api.use(authRoutes(db, config));
   api.use(userRoutes(db, config));
+  api.use(menuRoutes(db, config));
   app.use('/api', api);
 
   app.use((_req, res) => {
