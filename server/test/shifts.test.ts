@@ -56,8 +56,10 @@ async function startShift(token: string) {
   return api.post('/api/shifts/start').set('Authorization', `Bearer ${token}`);
 }
 
-type ShiftBody = { shiftId: number; startedAt: string };
-type CurrentBody = { waiters: { id: number; name: string; startedAt: string }[] };
+type ShiftBody = { shiftId: number; startedAt: string; principal: boolean };
+type CurrentBody = {
+  waiters: { id: number; name: string; startedAt: string; principal: boolean }[];
+};
 
 describe('POST /shifts/start', () => {
   it('ouvre un shift pour un serveur, une seule fois', async () => {
@@ -70,6 +72,7 @@ describe('POST /shifts/start', () => {
     expect(shift).toEqual({
       shiftId: expect.any(Number) as number,
       startedAt: expect.any(String) as string,
+      principal: true,
     });
 
     // Double tap : le shift déjà ouvert est renvoyé, rien n'est recréé.
@@ -89,7 +92,44 @@ describe('POST /shifts/start', () => {
     expect(audit.rows).toEqual([{ action: 'shift.started', entity_id: shift.shiftId }]);
 
     const me = await api.get('/api/me').set('Authorization', `Bearer ${token}`);
-    expect(me.body).toMatchObject({ onShift: true });
+    expect(me.body).toMatchObject({ onShift: true, principal: true });
+  });
+
+  it('le premier arrivé est principal, les suivants renforts ; un nouveau principal après son départ', async () => {
+    await createUser('ali');
+    await createUser('sami');
+    await createUser('mehdi');
+    const ali = await tokenFor('ali');
+    const sami = await tokenFor('sami');
+
+    expect((await startShift(ali)).body).toMatchObject({ principal: true });
+    expect((await startShift(sami)).body).toMatchObject({ principal: false });
+    const me = await api.get('/api/me').set('Authorization', `Bearer ${sami}`);
+    expect(me.body).toMatchObject({ onShift: true, principal: false });
+
+    // Double tap du renfort : il reste renfort.
+    expect((await startShift(sami)).body).toMatchObject({ principal: false });
+
+    // Shift d'Ali terminé (la passation arrive plus tard) : le prochain arrivé est principal.
+    await db.query(`UPDATE shifts SET ended_at = now() WHERE principal`);
+    expect((await startShift(await tokenFor('mehdi'))).body).toMatchObject({ principal: true });
+  });
+
+  it('un seul principal quand deux serveurs démarrent en même temps', async () => {
+    await createUser('ali');
+    await createUser('sami');
+    const tokens = [await tokenFor('ali'), await tokenFor('sami')];
+    const results = await Promise.all(tokens.map((t) => startShift(t)));
+    expect(results.map((r) => r.status)).toEqual([201, 201]);
+    const principals = results.filter((r) => (r.body as ShiftBody).principal);
+    expect(principals).toHaveLength(1);
+  });
+
+  it('/me : un compte hors shift n’est pas principal', async () => {
+    await createUser('sami');
+    const token = await tokenFor('sami');
+    const me = await api.get('/api/me').set('Authorization', `Bearer ${token}`);
+    expect(me.body).toMatchObject({ onShift: false, principal: false });
   });
 
   it('refuse les autres rôles et les appels sans token', async () => {
@@ -126,7 +166,10 @@ describe('GET /shifts/current', () => {
       id: sami,
       name: 'Nom sami',
       startedAt: expect.any(String) as string,
+      principal: false,
     });
+    // Amira est arrivée la première : c'est elle la principale.
+    expect(body.waiters[1]).toMatchObject({ id: amira, principal: true });
   });
 
   it('ignore les shifts terminés, les comptes désactivés et ceux qui ne sont plus serveurs', async () => {

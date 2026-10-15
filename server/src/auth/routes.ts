@@ -181,15 +181,18 @@ export function authRoutes(db: Db, config: Config): Router {
 
   router.get('/me', requireStaff(db, config), async (_req, res) => {
     const { user } = getAuth(res);
-    const { rows } = await db.query<{ on_shift: boolean }>(
-      `SELECT EXISTS (SELECT 1 FROM shifts WHERE user_id = $1 AND ended_at IS NULL) AS on_shift`,
+    const { rows } = await db.query<{ principal: boolean }>(
+      `SELECT principal FROM shifts WHERE user_id = $1 AND ended_at IS NULL`,
       [user.id],
     );
+    const shift = rows[0];
     res.json({
       id: user.id,
       name: user.name,
       role: user.role,
-      onShift: rows[0]?.on_shift ?? false,
+      onShift: shift !== undefined,
+      // Serveur principal en shift (docs/api.md v1.8) : c'est lui qui gère l'argent.
+      principal: shift?.principal ?? false,
     });
   });
 

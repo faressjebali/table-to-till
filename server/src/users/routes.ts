@@ -150,6 +150,17 @@ export function userRoutes(db: Db, config: Config): Router {
 
       const newRole = role ?? before.role;
       const newActive = active ?? before.active;
+      // Un serveur en shift garde son rôle et son compte jusqu'à la fin de son shift :
+      // le principal ne doit pas perdre sa caisse sans clôture.
+      if (newRole !== before.role || newActive !== before.active) {
+        const { rowCount } = await client.query(
+          `SELECT 1 FROM shifts WHERE user_id = $1 AND ended_at IS NULL`,
+          [id],
+        );
+        if (rowCount) {
+          throw new HttpError(409, 'INVALID_STATUS', 'This waiter is on shift');
+        }
+      }
       if (id === me.id && !newActive) {
         throw new HttpError(409, 'INVALID_STATUS', 'You cannot disable your own account');
       }

@@ -212,6 +212,28 @@ describe('PATCH /users/:id', () => {
     expect(await auditActions()).toEqual([]);
   });
 
+  it('refuse de changer le rôle ou de désactiver un serveur en shift, puis l’accepte après son shift', async () => {
+    const { token } = await managerToken();
+    const id = await createUser('sami');
+    await db.query(`INSERT INTO shifts (user_id, principal) VALUES ($1, true)`, [id]);
+    for (const body of [{ role: 'barista' }, { active: false }]) {
+      const res = await api
+        .patch(`/api/users/${String(id)}`)
+        .set('Authorization', `Bearer ${token}`)
+        .send(body);
+      expect(res.status).toBe(409);
+      expect(res.body).toMatchObject({ error: { code: 'INVALID_STATUS' } });
+    }
+    expect(await auditActions()).toEqual([]);
+
+    await db.query(`UPDATE shifts SET ended_at = now() WHERE user_id = $1`, [id]);
+    const res = await api
+      .patch(`/api/users/${String(id)}`)
+      .set('Authorization', `Bearer ${token}`)
+      .send({ role: 'barista' });
+    expect(res.status).toBe(200);
+  });
+
   it('laisse désactiver un autre manager tant qu’il en reste un actif', async () => {
     const { token } = await managerToken();
     const autre = await createUser('autre', 'manager');

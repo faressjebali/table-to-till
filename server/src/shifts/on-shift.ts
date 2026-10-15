@@ -4,13 +4,13 @@ import type { Config } from '../config.js';
 import type { Db } from '../db.js';
 import { HttpError } from '../errors.js';
 
-export type WaiterOnShift = { id: number; name: string; startedAt: Date };
+export type WaiterOnShift = { id: number; name: string; startedAt: Date; principal: boolean };
 
 // Serveurs en shift : shift ouvert, compte actif et toujours serveur.
 // Sert aux notifications et au refus des commandes QR quand personne ne peut les confirmer.
 export async function waitersOnShift(db: Db): Promise<WaiterOnShift[]> {
   const { rows } = await db.query<WaiterOnShift>(
-    `SELECT u.id, u.name, s.started_at AS "startedAt"
+    `SELECT u.id, u.name, s.started_at AS "startedAt", s.principal
        FROM shifts s JOIN users u ON u.id = s.user_id
       WHERE s.ended_at IS NULL AND u.disabled_at IS NULL AND u.role = 'waiter'
       ORDER BY s.started_at, u.id`,

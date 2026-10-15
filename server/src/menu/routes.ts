@@ -5,6 +5,7 @@ import type { Role } from '../auth/sessions.js';
 import type { Config } from '../config.js';
 import { audit, type Db } from '../db.js';
 import { HttpError, validationError } from '../errors.js';
+import { isOnShift } from '../shifts/on-shift.js';
 import { localized, loadMenuItems, onMenu, toMenuItem, type Station } from './items.js';
 
 const idParam = z.coerce.number().int().positive();
@@ -78,6 +79,10 @@ export function menuRoutes(db: Db, config: Config): Router {
       if (!row) throw new HttpError(404, 'NOT_FOUND', 'Menu item not found');
       if (!stationsByRole[user.role].includes(row.station)) {
         throw new HttpError(403, 'FORBIDDEN', 'Forbidden');
+      }
+      // Un serveur hors shift ne voit que « Démarrer mon shift » (docs/api.md v1.8).
+      if (user.role === 'waiter' && !(await isOnShift(db, user.id))) {
+        throw new HttpError(403, 'NOT_ON_SHIFT', 'Not on shift');
       }
 
       const soldOut = !body.data.available;

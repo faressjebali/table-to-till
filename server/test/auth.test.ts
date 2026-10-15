@@ -168,7 +168,13 @@ describe('GET /me et vérification du token', () => {
     const token = await tokenFor('sami');
     const me = () => request(app()).get('/api/me').set('Authorization', `Bearer ${token}`);
 
-    expect((await me()).body).toEqual({ id, name: 'Nom sami', role: 'waiter', onShift: false });
+    expect((await me()).body).toEqual({
+      id,
+      name: 'Nom sami',
+      role: 'waiter',
+      onShift: false,
+      principal: false,
+    });
     await db.query(`INSERT INTO shifts (user_id) VALUES ($1)`, [id]);
     expect((await me()).body).toMatchObject({ onShift: true });
   });
