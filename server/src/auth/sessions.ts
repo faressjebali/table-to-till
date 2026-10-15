@@ -1,7 +1,7 @@
 import { createHash, randomBytes } from 'node:crypto';
 import type { Db } from '../db.js';
 
-export type Role = 'waiter' | 'barista' | 'chef' | 'manager' | 'owner';
+export type Role = 'manager' | 'waiter' | 'barista' | 'chef';
 
 export type AuthContext = {
   sessionId: number;

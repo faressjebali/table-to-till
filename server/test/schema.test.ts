@@ -89,9 +89,12 @@ describe('contraintes du schéma', () => {
     );
   });
 
-  it('refuse un rôle inconnu', async () => {
+  it('refuse un rôle inconnu, y compris l’ancien rôle owner', async () => {
     await expectRejected(
       `INSERT INTO users (login, name, password_hash, role) VALUES ('x', 'X', 'x', 'admin')`,
+    );
+    await expectRejected(
+      `INSERT INTO users (login, name, password_hash, role) VALUES ('x', 'X', 'x', 'owner')`,
     );
   });
 

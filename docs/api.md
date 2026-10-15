@@ -1,6 +1,6 @@
 # Contrat d'API — Coffee QR
 
-> Brouillon v1.4 (15 octobre 2026). À relire ensemble. Toute modification passe par une PR dédiée, annoncée à l'autre.
+> Brouillon v1.5 (15 octobre 2026). À relire ensemble. Toute modification passe par une PR dédiée, annoncée à l'autre.
 
 ## 1. Règles générales
 
@@ -24,7 +24,7 @@
 | Staff (PWA) | `Authorization: Bearer <token>` obtenu par `POST /auth/login` (30 jours) |
 | Agent caisse | `X-Agent-Key: <secret>` (dans le `.env` du PC de caisse) |
 
-Rôles : `waiter`, `barista`, `chef`, `manager`, `owner`. Chaque endpoint staff indique les rôles autorisés.
+Rôles : `manager`, `waiter` (serveur), `barista`, `chef` (affiché « Cuisinier »). Chaque endpoint staff indique les rôles autorisés.
 Un compte désactivé est refusé partout (`ACCOUNT_DISABLED`) et ses connexions temps réel sont coupées.
 
 ### Erreurs
@@ -222,7 +222,7 @@ Toutes les actions de cette section qui modifient quelque chose exigent d'être 
 | POST | `/orders/:id/reject` | `{ reason? }` | Order |
 | POST | `/staff-orders` | `{ clientRequestId, tableId, lines: [ { menuItemId, quantity, note, choices? } ] }` | 201 Order (`source: "waiter"`, `confirmed`) |
 | POST | `/direct-sales` | `{ clientRequestId, lines: [ { menuItemId, quantity, note, choices? } ], method: "cash" \| "card" }` | 201 Order (`source: "direct"`, `confirmed`) — serveur en shift ou barista |
-| PATCH | `/menu-items/:id/availability` | `{ available }` | MenuItem — serveur, manager, owner : tout article ; barista : `station` `bar` ou `both` ; chef : `kitchen` ou `both` ; sinon `FORBIDDEN` |
+| PATCH | `/menu-items/:id/availability` | `{ available }` | MenuItem — serveur, manager : tout article ; barista : `station` `bar` ou `both` ; chef : `kitchen` ou `both` ; sinon `FORBIDDEN` |
 | POST | `/push/subscribe` | abonnement Web Push | 204 (tout le staff) |
 
 Vente directe (`/direct-sales`) : le serveur attribue une **table fictive libre** (sinon 409 `NO_FREE_VIRTUAL_TABLE`), crée la commande, puis met en file `enter_order` et `pay_table` (dans cet ordre) ; la session de la table fictive est fermée. Le numéro de la table fictive est dans `Order.table`.
@@ -239,7 +239,7 @@ Vente directe (`/direct-sales`) : le serveur attribue une **table fictive libre*
 | POST | `/tables/:id/pay` | `{ method: "cash" \| "card" }` | tâche `pay_table` ; la session est fermée tout de suite dans l'app ; 409 `CANCEL_WAITING` si une annulation de la table est `waiting` |
 | POST | `/tables/:id/print-bill` | — | tâche `print_bill` |
 
-- **Offrir** : un article est offert **dès le départ**, jamais après avoir été tapé en caisse. L'offert crée une ligne `gifted` (dans la session de la table si `tableId`), qui sort du stock. Rôles : serveur, barista (offres staff), manager, owner.
+- **Offrir** : un article est offert **dès le départ**, jamais après avoir été tapé en caisse. L'offert crée une ligne `gifted` (dans la session de la table si `tableId`), qui sort du stock. Rôles : serveur, barista (offres staff), manager. La raison `owner` veut dire « offert à un patron » : ce n'est pas un rôle.
 - Toutes ces actions sont écrites dans le journal d'actions.
 
 ### Échecs caisse (serveur, manager)
@@ -250,7 +250,7 @@ Vente directe (`/direct-sales`) : le serveur attribue une **table fictive libre*
 | POST | `/pos/jobs/:id/retry` | — | `failed` → `queued` |
 | POST | `/pos/jobs/:id/resolve-manually` | `{ note? }` | `failed` ou `waiting` → `manual` (fait à la main au comptoir) ; commande `pos.status = "manual"` |
 
-## 6. Manager (rôle `manager`, `owner`)
+## 6. Manager (rôle `manager`)
 
 | Méthode | Chemin | Rôle |
 | --- | --- | --- |
@@ -264,7 +264,7 @@ Vente directe (`/direct-sales`) : le serveur attribue une **table fictive libre*
 | POST | `/uploads` | photo (jpg/png ≤ 5 Mo) → `{ photoUrl }` (redimensionnée 800 px, WebP) |
 | GET | `/audit-log` | journal d'actions, paginé |
 
-Rôles barista / chef / owner : endpoints ajoutés avec le stock (achats, arrivages, avaries, inventaire, besoins, offres staff, rapports d'écarts). Le patron (`owner`) a tous les droits de la manager.
+Rôles barista / chef : endpoints ajoutés avec le stock (achats, arrivages, avaries, inventaire, besoins, offres staff, rapports d'écarts).
 
 ## 7. Agent caisse
 
@@ -310,6 +310,7 @@ Après reconnexion, chaque client recharge via REST.
 
 | Version | Date | Changement |
 | --- | --- | --- |
+| v1.5 brouillon | 2026-10-15 | Quatre rôles : `manager`, `waiter`, `barista`, `chef` (affiché « Cuisinier ») ; rôle `owner` supprimé (la raison `owner` de `POST /gifts` reste : offert à un patron) |
 | v1.4 brouillon | 2026-10-15 | `VALIDATION_ERROR` : format de `details` précisé (`{ fields: [{ field, message }] }`) |
 | v1.3 brouillon | 2026-10-15 | Groupes de choix : une liste d'options par groupe ; `eggs` (omelette ou brouillés) et `eggs_with_benedict` (Sweet Start) ; `MenuItem.choiceGroups` = liste de clés |
 | v1.2 brouillon | 2026-10-15 | Décisions de la PR : `station` et droits de rupture par poste ; `choiceGroups` et `choices` (formules, Kids Menu) ; statut `expired` et `ORDER_PENDING_TTL_SECONDS` ; `NO_WAITER_ON_SHIFT` ; session ouverte à la confirmation ; tables `real` / `virtual` et `layout` ; `/direct-sales` ; champs des tâches caisse, `pay_table` (`cash` / `card`) et `print_bill` avec `expectedTotal` ; remise staff (`beneficiary`) ; annulation `waiting` et `CANCEL_WAITING` ; offert sans `orderLineId` |

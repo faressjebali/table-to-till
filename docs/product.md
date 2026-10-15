@@ -54,8 +54,8 @@ Version 2 — refonte du 15 octobre 2026.
 - **Plat de la semaine** : choisi en début de semaine. La manager le met à jour dans l'app (nom FR/EN, description, photo, prix, code) et le crée elle-même dans LegacyPOS. L'agent le saisit ensuite par son code, comme tout autre article. Le code peut changer chaque semaine : seul compte que la manager saisisse dans l'app le même code que dans la caisse.
 - **Rupture** : un article peut être marqué indisponible à tout moment ; il est grisé immédiatement chez les clients. Qui la marque dépend du poste de l'article (colonne `station` de `menu.csv`) :
   - articles du bar (boissons) : le **barista** ;
-  - articles de la cuisine : le **chef** ;
-  - Carrot cake, Fondant au chocolat, Cookie, Formules petit-déjeuner et Kids Menu (`both`) : barista **ou** chef ;
+  - articles de la cuisine : le **cuisinier** ;
+  - Carrot cake, Fondant au chocolat, Cookie, Formules petit-déjeuner et Kids Menu (`both`) : barista **ou** cuisinier ;
   - le **serveur** et la **manager** peuvent marquer n'importe quel article.
 - Deux espressos distincts : **Espresso** (6,5 DT) et **Espresso premium** (9,5 DT), chacun avec son code.
 
@@ -87,9 +87,8 @@ Version 2 — refonte du 15 octobre 2026.
 | --- | --- |
 | Serveur | Plan des tables, commandes, confirmer/rejeter les commandes QR, saisir une commande, encaisser n'importe quelle table (s'il est en shift), imprimer l'addition, remise staff 20 %, annulation, transfert d'article, changement de table, offrir un article, marquer n'importe quel article en rupture |
 | Barista | Saisir et encaisser une vente directe (comptoir), ruptures des articles du bar (+ articles `both`), achats, pointer l'arrivage de marchandise, déclarer les avaries, enregistrer les offres café du staff et des patrons |
-| Chef | Ruptures des articles de la cuisine (+ articles `both`), pointer les arrivages de la cuisine, déclarer les avaries de la cuisine, saisir l'inventaire de la cuisine, signaler les besoins (ce qu'il faut racheter) |
+| Cuisinier | Ruptures des articles de la cuisine (+ articles `both`), pointer les arrivages de la cuisine, déclarer les avaries de la cuisine, saisir l'inventaire de la cuisine, signaler les besoins (ce qu'il faut racheter) |
 | Manager | Comptes et rôles, édition du menu (articles, photos, prix, codes, horaires, Plat de la semaine, jus de saison), ruptures, tout voir |
-| Patron | Tout ce que fait la manager, tout voir, offrir des articles (offres des patrons), rapports de stock et d'écarts |
 
 Tout le monde a la PWA sur son téléphone et peut y accéder à tout moment ; ce qu'il voit dépend de son rôle.
 
@@ -160,7 +159,7 @@ Commande tapée par un serveur : on démarre directement à l'étape 4.
 
 ## 11. Questions ouvertes (à trancher après la vidéo)
 
-Tranchées le 15/10/2026 (voir §5 et `docs/decisions.md`) : encaissement depuis l'app, addition depuis l'app, remise staff, annulation par −1, offert, pas de division de l'addition, plan selon la disposition de la salle, Plat de la semaine, rôles Chef et Patron.
+Tranchées le 15/10/2026 (voir §5 et `docs/decisions.md`) : encaissement depuis l'app, addition depuis l'app, remise staff, annulation par −1, offert, pas de division de l'addition, plan selon la disposition de la salle, Plat de la semaine.
 
 Restent :
 

@@ -2,15 +2,13 @@ import type { Config } from '../config.js';
 import { audit, type Db } from '../db.js';
 import { hashPassword } from './passwords.js';
 
-// Premier compte manager, créé depuis .env tant qu'il n'existe ni manager ni patron.
+// Premier compte manager, créé depuis .env tant qu'il n'existe aucun manager.
 // Mot de passe temporaire : changement obligatoire à la première connexion.
 export async function ensureFirstManager(db: Db, config: Config): Promise<'created' | 'skipped'> {
   const { firstManagerLogin: login, firstManagerTempPassword: password } = config;
   if (!login || !password) return 'skipped';
 
-  const { rowCount } = await db.query(
-    `SELECT 1 FROM users WHERE role IN ('manager', 'owner') LIMIT 1`,
-  );
+  const { rowCount } = await db.query(`SELECT 1 FROM users WHERE role = 'manager' LIMIT 1`);
   if (rowCount) return 'skipped';
 
   const { rows } = await db.query<{ id: number }>(

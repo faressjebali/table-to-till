@@ -321,9 +321,9 @@ describe('premier compte manager', () => {
     expect(await ensureFirstManager(db, config)).toBe('skipped');
   });
 
-  it('n’est pas créé s’il existe déjà un manager ou un patron, ou sans réglage', async () => {
+  it('n’est pas créé s’il existe déjà un manager, ou sans réglage', async () => {
     expect(await ensureFirstManager(db, baseConfig)).toBe('skipped');
-    await createUser('patron', { role: 'owner' });
+    await createUser('gerante', { role: 'manager' });
     expect(await ensureFirstManager(db, config)).toBe('skipped');
     const { rowCount } = await db.query(`SELECT 1 FROM users`);
     expect(rowCount).toBe(1);
