@@ -13,7 +13,8 @@
 | `pos_code` | Code produit LegacyPOS |
 | `availability` | Vide = toujours ; `until 12:00` ; `until 15:00` ; `mon-fri 08:00-15:00`. « until » part de l'ouverture du café (8h00) |
 | `suggested_extras` | Noms d'extras suggérés sous l'article, séparés par `;` |
-| `note_hint` | Aide affichée au client pour préciser son choix dans la note |
+| `note_hint` | Aide facultative affichée au-dessus de la note libre (ex. « Sans sucre ? ») ; vide pour les formules, dont les choix passent par `choice_groups` |
+| `choice_groups` | Groupes de choix obligatoires, séparés par `;` (voir `docs/api.md` § ChoiceGroup) : `hot_drink`, `eggs`, `eggs_with_benedict`, `seasonal_juice`. Seulement pour les formules petit-déjeuner et le Kids Menu |
 | `photo` | Nom du fichier photo |
 | `station` | Poste qui marque la rupture : `bar` (barista), `kitchen` (chef), `both` (barista ou chef : Carrot cake, Fondant, Cookie, Formules, Kids Menu). Le serveur et la manager peuvent marquer tout article |
 
