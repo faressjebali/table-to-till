@@ -2,10 +2,33 @@
 
 Une ligne par décision, la plus récente en haut. Format : `AAAA-MM-JJ — décision — pourquoi`.
 
+- 2026-10-15 — Granola, Fruits et Extras sucrés : poste `both` (barista ou cuisinier) ; Espresso premium et Décaféiné premium exclus des formules (cafés jusqu'à 8,5 DT) — confirmé par l'équipe
+- 2026-10-15 — Rapports de la manager : Shift 1 = 8h–15h, Shift 2 = 15h–22h, par horaire, indépendamment des clôtures — jours comparables
+- 2026-10-15 — Plus d'offre « patron » par le barista ou le principal : patrons et managers passent toujours par leurs commandes dans l'app — une seule façon de faire, stock fiable
+- 2026-10-15 — Annulation : choix obligatoire « déjà préparé » (sort du stock, perte) ou « pas préparé » (ne sort pas) — le stock doit savoir ce qui a été consommé
+- 2026-10-15 — Annulation du dernier article d'une table : on attend un autre article sur la table (commande du client suivant) ; sinon (fin de journée) le principal retire l'annulation et la table est encaissée normalement, le serveur paie l'article — c'est ce que fait le café, la caisse et l'app restent d'accord
+- 2026-10-15 — Tâche caisse en échec : tout serveur en shift peut réessayer, seul le principal peut la marquer faite à la main — « fait à la main » peut toucher à l'argent
+- 2026-10-15 — Clôture forcée : si le principal part sans clôturer, la manager force la passation vers un autre serveur en shift (qui compte les espèces), ou termine le shift en fin de journée ; noté au journal et sur le PDF — la caisse ne reste jamais bloquée
+- 2026-10-15 — Une seule caisse : un serveur principal à la fois (le premier arrivé) encaisse, gère remises, annulations, offerts, dépenses et clôture ; un renfort (jours chargés) prend et confirme les commandes, sert, transfère, change de table et imprime l'addition, sans jamais toucher à l'argent ; tout compte dans la caisse du principal, le journal garde le vrai nom — c'est ainsi que travaille le café ; remplace l'attribution par serveur et la clôture par serveur
+- 2026-10-15 — Une clôture par créneau (Shift 1, Shift 2), faite par le principal ; passation au principal suivant (il accepte, reçoit les tables ouvertes et les commandes en attente) ; le principal ne part pas avec des tables ouvertes ; en fin de journée, toutes les tables sont encaissées et fermées — pas de table ni d'argent sans responsable
+- 2026-10-15 — Vente directe, offres du barista et du cuisinier, commandes des managers, dépenses : dans la caisse du principal en cours (plus de « pour le compte d'un serveur ») — une seule caisse
+- 2026-10-15 — Un manager offre à un client depuis sa propre table (« offre client »), confirmée par un serveur comme ses commandes — un seul écran pour la manager
+- 2026-10-15 — Ruptures : le serveur seulement en shift ; hors shift il voit seulement « Démarrer mon shift » — cohérence de l'écran hors shift
+- 2026-10-15 — Pas de changement de rôle ni de désactivation d'un serveur en shift — un principal ne peut pas perdre sa caisse sans clôture
+- 2026-10-15 — Après 22h (et avant 8h), seul le menu QR est bloqué ; les serveurs peuvent saisir, les horaires propres des articles restent appliqués — un client encore là doit pouvoir commander
+- 2026-10-15 — Annulation ou transfert d'une partie d'une ligne : la ligne est coupée en deux (la partie annulée ou transférée devient une nouvelle ligne liée) — une ligne n'a qu'un état
+- 2026-10-15 — Remise sur toute la table : seulement les articles déjà commandés à ce moment-là — usage du café
+- 2026-10-15 — Nouvel article : créé d'abord dans LegacyPOS (code), puis dans l'app avec le même prix ; un changement de prix se fait dans les deux le même jour — l'agent vérifie le total avant d'encaisser
+- 2026-10-15 — Seule la clôture de l'app sert au café (pas celle de LegacyPOS) — elle contient les offerts et elle est archivée en PDF
+- 2026-10-15 — Panne d'Internet : rattrapage des ventes tapées directement en caisse, à définir plus tard
+- 2026-10-15 — Commandes des managers : chaque compte manager a sa table fictive réservée ; sa commande est notifiée aux serveurs en shift, confirmée par un serveur qui la transmet oralement, jamais tapée en caisse ; c'est un offert (hors CA, sort du stock) dans la clôture du créneau ; refusée sans serveur en shift — les managers et patrons consomment sur place sans passer par la caisse
+- 2026-10-15 — Rôle manager : 2 managers et 3 patrons, tous avec le rôle `manager` ; un manager peut offrir un article à un client (offre client, à son nom) — pas besoin d'un rôle Patron
+- 2026-10-15 — ~~Offres du barista et du cuisinier (staff, patrons) : dans la clôture du serveur en shift — chaque offert apparaît dans une clôture~~ (remplacée : une seule caisse, voir plus haut)
+- 2026-10-15 — Café ou thé des formules : les thés à 6,5 DT et les cafés jusqu'à 8,5 DT de la carte (remplace « n'importe quel café ou thé ») — règle du café
 - 2026-10-15 — Plan des tables et commandes gérés seulement par les serveurs en shift, lecture comprise ; la manager n'y a pas accès mais a des rapports (CA, espèces / carte, dépenses, articles sortis en temps réel, par shift ou par date, PDF de clôture ; statistiques et courbes plus tard) — chacun son rôle ; la manager pilote par les chiffres
-- 2026-10-15 — Clôture de shift : chaque serveur clôture son shift (compte ses espèces) et un PDF par serveur est archivé (CA tapé, espèces / carte, dépenses, offerts, annulations, espèces attendues / comptées / écart) ; pas de fond de caisse ; tables ouvertes passées au shift suivant ; Shift 1 = démarré avant 15h, Shift 2 après — usage du café
-- 2026-10-15 — Attribution : la vente compte pour le serveur qui l'a saisie ou confirmée, l'argent pour celui qui a encaissé ; une vente directe du barista compte pour un serveur en shift qu'il choisit ; sans serveur en shift, pas de vente directe — chaque serveur répond de sa caisse
-- 2026-10-15 — Dépenses payées en espèces pendant le shift (fournisseur, extra, achats courants) saisies par le serveur en shift, déduites de ses espèces attendues — la clôture doit tomber juste
+- 2026-10-15 — ~~Clôture de shift : chaque serveur clôture son shift (compte ses espèces) et un PDF par serveur est archivé (CA tapé, espèces / carte, dépenses, offerts, annulations, espèces attendues / comptées / écart) ; pas de fond de caisse ; tables ouvertes passées au shift suivant ; Shift 1 = démarré avant 15h, Shift 2 après — usage du café~~ (remplacée : une seule caisse, clôture par créneau, voir plus haut)
+- 2026-10-15 — ~~Attribution : la vente compte pour le serveur qui l'a saisie ou confirmée, l'argent pour celui qui a encaissé ; une vente directe du barista compte pour un serveur en shift qu'il choisit ; sans serveur en shift, pas de vente directe — chaque serveur répond de sa caisse~~ (remplacée : une seule caisse, voir plus haut)
+- 2026-10-15 — ~~Dépenses payées en espèces pendant le shift (fournisseur, extra, achats courants) saisies par le serveur en shift, déduites de ses espèces attendues — la clôture doit tomber juste~~ (remplacée : une seule caisse, clôture par créneau, voir plus haut)
 - 2026-10-15 — Offert enregistré seulement dans `gifts`, jamais comme ligne de commande (plus de statut `gifted`) — impossible qu'il parte en caisse
 - 2026-10-15 — Changement de table : la session et ses commandes passent à la nouvelle table (ancienne table dans le journal) — une commande est toujours sur la table où elle se trouve
 - 2026-10-15 — Transfert d'article : la ligne d'origine passe `transferred`, une nouvelle ligne liée à l'originale est créée sur la table d'arrivée, jamais renvoyée en saisie caisse — garder la trace des deux tables
@@ -13,12 +36,12 @@ Une ligne par décision, la plus récente en haut. Format : `AAAA-MM-JJ — déc
 - 2026-10-15 — Comptes : mot de passe temporaire généré par le serveur et montré une seule fois ; pas de désactivation de soi-même ni de retrait de son propre rôle manager, toujours au moins un manager actif ; rapports de stock et d'écarts donnés à la manager — ne jamais perdre l'accès à la gestion des comptes
 - 2026-10-15 — Quatre rôles : manager, serveur (`waiter`), barista, cuisinier (`chef`, affiché « Cuisinier ») ; le rôle Patron (`owner`) est supprimé, les offres des patrons restent une raison d'offert — remplace la décision Chef / Patron ci-dessous
 - 2026-10-15 — Migrations avec node-pg-migrate, écrites en SQL pur (`server/migrations/`), client `pg` ; `npm run migrate` chaque matin via `scripts/start-day.sh` — outil maintenu, SQL lisible par toute l'équipe, pas d'ORM imposé
-- 2026-10-15 — Offerts dans une table `gifts` : un article est offert dès le départ, jamais après avoir été tapé en caisse ; sans table (offres staff, patrons) seulement dans `gifts` ; sur une table, `gifts` liée à une ligne `gifted` jamais envoyée en caisse — traçabilité du stock (modèle revu dans)
+- 2026-10-15 — ~~Offerts dans une table `gifts` : un article est offert dès le départ, jamais après avoir été tapé en caisse ; sans table (offres staff, patrons) seulement dans `gifts` ; sur une table, `gifts` liée à une ligne `gifted` jamais envoyée en caisse — traçabilité du stock~~ (remplacée : offert seulement dans `gifts`, jamais comme ligne de commande, voir plus haut)
 - 2026-10-15 — Œufs des formules : deux groupes de choix, `eggs` (omelette ou brouillés : Sunrise, Full) et `eggs_with_benedict` (+ Bénédicte : Sweet) ; Boost Start a ses Bénédicte imposés — les options diffèrent selon la formule sur le menu papier
 - 2026-10-15 — Le calcul du stock est une fonctionnalité principale : tout calculer pour minimiser les écarts inexpliqués — besoin principal du café
 - 2026-10-15 — Annulation = commander −1 ; jamais sur le dernier article d'une table (l'annulation attend d'autres articles) — LegacyPOS plante sinon
-- 2026-10-15 — Remise staff 20 % exactement, par tout serveur en shift, sur toute la table ou des articles, note « pour qui » obligatoire — usage actuel du café
-- 2026-10-15 — Encaissement en une fois (ni division ni paiement mixte) par tout serveur en shift ; addition imprimée depuis l'app par l'agent — usage actuel
+- 2026-10-15 — Remise staff 20 % exactement, par tout serveur en shift (depuis : par le principal seulement, voir « Une seule caisse »), sur toute la table ou des articles, note « pour qui » obligatoire — usage actuel du café
+- 2026-10-15 — Encaissement en une fois (ni division ni paiement mixte) par tout serveur en shift (depuis : par le principal seulement, voir « Une seule caisse ») ; addition imprimée depuis l'app par l'agent — usage actuel
 - 2026-10-15 — Offert déclaré dès le départ, jamais après saisie en caisse ; il sort du stock — éviter les annulations, stock exact
 - 2026-10-15 — Plan des tables de l'app : disposition de la salle ; tables fictives attribuées automatiquement aux ventes directes — demande de l'équipe
 - 2026-10-15 — ~~Chef : ruptures, arrivages, avaries, inventaire et besoins de la cuisine ; Patron : droits de la manager + rapports de stock et d'écarts — rôles réels~~ (remplacée : quatre rôles, plus de Patron, voir plus haut)
@@ -44,7 +67,7 @@ Une ligne par décision, la plus récente en haut. Format : `AAAA-MM-JJ — déc
 - 2026-10-15 — Horaires automatiques : formules jusqu'à 12h, œufs jusqu'à 15h, plat de la semaine lun–ven 8h–15h
 - 2026-10-15 — Menu complet en français et en anglais, avec une photo par article
 - 2026-10-15 — Chaque membre du staff a son compte (identifiant + mot de passe, session 30 jours) et un rôle ; la manager crée les comptes
-- 2026-10-15 — Notifications des commandes QR uniquement aux serveurs en shift (1 ou 2 par shift)
+- 2026-10-15 — Notifications des commandes QR (et des managers) uniquement aux serveurs en shift : le principal et, les jours chargés, le renfort
 - 2026-10-15 — L'app serveur sert aussi de mini-caisse : plan des tables, saisie de commande pour clients sans téléphone
 - 2026-10-15 — Argent en millimes entiers ; prix calculés par le serveur ; QR avec jeton aléatoire
 - 2026-10-15 — Stack : Node.js/TypeScript, Express, Socket.IO, PostgreSQL ; React/Vite (PWA) ; Python/pywinauto (agent)

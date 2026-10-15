@@ -75,9 +75,14 @@ const CHOICE_GROUPS: {
     key: 'hot_drink',
     nameFr: 'Café ou thé',
     nameEn: 'Coffee or tea',
+    // Règle du café (15/10/2026) : les thés à 6,5 DT et les cafés jusqu'à 8,5 DT.
     options: (items) =>
       items
-        .filter((i) => i.categoryFr === 'Cafés' || i.categoryFr === 'Thé & Infusion')
+        .filter(
+          (i) =>
+            (i.categoryFr === 'Thé & Infusion' && i.price === 6500) ||
+            (i.categoryFr === 'Cafés' && i.price !== null && i.price <= 8500),
+        )
         .map((i) => i.nameFr),
   },
   {

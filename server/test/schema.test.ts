@@ -156,21 +156,36 @@ describe('contraintes du schéma', () => {
     await expectRejected(sql, [orderId, menuItemId, 1, 0, 'x'.repeat(201)]);
   });
 
-  it('accepte un offert sans table et refuse un offert sans note ou lié à une ligne sans table', async () => {
-    const sql = `INSERT INTO gifts (table_id, order_line_id, menu_item_id, quantity, reason, given_by, note)
+  it('accepte un offert sans table et refuse un offert sans note ou rattaché à une session sans table', async () => {
+    const sql = `INSERT INTO gifts (table_id, table_session_id, menu_item_id, quantity, reason, given_by, note)
                  VALUES ($1, $2, $3, 1, $4, $5, $6)`;
     await db.query(sql, [null, null, menuItemId, 'staff', waiterId, 'café de Sami']);
     await expectRejected(sql, [null, null, menuItemId, 'staff', waiterId, '']);
     await expectRejected(sql, [null, null, menuItemId, 'friend', waiterId, 'x']);
+    await expectRejected(sql, [null, null, menuItemId, 'owner', waiterId, 'café du patron']);
 
+    const sessionId = await insertId(
+      `INSERT INTO table_sessions (table_id) VALUES ($1) RETURNING id`,
+      [tableId],
+    );
+    await expectRejected(sql, [
+      null,
+      sessionId,
+      menuItemId,
+      'unhappy_customer',
+      waiterId,
+      'attente',
+    ]);
+    await db.query(sql, [tableId, sessionId, menuItemId, 'unhappy_customer', waiterId, 'attente']);
+  });
+
+  it("refuse le statut de ligne gifted : un offert n'est jamais une ligne de commande", async () => {
     const orderId = await confirmedOrder();
-    const lineId = await insertId(
+    await expectRejected(
       `INSERT INTO order_lines (order_id, menu_item_id, name_fr, quantity, unit_price, status)
-       VALUES ($1, $2, 'Espresso', 1, 6500, 'gifted') RETURNING id`,
+       VALUES ($1, $2, 'Espresso', 1, 6500, 'gifted')`,
       [orderId, menuItemId],
     );
-    await expectRejected(sql, [null, lineId, menuItemId, 'unhappy_customer', waiterId, 'attente']);
-    await db.query(sql, [tableId, lineId, menuItemId, 'unhappy_customer', waiterId, 'attente']);
   });
 
   it('refuse deux tâches caisse en cours en même temps', async () => {

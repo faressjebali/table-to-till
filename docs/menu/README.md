@@ -16,7 +16,7 @@
 | `note_hint_fr` / `note_hint_en` | Aide facultative affichée au client au-dessus de la note libre (ex. « Sans sucre ? » / « No sugar? ») : les deux langues ou aucune. Ce n'est pas la note du client. Vide pour les formules, dont les choix passent par `choice_groups` |
 | `choice_groups` | Groupes de choix obligatoires, séparés par `;` (voir `docs/api.md` § ChoiceGroup) : `hot_drink`, `eggs`, `eggs_with_benedict`, `seasonal_juice`. Seulement pour les formules petit-déjeuner et le Kids Menu |
 | `photo` | Nom du fichier photo |
-| `station` | Poste qui marque la rupture : `bar` (barista), `kitchen` (chef), `both` (barista ou chef : Carrot cake, Fondant, Cookie, Formules, Kids Menu). Le serveur et la manager peuvent marquer tout article |
+| `station` | Poste qui marque la rupture : `bar` (barista), `kitchen` (chef), `both` (barista ou chef : Carrot cake, Fondant, Cookie, Granola, Fruits, Extras sucrés, Formules, Kids Menu). Le serveur et la manager peuvent marquer tout article |
 
 ## À compléter
 
@@ -26,6 +26,6 @@
 - [ ] **Plat de la semaine** : absent du menu papier, la manager le met à jour chaque semaine dans l'app
 - [x] Extras suggérés sous les **Œufs** : confirmés
 - [x] Poste des Formules et du Kids Menu : `both`
-- [ ] Vérifier le poste (`station`) des Extras sucrés, de Granola et Fruits (mis en `kitchen`)
+- [x] Poste des Extras sucrés, de Granola et Fruits : `both` (confirmé le 15/10/2026)
 - [x] Prix du **Carrot cake** : 9,5 DT (confirmé sur le menu)
 - [x] **Jus de saison** : pas vendu seul (seulement dans les formules et le Kids Menu)

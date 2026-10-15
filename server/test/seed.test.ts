@@ -100,7 +100,17 @@ describe('parseMenuCsv sur docs/menu/menu.csv', () => {
 
   it('construit les groupes de choix de docs/api.md', () => {
     const options = Object.fromEntries(menu.choiceGroups.map((g) => [g.key, g.options]));
-    expect(options.hot_drink).toHaveLength(22);
+    expect(options.hot_drink).toEqual([
+      'Lemon grove',
+      'Ginger calm',
+      'Verveine',
+      'Camomille',
+      'Espresso',
+      'Espresso macchiato',
+      'Latte macchiato',
+      'Capuccino',
+      'Americano',
+    ]);
     expect(options.seasonal_juice).toEqual(['Grenade']);
     expect(options.eggs).toEqual(['Omelette nature', 'Œufs brouillés']);
     expect(options.eggs_with_benedict).toEqual([

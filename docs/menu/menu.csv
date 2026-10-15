@@ -44,14 +44,14 @@ Cakes & Sweets,Cakes & Sweets,Fondant au chocolat,Chocolate fondant,"Chocolat no
 Cakes & Sweets,Cakes & Sweets,Carrot cake,Carrot cake,"Carotte, noix, cannelle, noix de muscade, sucre brun, cream cheese","Carrot, walnuts, cinnamon, nutmeg, brown sugar, cream cheese",9.5,,,,,,,,both
 Cakes & Sweets,Cakes & Sweets,Pancakes au caramel beurre salé,Salted caramel pancakes,"Caramel beurre salé, chantilly, amandes effilées","Salted caramel, whipped cream, flaked almonds",20,,,Pommes cannelle caramélisées,,,,,kitchen
 Cakes & Sweets,Cakes & Sweets,Pain perdu,French toast,"Caramel beurre salé, chantilly, noisettes pralinées","Salted caramel, whipped cream, praline hazelnuts",13.5,,,Pommes cannelle caramélisées,,,,,kitchen
-Cakes & Sweets,Cakes & Sweets,Granola,Granola,"Yaourt grec, granola aux fruits secs, dattes, sirop de dattes","Greek yogurt, dried fruit granola, dates, date syrup",19,,,,,,,,kitchen
+Cakes & Sweets,Cakes & Sweets,Granola,Granola,"Yaourt grec, granola aux fruits secs, dattes, sirop de dattes","Greek yogurt, dried fruit granola, dates, date syrup",19,,,,,,,,both
 Cakes & Sweets,Cakes & Sweets,Cookie chocolat,Chocolate cookie,,,5,,,,,,,,both
 Cakes & Sweets,Cakes & Sweets,Cookie pomme cannelle,Apple cinnamon cookie,,,4.5,,,,,,,,both
-Cakes & Sweets,Cakes & Sweets,Fruits,Fruit,Fruits de saison,Seasonal fruit,12,,,,,,,,kitchen
-Extras sucrés,Sweet extras,Amandes effilées,Flaked almonds,,,5.5,,,,,,,,kitchen
-Extras sucrés,Sweet extras,Caramel,Caramel,,,3,,,,,,,,kitchen
-Extras sucrés,Sweet extras,Chantilly,Whipped cream,,,3.5,,,,,,,,kitchen
-Extras sucrés,Sweet extras,Pommes cannelle caramélisées,Caramelized cinnamon apples,,,4.5,,,,,,,,kitchen
+Cakes & Sweets,Cakes & Sweets,Fruits,Fruit,Fruits de saison,Seasonal fruit,12,,,,,,,,both
+Extras sucrés,Sweet extras,Amandes effilées,Flaked almonds,,,5.5,,,,,,,,both
+Extras sucrés,Sweet extras,Caramel,Caramel,,,3,,,,,,,,both
+Extras sucrés,Sweet extras,Chantilly,Whipped cream,,,3.5,,,,,,,,both
+Extras sucrés,Sweet extras,Pommes cannelle caramélisées,Caramelized cinnamon apples,,,4.5,,,,,,,,both
 Kids Menu,Kids Menu,Kids Menu (Cookie),Kids Menu (Cookie),Mini Burger + Cookie + Jus de saison,Mini burger + cookie + seasonal juice,30.5,,,,,,seasonal_juice,,both
 Kids Menu,Kids Menu,Kids Menu (Pancakes),Kids Menu (Pancakes),Mini Burger + Pancakes + Jus de saison,Mini burger + pancakes + seasonal juice,27,,,,,,seasonal_juice,,both
 Plat de la semaine,Dish of the week,Plat de la semaine,Dish of the week,À définir chaque semaine,Changes every week,,,mon-fri 08:00-15:00,,,,,,kitchen

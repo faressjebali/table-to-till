@@ -4,6 +4,7 @@ import type { MenuItem, MenuResponse } from '../api/types';
 
 const allDay: MenuItem['availability'] = { days: [1, 2, 3, 4, 5, 6, 7], from: null, until: null };
 const untilNoon: MenuItem['availability'] = { ...allDay, until: '12:00' };
+const untilThree: MenuItem['availability'] = { ...allDay, until: '15:00' };
 
 const base = {
   photoUrl: null,
@@ -80,9 +81,36 @@ export const mockMenu: MenuResponse = {
       ],
     },
     {
+      id: 4,
+      name: { fr: 'Œufs', en: 'Eggs' },
+      sortOrder: 3,
+      items: [
+        {
+          ...base,
+          id: 30,
+          categoryId: 4,
+          name: { fr: 'Omelette nature', en: 'Plain omelette' },
+          description: null,
+          price: 13500,
+          availability: untilThree,
+          station: 'kitchen',
+        },
+        {
+          ...base,
+          id: 31,
+          categoryId: 4,
+          name: { fr: 'Œufs brouillés', en: 'Scrambled eggs' },
+          description: null,
+          price: 9000,
+          availability: untilThree,
+          station: 'kitchen',
+        },
+      ],
+    },
+    {
       id: 3,
       name: { fr: 'Cafés', en: 'Coffees' },
-      sortOrder: 3,
+      sortOrder: 4,
       items: [
         {
           ...base,
@@ -106,11 +134,12 @@ export const mockMenu: MenuResponse = {
     },
   ],
   choiceGroups: [
-    { key: 'hot_drink', name: { fr: 'Café ou thé', en: 'Coffee or tea' }, optionIds: [20, 21] },
+    // Thés à 6 DT et cafés jusqu'à 8,5 DT : pas l'Espresso premium (9 DT).
+    { key: 'hot_drink', name: { fr: 'Café ou thé', en: 'Coffee or tea' }, optionIds: [20] },
     {
       key: 'eggs',
       name: { fr: 'Omelette ou œufs brouillés', en: 'Omelette or scrambled eggs' },
-      optionIds: [],
+      optionIds: [30, 31],
     },
   ],
 };
