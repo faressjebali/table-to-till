@@ -78,7 +78,7 @@ Version 2 — refonte du 15 octobre 2026.
 - **Un compte par personne.** Identifiant (numéro de téléphone ou nom d'utilisateur) + mot de passe.
 - Connexion **une fois par téléphone**, session de **30 jours**.
 - La **manager crée les comptes** avec un mot de passe temporaire et attribue un **rôle**. Changement de mot de passe obligatoire à la première connexion.
-- La manager peut changer un rôle, réinitialiser un mot de passe, **désactiver** un compte (sessions coupées immédiatement).
+- La manager peut changer un rôle, réinitialiser un mot de passe, **désactiver** un compte (sessions coupées immédiatement). On ne peut pas se désactiver soi-même ni retirer son propre rôle de manager ; il reste toujours au moins un manager actif.
 - Blocage temporaire après 5 essais ratés. Mots de passe hachés.
 - **Journal d'actions** : qui a fait quoi et quand.
 
@@ -88,7 +88,7 @@ Version 2 — refonte du 15 octobre 2026.
 | Serveur | Plan des tables, commandes, confirmer/rejeter les commandes QR, saisir une commande, encaisser n'importe quelle table (s'il est en shift), imprimer l'addition, remise staff 20 %, annulation, transfert d'article, changement de table, offrir un article, marquer n'importe quel article en rupture |
 | Barista | Saisir et encaisser une vente directe (comptoir), ruptures des articles du bar (+ articles `both`), achats, pointer l'arrivage de marchandise, déclarer les avaries, enregistrer les offres café du staff et des patrons |
 | Cuisinier | Ruptures des articles de la cuisine (+ articles `both`), pointer les arrivages de la cuisine, déclarer les avaries de la cuisine, saisir l'inventaire de la cuisine, signaler les besoins (ce qu'il faut racheter) |
-| Manager | Comptes et rôles, édition du menu (articles, photos, prix, codes, horaires, Plat de la semaine, jus de saison), ruptures, tout voir |
+| Manager | Comptes et rôles, édition du menu (articles, photos, prix, codes, horaires, Plat de la semaine, jus de saison), ruptures, rapports de stock et d'écarts, tout voir |
 
 Tout le monde a la PWA sur son téléphone et peut y accéder à tout moment ; ce qu'il voit dépend de son rôle.
 

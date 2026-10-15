@@ -2,6 +2,7 @@
 
 Une ligne par décision, la plus récente en haut. Format : `AAAA-MM-JJ — décision — pourquoi`.
 
+- 2026-10-15 — Comptes : mot de passe temporaire généré par le serveur et montré une seule fois ; pas de désactivation de soi-même ni de retrait de son propre rôle manager, toujours au moins un manager actif ; rapports de stock et d'écarts donnés à la manager — ne jamais perdre l'accès à la gestion des comptes
 - 2026-10-15 — Quatre rôles : manager, serveur (`waiter`), barista, cuisinier (`chef`, affiché « Cuisinier ») ; le rôle Patron (`owner`) est supprimé, les offres des patrons restent une raison d'offert — remplace la décision Chef / Patron ci-dessous
 - 2026-10-15 — Migrations avec node-pg-migrate, écrites en SQL pur (`server/migrations/`), client `pg` ; `npm run migrate` chaque matin via `scripts/start-day.sh` — outil maintenu, SQL lisible par toute l'équipe, pas d'ORM imposé
 - 2026-10-15 — Offerts dans une table `gifts` : sans table (offres staff, patrons) seulement dans `gifts` ; article déjà commandé et offert = `gifts` liée à la ligne, qui passe `gifted` — traçabilité du stock

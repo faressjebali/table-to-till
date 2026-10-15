@@ -1,6 +1,6 @@
 # Contrat d'API — Coffee QR
 
-> Brouillon v1.5 (15 octobre 2026). À relire ensemble. Toute modification passe par une PR dédiée, annoncée à l'autre.
+> Brouillon v1.6 (15 octobre 2026). À relire ensemble. Toute modification passe par une PR dédiée, annoncée à l'autre.
 
 ## 1. Règles générales
 
@@ -183,6 +183,17 @@ Limites anti-abus (valeurs de départ, réglables dans `.env`) : 5 commandes QR 
 - **Une seule** tâche `in_progress` à la fois. Les tâches sont traitées dans l'ordre de création.
 - Si une tâche reste `in_progress` plus de 2 minutes sans heartbeat de l'agent, elle passe `failed` (`lastError: "AGENT_TIMEOUT"`) et le staff est alerté — **jamais remise automatiquement en file**, pour ne pas saisir deux fois la même chose.
 
+### User (compte staff)
+```json
+{ "id": 4, "name": "Amira", "login": "amira", "role": "waiter", "active": true,
+  "mustChangePassword": false, "locked": false,
+  "lastLoginAt": "2026-10-20T07:58:12Z", "createdAt": "2026-10-15T10:00:00Z" }
+```
+- `active` : `false` = compte désactivé par la manager (refusé partout, `ACCOUNT_DISABLED`).
+- `locked` : bloqué temporairement après trop d'essais de connexion ratés (`ACCOUNT_LOCKED`).
+- `lastLoginAt` : dernière connexion réussie ; `null` si jamais connecté.
+- Le mot de passe et son empreinte ne sont jamais renvoyés.
+
 ## 3. Client (sans connexion)
 
 | Méthode | Chemin | Corps | Réponse |
@@ -254,15 +265,24 @@ Vente directe (`/direct-sales`) : le serveur attribue une **table fictive libre*
 
 | Méthode | Chemin | Rôle |
 | --- | --- | --- |
-| GET/POST | `/users` | lister / créer (nom, login, rôle, mot de passe temporaire) |
-| PATCH | `/users/:id` | changer rôle, désactiver/réactiver |
-| POST | `/users/:id/reset-password` | nouveau mot de passe temporaire |
+| GET | `/users` | `{ users: [User] }` (tous les comptes, sans pagination) |
+| POST | `/users` | `{ name, login, role }` → 201 `{ user: User, temporaryPassword }` |
+| PATCH | `/users/:id` | `{ role?, active? }` (changer de rôle, désactiver/réactiver) → User |
+| POST | `/users/:id/reset-password` | — → `{ user: User, temporaryPassword }` |
 | GET/POST/PUT/DELETE | `/categories`, `/menu-items` | édition du menu (noms FR/EN, prix, code, horaires, extras suggérés, `station`, `choiceGroups`) ; dont le Plat de la semaine |
 | GET/PUT | `/admin/choice-groups/:key` | options d'un groupe de choix (ex. `seasonal_juice` : `{ optionIds: [..] }`) |
 | GET/POST/PATCH | `/admin/tables` | lister, créer, renommer les tables ; `kind` (`real` / `virtual`) et `layout` (plan de la salle) |
 | POST | `/admin/tables/:id/rotate-token` | nouveau jeton QR (l'ancien QR ne marche plus) → `{ tableToken }` ; 409 `INVALID_STATUS` pour une table `virtual` |
 | POST | `/uploads` | photo (jpg/png ≤ 5 Mo) → `{ photoUrl }` (redimensionnée 800 px, WebP) |
 | GET | `/audit-log` | journal d'actions, paginé |
+
+Comptes (`/users`) :
+- Le **serveur génère** le mot de passe temporaire (aléatoire, 10 caractères faciles à taper : minuscules et chiffres, sans `0 o 1 l i`). Il est renvoyé **une seule fois**, dans la réponse ; il n'est jamais stocké en clair. Changement obligatoire à la connexion suivante (`mustChangePassword: true`).
+- `login` déjà pris (sans tenir compte des majuscules) → 400 `VALIDATION_ERROR` sur le champ `login`.
+- Désactiver (`active: false`) coupe tout de suite toutes les sessions du compte (`session:revoked`, `reason: "ACCOUNT_DISABLED"`).
+- Réinitialiser le mot de passe débloque le compte (`locked: false`) et coupe toutes ses sessions.
+- On ne peut pas se désactiver soi-même ni retirer son propre rôle `manager`, et il reste toujours au moins un manager actif → 409 `INVALID_STATUS`.
+- Toutes ces actions sont écrites dans le journal d'actions.
 
 Rôles barista / chef : endpoints ajoutés avec le stock (achats, arrivages, avaries, inventaire, besoins, offres staff, rapports d'écarts).
 
@@ -310,6 +330,7 @@ Après reconnexion, chaque client recharge via REST.
 
 | Version | Date | Changement |
 | --- | --- | --- |
+| v1.6 brouillon | 2026-10-15 | Forme `User` ; corps et réponses de `/users` ; mot de passe temporaire généré par le serveur et renvoyé une seule fois ; règles de désactivation (pas soi-même, toujours un manager actif) |
 | v1.5 brouillon | 2026-10-15 | Quatre rôles : `manager`, `waiter`, `barista`, `chef` (affiché « Cuisinier ») ; rôle `owner` supprimé (la raison `owner` de `POST /gifts` reste : offert à un patron) |
 | v1.4 brouillon | 2026-10-15 | `VALIDATION_ERROR` : format de `details` précisé (`{ fields: [{ field, message }] }`) |
 | v1.3 brouillon | 2026-10-15 | Groupes de choix : une liste d'options par groupe ; `eggs` (omelette ou brouillés) et `eggs_with_benedict` (Sweet Start) ; `MenuItem.choiceGroups` = liste de clés |
