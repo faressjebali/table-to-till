@@ -1,0 +1,9 @@
+node_modules/
+dist/
+build/
+coverage/
+package-lock.json
+
+# Docs et données écrites à la main : on ne les reformate pas
+*.md
+*.csv
