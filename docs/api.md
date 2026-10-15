@@ -1,6 +1,6 @@
 # Contrat d'API — Coffee QR
 
-> Brouillon v1.8 (15 octobre 2026). À relire ensemble. Toute modification passe par une PR dédiée, annoncée à l'autre.
+> Brouillon v1.8.1 (15 octobre 2026). À relire ensemble. Toute modification passe par une PR dédiée, annoncée à l'autre.
 
 ## 1. Règles générales
 
@@ -58,7 +58,7 @@ Un compte désactivé est refusé partout (`ACCOUNT_DISABLED`) et ses connexions
 | 500 | `INTERNAL_ERROR` | Bug serveur. `message` générique ; le détail va seulement dans les logs serveur, jamais au client |
 | 503 | `SERVICE_UNAVAILABLE` | Base de données indisponible ou maintenance ; l'app propose de réessayer |
 
-Limites anti-abus (valeurs de départ, réglables dans `.env`) : 5 commandes QR par jeton de table par 10 minutes ; 10 essais de connexion par adresse IP par minute.
+Limites anti-abus (valeurs de départ, réglables dans `.env`) : 5 commandes QR par jeton de table par 10 minutes (`QR_ORDER_RATE_LIMIT`, `QR_ORDER_RATE_WINDOW_MINUTES`) ; 10 essais de connexion par adresse IP par minute (`LOGIN_RATE_LIMIT_PER_MINUTE`).
 
 ## 2. Formes de données
 
@@ -137,7 +137,7 @@ Limites anti-abus (valeurs de départ, réglables dans `.env`) : 5 commandes QR 
 - `manager` : `{ id, name, forClient }` pour une commande `manager` (`forClient: true` = offerte à un client), sinon `null`.
 - `confirmedBy` : `{ id, name }` de la personne qui a confirmé ou saisi la commande (serveur principal ou renfort, barista pour une vente directe), pour le journal ; `null` tant qu'elle est `pending`. La vente compte dans la caisse du principal.
 - `status` : `pending` → `confirmed` | `rejected` | `expired`. Une commande `waiter` ou `direct` est créée directement `confirmed`.
-- `expired` : commande `pending` (`qr` ou `manager`) non traitée après `ORDER_PENDING_TTL_SECONDS` (300 s par défaut). La table ou le manager en est informé (`order:updated`).
+- `expired` : commande `pending` (`qr` ou `manager`) non traitée après `ORDER_PENDING_TTL_SECONDS` (300 s par défaut, même délai pour les deux). La table ou le manager en est informé (`order:updated`).
 - Commande `manager` : `unitPrice` et `lineTotal` valent 0, `total` 0 ; jamais de tâche caisse (`pos: null`) ; jamais de session de table (`tableSessionId` toujours `null`). C'est un offert : hors CA, elle sort du stock et figure dans la clôture (`managerOrders`).
 - `tableSessionId` : `null` tant que la commande est `pending` (ou si elle est rejetée ou expirée). C'est la **confirmation** qui rattache la commande à la session de la table, et l'ouvre si la table était libre.
 - `choices` : présent sur les lignes d'articles ayant des `choiceGroups`, un choix par groupe. Les choix valent pour toute la quantité de la ligne ; pour des choix différents, le client ajoute une autre ligne.
@@ -283,7 +283,7 @@ Après la fermeture du café (22h00) et avant l'ouverture (8h00), `/staff-orders
 | Méthode | Chemin | Corps | Réponse |
 | --- | --- | --- | --- |
 | POST | `/shifts/start` | — | `{ shiftId, startedAt, principal }` (premier serveur en shift = principal, sinon renfort) |
-| POST | `/shifts/end` | renfort : — ; principal : `{ countedCash, handoverTo? }` (espèces comptées, millimes ; `handoverTo` = id d'un serveur en shift) | renfort : 204 (fin de son shift). Principal **avec** `handoverTo` : 202 `{ handoverId }` (passation en attente, voir plus bas). Principal **sans** `handoverTo` (fin de journée) : 201 ShiftClosure ; refusé si un autre serveur est en shift (`VALIDATION_ERROR` sur `handoverTo`), ou s'il reste une table ouverte ou une commande en attente (409 `OPEN_TABLES`) |
+| POST | `/shifts/end` | renfort : — ; principal : `{ countedCash, handoverTo? }` (espèces comptées, millimes ; `handoverTo` = id d'un serveur en shift) | renfort : 204 (fin de son shift). Principal **avec** `handoverTo` : 202 `{ handoverId }` (passation en attente, voir plus bas). Principal **sans** `handoverTo` (fin de journée) : 201 ShiftClosure ; refusé (409 `OPEN_TABLES`) s'il reste une table ouverte, une commande en attente ou un renfort en shift |
 | GET | `/handovers/pending` | — | `{ items: [ { id, from: { id, name }, openTables: [ { id, number, openTotal } ], pendingOrders, createdAt } ] }` (passations qui m'attendent) |
 | POST | `/handovers/:id/accept` | `{ countedCash }` seulement pour une passation forcée (c'est alors moi qui compte) | 201 ShiftClosure (la clôture du principal sortant est générée maintenant ; je deviens principal ; tables ouvertes et commandes en attente me sont passées ; son shift se termine) |
 | POST | `/handovers/:id/decline` | — | 204 (le principal sortant reste principal) |
@@ -315,7 +315,7 @@ Vente directe (`/direct-sales`) : le serveur attribue une **table fictive libre*
 | POST | `/tables/:id/pay` | `{ method: "cash" \| "card" }` | tâche `pay_table` ; la session est fermée tout de suite dans l'app ; 409 `CANCEL_WAITING` si une annulation de la table est `waiting` |
 | POST | `/tables/:id/print-bill` | — | tâche `print_bill` |
 
-- **Offrir** : un article est offert **dès le départ**, jamais après avoir été tapé en caisse. L'offert crée un Gift (rattaché à la session ouverte de la table si `tableId`), jamais une ligne de commande ; il sort du stock. Rôles : principal, barista, chef (les offres du barista et du cuisinier comptent dans la clôture en cours). La manager n'utilise pas `/gifts` : ses offres et celles des patrons sont des commandes `manager`.
+- **Offrir** : un article est offert **dès le départ**, jamais après avoir été tapé en caisse. L'offert crée un Gift (rattaché à la session ouverte de la table si `tableId`), jamais une ligne de commande ; il sort du stock. Rôles : principal (`unhappy_customer` ou `staff`), barista et chef (`staff` seulement, sinon 403 `FORBIDDEN`) ; les offres du barista et du cuisinier comptent dans la clôture en cours. La manager n'utilise pas `/gifts` : ses offres et celles des patrons sont des commandes `manager`.
 - Toutes ces actions sont écrites dans le journal d'actions.
 
 ## 5 bis. Commandes des managers (rôle `manager`)
@@ -417,6 +417,7 @@ Après reconnexion, chaque client recharge via REST.
 
 | Version | Date | Changement |
 | --- | --- | --- |
+| v1.8.1 brouillon | 2026-10-15 | Fin de journée avec un renfort encore en shift : 409 `OPEN_TABLES` (comme au § 1), plus de `VALIDATION_ERROR` sur `handoverTo` ; `/gifts` : barista et chef seulement avec `reason: "staff"` ; variables `.env` de la limite des commandes QR ; `ORDER_PENDING_TTL_SECONDS` vaut aussi pour les commandes des managers |
 | v1.8 brouillon | 2026-10-15 | Une seule caisse : serveur **principal** et **renfort** (`NOT_PRINCIPAL`), clôture par créneau (`ShiftClosure.principal`, `handedOverTo`, `managerOrders`), passation (`/handovers`, `handover:*`, `HANDOVER_PENDING`), fin de journée (`OPEN_TABLES`) ; plus de `Order.waiterId` ni de `waiterId` dans `/direct-sales` ; commandes des managers (`/manager-orders`, `source: "manager"`, `Order.manager`, `Table.managerId`) ; `/gifts` sans la manager, avec le chef ; découpage des lignes (`splitFromLineId`) ; remise sur les lignes présentes ; ruptures du serveur seulement en shift ; annulation `prepared` (perte de stock ou non) et retrait d'une annulation en attente (`withdraw-cancel`, tâche `withdrawn`) ; « fait à la main » réservé au principal ; plus de raison d'offert `owner` (patrons = commandes `manager`) ; rapports `slot` par horaire ; pas de changement de rôle d'un serveur en shift ; après 22h seul le menu QR est bloqué ; `Expense.closureId` ; `/me` et `/shifts/current` avec `principal` ; clôture forcée par la manager (`/admin/force-handover`, `forcedBy`) ; exemple `expectedCash` corrigé (233 000) ; exemple Order `confirmed` (il était `pending` avec une session) ; `/staff-orders` sur une table `real` ; `HANDOVER_PENDING` bloque aussi la vente directe |
 | v1.7.1 brouillon | 2026-10-15 | Sans changement de forme : options de `hot_drink` (thés à 6,5 DT, cafés jusqu'à 8,5 DT) ; corrections des exemples (totaux 51 500, id du Gift) ; `/gifts` dans les exceptions du § 5 |
 | v1.7 brouillon | 2026-10-15 | Plan des tables, commandes, échecs caisse et leurs événements réservés aux serveurs **en shift** (lecture comprise) ; clôture de shift (`POST /shifts/end` avec `countedCash` → ShiftClosure, PDF) ; dépenses (`/expenses`, Expense) ; `Order.waiterId` ; `/direct-sales` pour le compte d'un serveur en shift (`waiterId`) ; rapports de la manager (`/reports/sales`, `/closures`, `report:updated`) ; offerts : forme Gift, plus de ligne `gifted` |
