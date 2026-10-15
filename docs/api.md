@@ -1,6 +1,6 @@
 # Contrat d'API — Coffee QR
 
-> Brouillon v1.3 (15 octobre 2026). À relire ensemble. Toute modification passe par une PR dédiée, annoncée à l'autre.
+> Brouillon v1.4 (15 octobre 2026). À relire ensemble. Toute modification passe par une PR dédiée, annoncée à l'autre.
 
 ## 1. Règles générales
 
@@ -35,7 +35,7 @@ Un compte désactivé est refusé partout (`ACCOUNT_DISABLED`) et ses connexions
 
 | HTTP | Codes | Quand |
 | --- | --- | --- |
-| 400 | `VALIDATION_ERROR` | Corps ou paramètres invalides (`details` liste les champs) |
+| 400 | `VALIDATION_ERROR` | Corps ou paramètres invalides : `details: { fields: [{ field, message }] }` (`field` = chemin du champ, ex. `lines.0.quantity`) |
 | 401 | `UNAUTHORIZED` | Token absent, invalide ou expiré |
 | 401 | `PASSWORD_CHANGE_REQUIRED` | Première connexion : changer le mot de passe d'abord |
 | 403 | `FORBIDDEN` | Mauvais rôle |
@@ -310,6 +310,7 @@ Après reconnexion, chaque client recharge via REST.
 
 | Version | Date | Changement |
 | --- | --- | --- |
+| v1.4 brouillon | 2026-10-15 | `VALIDATION_ERROR` : format de `details` précisé (`{ fields: [{ field, message }] }`) |
 | v1.3 brouillon | 2026-10-15 | Groupes de choix : une liste d'options par groupe ; `eggs` (omelette ou brouillés) et `eggs_with_benedict` (Sweet Start) ; `MenuItem.choiceGroups` = liste de clés |
 | v1.2 brouillon | 2026-10-15 | Décisions de la PR : `station` et droits de rupture par poste ; `choiceGroups` et `choices` (formules, Kids Menu) ; statut `expired` et `ORDER_PENDING_TTL_SECONDS` ; `NO_WAITER_ON_SHIFT` ; session ouverte à la confirmation ; tables `real` / `virtual` et `layout` ; `/direct-sales` ; champs des tâches caisse, `pay_table` (`cash` / `card`) et `print_bill` avec `expectedTotal` ; remise staff (`beneficiary`) ; annulation `waiting` et `CANCEL_WAITING` ; offert sans `orderLineId` |
 | v1.1 brouillon | 2026-10-15 | Codes d'erreur 413/429/500/503 et `ACCOUNT_DISABLED` ; `clientRequestId` anti-doublon ; `unavailableReason` ; id et statut des lignes, `discountPercent` ; sessions de table ; statuts des tâches caisse, réessai et résolution manuelle ; tables et rotation du jeton QR ; `/shifts/current` ; authentification Socket.IO ; pagination ; `/health` |
