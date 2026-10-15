@@ -89,15 +89,15 @@ Version 2 — refonte du 15 octobre 2026. Clôture de shift et rapports de la ma
 | Rôle | Privilèges connus |
 | --- | --- |
 | Serveur | **En shift seulement** (voir Shifts : principal ou renfort) : plan des tables, commandes, confirmer/rejeter les commandes QR et celles des managers, saisir une commande, transfert d'article, changement de table, imprimer l'addition, ruptures de tout article. **Principal seulement** : encaisser, remise staff 20 %, annulation, offrir un article, dépenses, clôture et passation. Hors shift : seulement « Démarrer mon shift » |
-| Barista | Saisir et encaisser une vente directe (comptoir), ruptures des articles du bar (+ articles `both`), achats, pointer l'arrivage de marchandise, déclarer les avaries, enregistrer les offres du staff |
-| Cuisinier | Ruptures des articles de la cuisine (+ articles `both`), pointer les arrivages de la cuisine, déclarer les avaries de la cuisine, saisir l'inventaire de la cuisine, signaler les besoins (ce qu'il faut racheter), enregistrer les offres du staff |
+| Barista | Saisir et encaisser une vente directe (comptoir), ruptures des articles du bar (+ articles `both`), achats, pointer l'arrivage de marchandise, déclarer les avaries, enregistrer les offres **au staff** (pas aux clients) |
+| Cuisinier | Ruptures des articles de la cuisine (+ articles `both`), pointer les arrivages de la cuisine, déclarer les avaries de la cuisine, saisir l'inventaire de la cuisine, signaler les besoins (ce qu'il faut racheter), enregistrer les offres **au staff** (pas aux clients) |
 | Manager | Comptes et rôles, édition du menu (articles, photos, prix, codes, horaires, Plat de la semaine, jus de saison), ruptures, rapports (CA, articles sortis, clôtures, statistiques), rapports de stock et d'écarts, **commander pour sa table** et y offrir un article à un client (voir Commandes des managers). **Pas** d'accès au plan des tables ni aux commandes des clients |
 
 Le rôle Manager regroupe les **2 managers et les 3 patrons** : tous ont le même rôle et les mêmes droits.
 
 La manager ne peut pas changer le rôle d'un serveur en shift ni le désactiver : il doit d'abord terminer son shift.
 
-Tout le monde a la PWA sur son téléphone et peut y accéder à tout moment ; ce qu'il voit dépend de son rôle.
+Tout le monde a la PWA sur son téléphone et peut y accéder à tout moment ; ce qu'il voit dépend de son rôle. Le staff a des iPhone : sur iPhone, la PWA doit être **installée sur l'écran d'accueil** (iOS 16.4+), sinon les notifications ne marchent pas ; l'app le demande.
 
 Le plan des tables et les commandes sont gérés **entièrement par les serveurs en shift**, consultation comprise : ni la manager (sauf ses propres commandes), ni le barista, ni le cuisinier, ni un serveur hors shift n'y ont accès. Un serveur hors shift voit seulement « Démarrer mon shift ».
 
@@ -149,7 +149,7 @@ Le plan des tables et les commandes sont gérés **entièrement par les serveurs
   - Deux types d'annulation, à choisir à chaque fois : **déjà préparé** (l'article sort du stock : perte) ou **pas préparé** (rien ne sort du stock). En caisse, c'est le même −1. Annuler une partie d'une ligne (1 capuccino sur 3) **coupe la ligne en deux** : la ligne d'origine garde 2 capuccinos, une nouvelle ligne de 1 est annulée avec sa note.
 - **Transférer un article** d'une table à une autre. Saisi en caisse par l'agent. Transférer une partie d'une ligne la coupe en deux de la même façon.
 - **Changer de table** (déplacer toute la table vers une autre). Saisi en caisse par l'agent.
-- **Offrir un article** : enregistré **uniquement dans l'app**, à part des commandes, **jamais tapé en caisse**. Un article est offert **dès le départ** : on n'offre jamais un article déjà tapé. Cas : client mécontent, offres du staff. Qui, quoi, à qui, pourquoi (note). Le barista et le cuisinier enregistrent aussi les offres du staff. Les managers et patrons ne passent pas par là : ils commandent depuis leur table, y compris pour offrir à un client (voir Commandes des managers). L'article offert **sort du stock**.
+- **Offrir un article** : enregistré **uniquement dans l'app**, à part des commandes, **jamais tapé en caisse**. Un article est offert **dès le départ** : on n'offre jamais un article déjà tapé. Cas : client mécontent, offres du staff. Qui, quoi, à qui, pourquoi (note). Le barista et le cuisinier enregistrent aussi les offres **au staff** ; l'offert à un client mécontent est réservé au principal. Les managers et patrons ne passent pas par là : ils commandent depuis leur table, y compris pour offrir à un client (voir Commandes des managers). L'article offert **sort du stock**.
 
 - Une tâche en échec côté caisse est signalée clairement à tous les serveurs en shift : chacun peut la **réessayer** ; seul le principal peut la marquer **faite à la main** au comptoir.
 
@@ -178,7 +178,7 @@ Commande tapée par un serveur : on démarre directement à l'étape 4.
 - **Un seul PIN caisse** dédié, stocké uniquement dans le `.env` du PC de caisse. Si l'écran PIN apparaît, l'agent le tape et continue.
 - **File unique** : une action à la fois (commande, encaissement, addition…).
 - **Partage de la caisse avec les humains** :
-  - l'agent n'agit que si personne n'a touché souris/clavier depuis quelques secondes **et** si l'écran est le plan des tables ;
+  - l'agent n'agit que si personne n'a touché souris/clavier depuis quelques secondes **et** si l'écran est le plan des tables (ou l'écran PIN, qu'il remplit avant de continuer) ;
   - bandeau « Saisie automatique en cours — ne touchez pas » pendant l'action ;
   - si un humain touche pendant l'action : arrêt immédiat, attente, vérification, reprise propre.
 - Vérifie l'écran attendu avant chaque étape ; sinon s'arrête, ne devine jamais, signale l'échec au serveur, journalise tout.

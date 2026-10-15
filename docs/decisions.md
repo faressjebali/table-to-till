@@ -2,6 +2,10 @@
 
 Une ligne par décision, la plus récente en haut. Format : `AAAA-MM-JJ — décision — pourquoi`.
 
+- 2026-10-15 — Le staff a des iPhone : la PWA demande à être installée sur l'écran d'accueil (iOS 16.4+) — sans installation, pas de notifications push sur iPhone
+- 2026-10-15 — Le barista et le cuisinier n'enregistrent que des offres au staff ; l'offert à un client mécontent est réservé au principal — l'argent et les clients restent à la caisse
+- 2026-10-15 — Un serveur ne travaille jamais seul de 8h à 22h : il y a toujours une passation entre le Shift 1 et le Shift 2, donc une clôture par créneau — usage du café
+- 2026-10-15 — Le jus de saison est aussi vendu seul (ex. Grenade dans « Jus »), en plus des formules et du Kids Menu — carte actuelle
 - 2026-10-15 — Granola, Fruits et Extras sucrés : poste `both` (barista ou cuisinier) ; Espresso premium et Décaféiné premium exclus des formules (cafés jusqu'à 8,5 DT) — confirmé par l'équipe
 - 2026-10-15 — Rapports de la manager : Shift 1 = 8h–15h, Shift 2 = 15h–22h, par horaire, indépendamment des clôtures — jours comparables
 - 2026-10-15 — Plus d'offre « patron » par le barista ou le principal : patrons et managers passent toujours par leurs commandes dans l'app — une seule façon de faire, stock fiable
@@ -34,7 +38,7 @@ Une ligne par décision, la plus récente en haut. Format : `AAAA-MM-JJ — déc
 - 2026-10-15 — Transfert d'article : la ligne d'origine passe `transferred`, une nouvelle ligne liée à l'originale est créée sur la table d'arrivée, jamais renvoyée en saisie caisse — garder la trace des deux tables
 - 2026-10-15 — Remise et annulation : bénéficiaire, notes, auteur et date stockés en colonnes (migration), en plus du journal — affichés dans l'app et le PDF de clôture
 - 2026-10-15 — Comptes : mot de passe temporaire généré par le serveur et montré une seule fois ; pas de désactivation de soi-même ni de retrait de son propre rôle manager, toujours au moins un manager actif ; rapports de stock et d'écarts donnés à la manager — ne jamais perdre l'accès à la gestion des comptes
-- 2026-10-15 — Quatre rôles : manager, serveur (`waiter`), barista, cuisinier (`chef`, affiché « Cuisinier ») ; le rôle Patron (`owner`) est supprimé, les offres des patrons restent une raison d'offert — remplace la décision Chef / Patron ci-dessous
+- 2026-10-15 — Quatre rôles : manager, serveur (`waiter`), barista, cuisinier (`chef`, affiché « Cuisinier ») ; le rôle Patron (`owner`) est supprimé ~~, les offres des patrons restent une raison d'offert~~ (depuis : patrons et managers passent par leurs commandes, voir plus haut) — remplace la décision Chef / Patron ci-dessous
 - 2026-10-15 — Migrations avec node-pg-migrate, écrites en SQL pur (`server/migrations/`), client `pg` ; `npm run migrate` chaque matin via `scripts/start-day.sh` — outil maintenu, SQL lisible par toute l'équipe, pas d'ORM imposé
 - 2026-10-15 — ~~Offerts dans une table `gifts` : un article est offert dès le départ, jamais après avoir été tapé en caisse ; sans table (offres staff, patrons) seulement dans `gifts` ; sur une table, `gifts` liée à une ligne `gifted` jamais envoyée en caisse — traçabilité du stock~~ (remplacée : offert seulement dans `gifts`, jamais comme ligne de commande, voir plus haut)
 - 2026-10-15 — Œufs des formules : deux groupes de choix, `eggs` (omelette ou brouillés : Sunrise, Full) et `eggs_with_benedict` (+ Bénédicte : Sweet) ; Boost Start a ses Bénédicte imposés — les options diffèrent selon la formule sur le menu papier
@@ -48,11 +52,11 @@ Une ligne par décision, la plus récente en haut. Format : `AAAA-MM-JJ — déc
 - 2026-10-15 — Vente directe : le barista ou le serveur la saisit dans l'app, l'agent la tape sur une table fictive (ex. 333) ; rien n'est jamais tapé directement en caisse — toutes les ventes passent par l'app pour le stock
 - 2026-10-15 — Encaissement depuis l'app : bouton Espèces / Carte, l'agent encaisse dans LegacyPOS — on prend l'argent sans attendre la caisse
 - 2026-10-15 — Kids Menu (Cookie / Pancakes) et Cookie (chocolat / pomme cannelle) en deux articles chacun, comme en caisse ; note libre gardée sur chaque ligne, non tapée en caisse pour une formule — reflète la caisse
-- 2026-10-15 — Formules et articles à choix : choix dans des listes (n'importe quel café ou thé, jus de saison), enregistrés pour le stock ; l'agent ne tape que la formule, sans note — la caisse n'a pas de note pour les formules, le stock a besoin de choix exacts
+- 2026-10-15 — Formules et articles à choix : choix dans des listes (café ou thé — depuis : thés à 6,5 DT et cafés jusqu'à 8,5 DT, voir plus haut —, jus de saison), enregistrés pour le stock ; l'agent ne tape que la formule, sans note — la caisse n'a pas de note pour les formules, le stock a besoin de choix exacts
 - 2026-10-15 — Plat de la semaine : la manager le crée dans LegacyPOS et entre son code dans l'app (même si le code change chaque semaine) ; l'agent le saisit par code — l'agent ne crée jamais d'article en caisse
 - 2026-10-15 — Aucun serveur en shift → commande QR refusée ; commande non confirmée expirée après 5 min (réglable) — le serveur doit avoir le temps d'aller vérifier à la table
 - 2026-10-15 — La confirmation (et non la commande en attente) ouvre la session de la table — pas de table « occupée » par une fausse commande
-- 2026-10-15 — Ruptures : barista pour le bar, chef pour la cuisine, les deux pour Carrot cake, Fondant, Cookie, Formules et Kids Menu ; serveur et manager pour tout — chacun connaît son poste
+- 2026-10-15 — Ruptures : barista pour le bar, chef pour la cuisine, les deux pour Carrot cake, Fondant, Cookie, Formules et Kids Menu (depuis : aussi Granola, Fruits et Extras sucrés, voir plus haut) ; serveur et manager pour tout (depuis : serveur seulement en shift) — chacun connaît son poste
 - 2026-10-15 — Café ouvert de 8h00 à 22h00 : formules 8h–12h, œufs 8h–15h — horaires réels
 - 2026-10-15 — Le menu de référence compte 97 articles (menu papier, Kids Menu et Cookie en deux articles, + Plat de la semaine) — vérifié contre le menu papier
 - 2026-10-15 — App serveur : remise 20 % et annulation avec note obligatoire, transfert d'article, changement de table, tous saisis en caisse par l'agent ; « offert » enregistré seulement dans l'app, jamais tapé en caisse

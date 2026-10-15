@@ -28,4 +28,4 @@
 - [x] Poste des Formules et du Kids Menu : `both`
 - [x] Poste des Extras sucrés, de Granola et Fruits : `both` (confirmé le 15/10/2026)
 - [x] Prix du **Carrot cake** : 9,5 DT (confirmé sur le menu)
-- [x] **Jus de saison** : pas vendu seul (seulement dans les formules et le Kids Menu)
+- [x] **Jus de saison** : vendu seul aussi (ex. Grenade dans « Jus »), en plus des formules et du Kids Menu (confirmé le 15/10/2026)
