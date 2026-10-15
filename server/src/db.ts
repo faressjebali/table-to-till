@@ -10,10 +10,23 @@ export function createPool(connectionString = process.env.DATABASE_URL): Db {
 // Journal d'actions : qui (NULL = système), quoi, sur quoi.
 export async function audit(
   db: Db | pg.PoolClient,
-  entry: { userId: number | null; action: string; entityType?: string; entityId?: number },
+  entry: {
+    userId: number | null;
+    action: string;
+    entityType?: string;
+    entityId?: number;
+    details?: Record<string, unknown>;
+  },
 ): Promise<void> {
   await db.query(
-    `INSERT INTO audit_log (user_id, action, entity_type, entity_id) VALUES ($1, $2, $3, $4)`,
-    [entry.userId, entry.action, entry.entityType ?? null, entry.entityId ?? null],
+    `INSERT INTO audit_log (user_id, action, entity_type, entity_id, details)
+     VALUES ($1, $2, $3, $4, $5)`,
+    [
+      entry.userId,
+      entry.action,
+      entry.entityType ?? null,
+      entry.entityId ?? null,
+      entry.details ?? null,
+    ],
   );
 }

@@ -91,9 +91,11 @@ export function authRoutes(db: Db, config: Config): Router {
       // Bon mot de passe : on peut dire que le compte est désactivé.
       if (user.disabled) throw new HttpError(403, 'ACCOUNT_DISABLED', 'Account disabled');
 
-      await db.query(`UPDATE users SET failed_logins = 0, locked_until = NULL WHERE id = $1`, [
-        user.id,
-      ]);
+      await db.query(
+        `UPDATE users SET failed_logins = 0, locked_until = NULL, last_login_at = now()
+          WHERE id = $1`,
+        [user.id],
+      );
       const token = await createSession(db, user.id, config.sessionDays);
       await audit(db, {
         userId: user.id,

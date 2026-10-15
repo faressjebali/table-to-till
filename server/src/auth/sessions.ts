@@ -1,7 +1,9 @@
 import { createHash, randomBytes } from 'node:crypto';
+import type { PoolClient } from 'pg';
 import type { Db } from '../db.js';
 
-export type Role = 'manager' | 'waiter' | 'barista' | 'chef';
+export const ROLES = ['manager', 'waiter', 'barista', 'chef'] as const;
+export type Role = (typeof ROLES)[number];
 
 export type AuthContext = {
   sessionId: number;
@@ -77,4 +79,12 @@ export async function revokeSession(db: Db, sessionId: number): Promise<void> {
   await db.query(`UPDATE sessions SET revoked_at = now() WHERE id = $1 AND revoked_at IS NULL`, [
     sessionId,
   ]);
+}
+
+// Déconnecte tous les téléphones d'un compte (désactivation, mot de passe réinitialisé).
+export async function revokeAllSessions(db: Db | PoolClient, userId: number): Promise<void> {
+  await db.query(
+    `UPDATE sessions SET revoked_at = now() WHERE user_id = $1 AND revoked_at IS NULL`,
+    [userId],
+  );
 }
