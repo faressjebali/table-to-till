@@ -4,6 +4,7 @@ import type { Config } from './config.js';
 import type { Db } from './db.js';
 import { errorBody, HttpError } from './errors.js';
 import { menuRoutes } from './menu/routes.js';
+import { shiftRoutes } from './shifts/routes.js';
 import { userRoutes } from './users/routes.js';
 
 export function createApp({ db, config }: { db: Db; config: Config }): Express {
@@ -14,6 +15,7 @@ export function createApp({ db, config }: { db: Db; config: Config }): Express {
   api.use(authRoutes(db, config));
   api.use(userRoutes(db, config));
   api.use(menuRoutes(db, config));
+  api.use(shiftRoutes(db, config));
   app.use('/api', api);
 
   app.use((_req, res) => {
