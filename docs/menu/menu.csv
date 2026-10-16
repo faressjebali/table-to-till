@@ -24,17 +24,17 @@ Extras,Extras,Œuf,Egg,,,2.5,,,,,,,,kitchen
 Extras,Extras,Steak,Steak,,,7.5,,,,,,,,kitchen
 Salades,Salads,Salade classique,Classic salad,"Laitue, tomates cerises, graines de courge, vinaigrette maison, pickles","Lettuce, cherry tomatoes, pumpkin seeds, house vinaigrette, pickles",11.5,,,,,,,,kitchen
 Salades,Salads,Salade César,Caesar salad,"Romaine, poulet cuit à basse température, tomates cerises, croûtons, Grana, sauce César","Romaine, slow-cooked chicken, cherry tomatoes, croutons, Grana, Caesar sauce",31.5,,,,,,,,kitchen
-Salades,Salads,Salade bourghoul,Bulgur salad,"Bourghoul, tomate, concombre, poivron, herbes fraîches, citron, huile d'olive, sauce tahini, feta, pickles","Bulgur, tomato, cucumber, bell pepper, fresh herbs, lemon, olive oil, tahini sauce, feta, pickles",17,,,,,,,,kitchen
-Plats,Mains,Power Bowl,Power Bowl,"Poulet cuit à basse température, bourghoul, champignons, épinards, Grana, œuf poché, salade classique, sauce César","Slow-cooked chicken, bulgur, mushrooms, spinach, Grana, poached egg, classic salad, Caesar sauce",31.5,,,,,,,,kitchen
-Plats,Mains,VG Power Bowl,VG Power Bowl,"Falafel, salade bourghoul, salade classique, sauce tahini","Falafel, bulgur salad, classic salad, tahini sauce",22,,,,,,,,kitchen
+Salades,Salads,Salade bulgur,Bulgur salad,"Bulgur, tomate, concombre, poivron, herbes fraîches, citron, huile d'olive, sauce tahini, feta, pickles","Bulgur, tomato, cucumber, bell pepper, fresh herbs, lemon, olive oil, tahini sauce, feta, pickles",16,,,,,,,,kitchen
+Plats,Mains,Power Bowl,Power Bowl,"Poulet cuit à basse température, bulgur, champignons, épinards, Grana, œuf poché, salade classique, sauce César","Slow-cooked chicken, bulgur, mushrooms, spinach, Grana, poached egg, classic salad, Caesar sauce",31.5,,,,,,,,kitchen
+Plats,Mains,VG Power Bowl,VG Power Bowl,"Falafel, salade bulgur, salade classique, sauce tahini","Falafel, bulgur salad, classic salad, tahini sauce",22,,,,,,,,kitchen
 Plats,Mains,Spiced Lentil Bowl,Spiced Lentil Bowl,"Riz Masala, œufs brouillés, Crispy chicken, avocat, sauce Général Tao, sweet chili sauce, pickles","Masala rice, scrambled eggs, Crispy chicken, avocado, General Tso sauce, sweet chili sauce, pickles",36.5,,,,,,,,kitchen
 Starters,Starters,"Sardines à l'huile, pan con tomato","Sardines in oil, pan con tomato","Sardines à l'huile, Pan con tomato, salade classique","Sardines in oil, pan con tomato, classic salad",11,,,,,,,,kitchen
 Starters,Starters,"Filet de poulet, sauce César","Chicken fillet, Caesar sauce","Poulet cuit à basse température, salade classique","Slow-cooked chicken, classic salad",15.5,,,,,,,,kitchen
 Starters,Starters,Falafel,Falafel,"Falafel, hommous, sauce tahini, salade classique","Falafel, hummus, tahini sauce, classic salad",19.5,,,,,,,,kitchen
 Starters,Starters,Chicken Tenders,Chicken Tenders,"Poulet Crispy, sauce Général Tao, graines de sésame, herbes fraîches, pickles","Crispy chicken, General Tso sauce, sesame seeds, fresh herbs, pickles",15,,,,,,,,kitchen
 Starters,Starters,Chakchouka,Shakshuka,"Tomate, oignon, poivron, œufs mollets","Tomato, onion, bell pepper, soft-boiled eggs",16,,,,,,,,kitchen
-Accompagnements,Sides,Salade de boulghour,Bulgur salad,,,10.5,,,,,,,,kitchen
-Accompagnements,Sides,Boulghour sauté aux champignons et épinards,Sautéed bulgur with mushrooms and spinach,,,21,,,,,,,,kitchen
+Accompagnements,Sides,Salade de bulgur,Bulgur salad,,,12.5,,,,,,,,kitchen
+Accompagnements,Sides,Bulgur sauté aux champignons et épinards,Sautéed bulgur with mushrooms and spinach,,,24,,,,,,,,kitchen
 Accompagnements,Sides,Masala rice,Masala rice,"Riz Basmati parfumé (ail, gingembre, laurier, clou de girofle, cardamome, anis étoilé, graines de nigelle)","Fragrant basmati rice (garlic, ginger, bay leaf, clove, cardamom, star anise, nigella seeds)",8,,,,,,,,kitchen
 Sandwichs,Sandwiches,Cheese Burger,Cheese Burger,"Steak haché de bœuf, sauce maison, cheddar, frites et salade classique","Beef patty, house sauce, cheddar, fries and classic salad",28.5,,,Bacon de bœuf;Œuf;Gouda;Cheddar;Steak;Gruyère,,,,,kitchen
 Sandwichs,Sandwiches,Club sandwich poulet,Chicken club sandwich,"Laitue, tomate, blanc de poulet grillé, gouda, œuf, mayonnaise maison, salade classique","Lettuce, tomato, grilled chicken breast, gouda, egg, homemade mayonnaise, classic salad",21.5,,,Bacon de bœuf;Frites maison,,,,,kitchen
