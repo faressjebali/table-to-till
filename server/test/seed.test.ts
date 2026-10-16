@@ -91,11 +91,14 @@ describe('parseMenuCsv sur docs/menu/menu.csv', () => {
     expect(menu.items.filter((i) => i.price === null)).toHaveLength(1);
   });
 
-  it('accepte les codes caisse vides', () => {
+  it('lit les codes caisse, vides seulement pour le Plat de la semaine', () => {
     expect(menu.items.find((i) => i.nameFr === 'Avocat')).toMatchObject({
       price: 7000,
-      posCode: null,
+      posCode: '82',
     });
+    expect(menu.items.filter((i) => i.posCode === null).map((i) => i.nameFr)).toEqual([
+      'Plat de la semaine',
+    ]);
   });
 
   it('construit les groupes de choix de docs/api.md', () => {

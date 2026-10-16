@@ -6,7 +6,7 @@ Version 2 — refonte du 15 octobre 2026. Clôture de shift et rapports de la ma
 
 ## 1. Contexte
 
-- Coffee shop réel en Tunisie, environ 20 tables (plus des tables fictives pour les ventes directes), **97 articles** (voir `docs/menu/menu.csv`).
+- Coffee shop réel en Tunisie, 24 tables (plus 16 tables fictives : 5 pour les ventes directes, 11 tables d'offre ; voir `docs/tables.csv`), **97 articles** (voir `docs/menu/menu.csv`).
 - Le café est ouvert de **8h00 à 22h00**.
 - Le **calcul du stock** est une fonctionnalité principale (voir §12).
 - Caisse : **LegacyPOS** (éditeur local) sur un **PC Windows**. Pas d'API. On ne contacte pas l'éditeur et on ne modifie rien dans LegacyPOS.
@@ -209,7 +209,7 @@ Tranchées le 15/10/2026 (voir §5 et `docs/decisions.md`) : encaissement depuis
 Restent :
 
 1. Après validation, LegacyPOS revient-il bien au plan des tables sans PIN ? Qu'est-ce qui fait sortir du plan des tables ?
-2. Nombre et numéros des tables réelles, disposition de la salle, liste des tables fictives, dont les 5 réservées aux managers (à relever à la visite).
+2. ~~Tables réelles, disposition, tables fictives et tables d'offre~~ : relevées le 16/10/2026, `docs/tables.csv`.
 3. Écrans d'encaissement, d'impression de l'addition, de remise, de transfert et de changement de table (à filmer).
 
 ## 12. Stock (fonctionnalité principale — à détailler)

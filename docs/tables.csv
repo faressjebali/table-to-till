@@ -1,0 +1,41 @@
+number,kind,layout_x,layout_y,offer_for
+1,real,2,5,
+2,real,12,7,
+3,real,12,6,
+4,real,12,5,
+5,real,12,4,
+6,real,7,3,
+7,real,7,2,
+8,real,4,3,
+9,real,14,9,
+10,real,14,8,
+11,real,14,6,
+12,real,14,4,
+14,real,14,2,
+15,virtual,,,
+16,virtual,,,
+17,real,8,1,
+18,real,10,1,
+19,real,4,1,
+20,real,2,1,
+21,real,0,1,
+22,real,2,2,
+23,real,0,2,
+25,real,0,4,
+26,real,11,3,
+27,real,11,2,
+55,virtual,,,
+100,real,2,7,
+101,virtual,,,Karim Haddad (comptable)
+102,virtual,,,Sami Trabelsi (patron)
+103,virtual,,,Nour Ben Salem (patronne)
+104,virtual,,,Table de test
+105,virtual,,,Rania (manager)
+106,virtual,,,
+107,virtual,,,"Walid (manager, cuisine et achats)"
+109,virtual,,,Hedi Mansour (propriétaire du local)
+111,virtual,,,Table des artistes
+333,virtual,,,
+817,virtual,,,Yasmine Ben Salem
+888,virtual,,,Rania Gharbi
+1010,virtual,,,Walid Chaabane (patron)

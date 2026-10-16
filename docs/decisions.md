@@ -2,6 +2,8 @@
 
 Une ligne par décision, la plus récente en haut. Format : `AAAA-MM-JJ — décision — pourquoi`.
 
+- 2026-10-16 — Tables : 24 réelles (1–12, 14, 17–23, 25–27, 100), 16 fictives (15, 16, 55 et toutes les tables à 3 ou 4 chiffres sauf 100) ; plan dans `docs/tables.csv` — relevé sur le plan de LegacyPOS
+- 2026-10-17 — Parmi les fictives, 11 tables d'offre (managers, patrons, comptable, table de test, propriétaire du local, artistes, deux invitées) et 5 tables de vente directe (15, 16, 55, 106, 333) — usage du café ; règles des offres dans le contrat v1.9
 - 2026-10-16 — Une tâche caisse en échec bloque les tâches suivantes de sa table (les autres tables continuent) ; une table fictive n'est réutilisée qu'après l'encaissement réel en caisse ; une annulation, remise ou un transfert d'un article pas encore tapé passe simplement après sa saisie — sinon une commande s'ajoute à une ancienne addition dans LegacyPOS
 - 2026-10-16 — Remises et annulations comptées dans la clôture (et le créneau de rapport) où elles sont faites, même sur un article d'un créneau précédent — les PDF ne changent jamais et leur somme égale le CA
 - 2026-10-16 — Les clôtures sont numérotées dans l'ordre de la journée (passation = Shift 1, dernière = Shift 2), plus selon l'heure de début — une passation à 14h30 donnait deux « Shift 1 »
