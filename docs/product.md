@@ -2,7 +2,7 @@
 
 Ce que nous construisons et quand une fonctionnalité est « terminée ». Si quelque chose manque ou n'est pas clair : demander, ne pas inventer.
 
-Version 2 — refonte du 15 octobre 2026. Clôture de shift et rapports de la manager ajoutés le 15 octobre 2026 (v1.7 du contrat). Caisse unique (principal et renfort), passation, commandes des managers : 15 octobre 2026 (v1.8).
+Version 2 — refonte du 15 octobre 2026. Clôture de shift et rapports de la manager ajoutés le 15 octobre 2026 (v1.7 du contrat). Caisse unique (principal et renfort), passation, commandes des managers : 15 octobre 2026 (v1.8). Fin de journée sans blocage, numéro des clôtures, file caisse après un échec : 16 octobre 2026 (v1.8.2).
 
 ## 1. Contexte
 
@@ -104,24 +104,25 @@ Le plan des tables et les commandes sont gérés **entièrement par les serveurs
 ### Shifts : principal et renfort
 - **Une seule caisse.** À tout moment, il y a au plus **un serveur principal** : il encaisse, gère l'argent, saisit les dépenses, fait la clôture. D'habitude, il est seul.
 - Les jours chargés (week-end), un **renfort** vient aider (ex. 10h–18h) : il prend et confirme les commandes, saisit des commandes, sert, transfère des articles, change de table et imprime l'addition. Il **ne touche jamais à l'argent** (ni encaissement, ni remise, ni annulation, ni offert, ni dépense). Tout ce qu'il fait compte dans la caisse du principal ; le journal d'actions garde son nom.
-- Le serveur **démarre son shift** dans l'app en arrivant. **Le premier arrivé est principal**, le suivant est renfort. Un renfort termine son shift quand il veut.
-- Deux créneaux : **Shift 1** (8h–15h) et **Shift 2** (15h–22h). Une **clôture par créneau** : le principal clôture en partant.
+- Le serveur **démarre son shift** dans l'app en arrivant. **Le premier arrivé est principal**, le suivant est renfort. Un renfort termine son shift quand il veut ; s'il oublie, la dernière clôture de la journée le termine d'office.
+- Deux créneaux : **Shift 1** (8h–15h) et **Shift 2** (15h–22h). Une **clôture par créneau** : le principal clôture en partant. Les clôtures sont numérotées dans l'ordre de la journée : la clôture de la passation est le Shift 1, la dernière le Shift 2, quelle que soit l'heure de la passation.
 - **Passation** : au changement de créneau, le principal clôture et choisit le serveur en shift à qui il passe la main (en général celui du Shift 2, déjà arrivé). Celui-ci reçoit la demande et l'accepte : il devient principal et reçoit les tables encore ouvertes et les commandes en attente. Tant qu'elle n'est pas acceptée, le principal reste principal. Un renfort reste renfort.
 - Le principal ne termine pas son shift tant qu'il a des tables ouvertes : il les encaisse ou les passe au serveur suivant (passation). Si le serveur du Shift 2 arrive en retard, celui du Shift 1 continue jusqu'à la passation.
-- **Clôture forcée** : si le principal part sans clôturer (oubli, téléphone déchargé, urgence), la manager le remplace depuis l'app par un autre serveur en shift, qui compte les espèces et devient principal ; en fin de journée sans autre serveur, elle termine le shift elle-même avec le montant compté. C'est noté au journal et sur le PDF (« clôture forcée par X »).
-- **Fin de journée** : la dernière clôture (sans passation) est refusée tant qu'une table est ouverte, qu'une commande attend une confirmation, ou qu'un renfort est encore en shift. Toutes les tables sont encaissées et fermées.
+- **Clôture forcée** : si le principal part sans clôturer (oubli, téléphone déchargé, urgence), la manager le remplace depuis l'app par un autre serveur en shift, qui compte les espèces et devient principal ; en fin de journée sans autre serveur, elle termine le shift elle-même avec le montant compté, même s'il reste des tables ouvertes : elles sont fermées **non encaissées**, signalées sur le PDF et régularisées à la main en caisse. C'est noté au journal et sur le PDF (« clôture forcée par X »).
+- **Fin de journée** : la dernière clôture (sans passation) est refusée tant qu'une table est ouverte ou qu'une commande attend une confirmation. Toutes les tables sont encaissées et fermées. Les renforts encore en shift terminent leur shift avec elle.
+- **Shift oublié** : un shift resté ouvert se termine automatiquement dans la nuit (4h00, réglable). Si le principal n'avait pas clôturé, une **clôture automatique** est faite sans espèces comptées (« clôture manquante » sur le PDF, au journal et notifiée aux managers) ; ses tables encore ouvertes sont fermées non encaissées. Le lendemain matin, le menu QR n'accepte donc pas de commande tant que personne n'a démarré son shift.
 - Les nouvelles commandes (QR et managers) sont notifiées (son + notification push) **à tous les serveurs en shift** ; le premier disponible confirme.
 
 ### Clôture
 - Le principal appuie sur **Clôturer**, compte les espèces de la caisse et saisit le montant compté ; puis passation (voir plus haut) ou fin de journée.
 - Un **PDF de clôture par créneau** est généré et archivé. Il couvre tout ce qui s'est passé depuis la clôture précédente, quel que soit le serveur (principal ou renfort) ou le poste (barista, cuisinier) :
-  - les articles vendus (quantités et montants) et le **CA** : toutes les commandes confirmées, envoyées en caisse, remises staff déduites, annulations déduites ;
+  - les articles vendus (quantités et montants) et le **CA** : toutes les commandes confirmées, envoyées en caisse, moins les remises staff et les annulations **faites pendant le créneau**, même sur un article commandé au créneau précédent (le PDF déjà archivé ne change jamais) ;
   - les encaissements **espèces** et **carte** ;
   - les **dépenses** ;
   - les articles **offerts** (clients mécontents, staff) et les **commandes des managers et patrons**, mentionnés à 0 DT avec qui les a offerts ou commandés : ils ne comptent pas dans le CA mais sortent du stock ;
   - les articles **annulés**, avec leur note, en séparant ceux **déjà préparés** (perte de stock) et ceux **pas préparés**, et les annulations retirées (payées par le serveur) ;
   - les **espèces attendues** (espèces encaissées − dépenses ; pas de fond de caisse), les **espèces comptées** et l'**écart** ;
-  - les tables passées au principal suivant.
+  - les tables passées au principal suivant, et les tables fermées **non encaissées** (clôture forcée ou automatique).
 
 ### Commandes des managers
 - Chaque compte manager (managers et patrons) a **sa table**, une table fictive qui lui est réservée (jamais utilisée pour les ventes directes ni affichée sur le plan).
@@ -133,13 +134,13 @@ Le plan des tables et les commandes sont gérés **entièrement par les serveurs
 - Elle est déduite des espèces attendues de la clôture et inscrite au journal d'actions.
 
 ### Rapports de la manager
-- **En temps réel** : CA, espèces / carte, dépenses et articles sortis (combien de jus, cafés…), pour la journée, le Shift 1 (8h–15h) ou le Shift 2 (15h–22h). Les créneaux des rapports se comptent **par horaire**, quelles que soient les clôtures ; l'argent compté est sur les PDF de clôture.
+- **En temps réel** : CA, espèces / carte, dépenses et articles sortis (combien de jus, cafés…), pour la journée, le Shift 1 (8h–15h) ou le Shift 2 (15h–22h). Les créneaux des rapports se comptent **par horaire**, quelles que soient les clôtures ; une remise ou une annulation compte à l'heure où elle est faite ; l'argent compté est sur les PDF de clôture.
 - **Par date** : les mêmes chiffres pour hier ou n'importe quel jour.
 - **Clôtures** : tous les PDF de clôture, anciens compris.
 - **Statistiques** (plus tard) : articles les plus et les moins vendus sur une période, ventes d'un article sur une période (ex. fondants vendus la semaine dernière), courbes.
 
 ### Écrans du serveur (mini-caisse)
-- **Plan des tables** : reproduit la **disposition de la salle** ; état de chaque table (libre / occupée), montant en cours. Les tables fictives (ventes directes) n'y figurent pas ; l'app en attribue une libre automatiquement à chaque vente directe et affiche son numéro.
+- **Plan des tables** : reproduit la **disposition de la salle** ; état de chaque table (libre / occupée), montant en cours. Les tables fictives (ventes directes) n'y figurent pas ; l'app en attribue une libre automatiquement à chaque vente directe et affiche son numéro. Une table fictive n'est réutilisée qu'une fois la vente réellement encaissée dans LegacyPOS.
 - **Commandes entrantes** (QR et managers) : table ou manager, lignes, notes, heure → **Confirmer** (après vérification avec la table) ou **Rejeter**.
 - **Saisir une commande** pour un client sans téléphone : choisir la table, ajouter articles + notes, envoyer. Pas de confirmation nécessaire.
 - **Encaisser une table** : le principal prend l'argent et appuie sur **Espèces** ou **Carte** dans l'app ; l'agent encaisse ensuite dans LegacyPOS. Une table se paie **en une seule fois** : pas de division de l'addition, pas de paiement mixte.
@@ -151,7 +152,7 @@ Le plan des tables et les commandes sont gérés **entièrement par les serveurs
 - **Changer de table** (déplacer toute la table vers une autre). Saisi en caisse par l'agent.
 - **Offrir un article** : enregistré **uniquement dans l'app**, à part des commandes, **jamais tapé en caisse**. Un article est offert **dès le départ** : on n'offre jamais un article déjà tapé. Cas : client mécontent, offres du staff. Qui, quoi, à qui, pourquoi (note). Le barista et le cuisinier enregistrent aussi les offres **au staff** ; l'offert à un client mécontent est réservé au principal. Les managers et patrons ne passent pas par là : ils commandent depuis leur table, y compris pour offrir à un client (voir Commandes des managers). L'article offert **sort du stock**.
 
-- Une tâche en échec côté caisse est signalée clairement à tous les serveurs en shift : chacun peut la **réessayer** ; seul le principal peut la marquer **faite à la main** au comptoir.
+- Une tâche en échec côté caisse est signalée clairement à tous les serveurs en shift : chacun peut la **réessayer** ; seul le principal peut la marquer **faite à la main** au comptoir. Tant qu'elle n'est pas réglée, les tâches suivantes de **la même table** attendent (les autres tables continuent) : par exemple, si l'encaissement de la table 5 a échoué, la commande des clients suivants de la table 5 ne s'ajoute pas à l'ancienne addition. Une annulation, une remise ou un transfert d'un article pas encore tapé en caisse passe simplement après sa saisie.
 
 Toutes ces actions sont inscrites au journal d'actions (qui, quand, quelle table, quelle note).
 
@@ -199,7 +200,7 @@ Commande tapée par un serveur : on démarre directement à l'étape 4.
 ## 10. Panne
 
 - Internet coupé : données mobiles, ou retour à la méthode classique (le serveur saisit à la caisse). C'est la seule exception à « rien n'est tapé directement en caisse » ; il faudra rattraper ces ventes pour le stock (à définir).
-- Agent en panne : la caisse reste utilisable à la main ; les commandes en attente sont signalées.
+- Agent en panne : la caisse reste utilisable à la main ; les serveurs en shift et la manager voient que l'agent ne répond plus ; les commandes en attente sont signalées.
 
 ## 11. Questions ouvertes (à trancher après la vidéo)
 

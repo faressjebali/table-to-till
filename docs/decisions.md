@@ -2,6 +2,13 @@
 
 Une ligne par décision, la plus récente en haut. Format : `AAAA-MM-JJ — décision — pourquoi`.
 
+- 2026-10-16 — Une tâche caisse en échec bloque les tâches suivantes de sa table (les autres tables continuent) ; une table fictive n'est réutilisée qu'après l'encaissement réel en caisse ; une annulation, remise ou un transfert d'un article pas encore tapé passe simplement après sa saisie — sinon une commande s'ajoute à une ancienne addition dans LegacyPOS
+- 2026-10-16 — Remises et annulations comptées dans la clôture (et le créneau de rapport) où elles sont faites, même sur un article d'un créneau précédent — les PDF ne changent jamais et leur somme égale le CA
+- 2026-10-16 — Les clôtures sont numérotées dans l'ordre de la journée (passation = Shift 1, dernière = Shift 2), plus selon l'heure de début — une passation à 14h30 donnait deux « Shift 1 »
+- 2026-10-16 — Shift oublié : fin automatique dans la nuit (4h00, réglable) ; un principal sans clôture donne une clôture automatique sans espèces comptées, signalée aux managers — sinon le menu QR accepte des commandes le matin sans personne
+- 2026-10-16 — Clôture forcée en fin de journée sans autre serveur : jamais bloquée ; les tables encore ouvertes sont fermées non encaissées, signalées sur le PDF et régularisées à la main en caisse — la manager n'a pas accès au plan, la journée doit pouvoir se fermer
+- 2026-10-16 — La dernière clôture de la journée termine d'office les shifts des renforts encore ouverts — un renfort ne touche pas à l'argent ; un oubli ne doit pas bloquer la clôture
+- 2026-10-16 — Limite de départ : 10 commandes QR par table par 10 minutes (au lieu de 5) — une grande tablée commande avec plusieurs téléphones
 - 2026-10-15 — Le staff a des iPhone : la PWA demande à être installée sur l'écran d'accueil (iOS 16.4+) — sans installation, pas de notifications push sur iPhone
 - 2026-10-15 — Le barista et le cuisinier n'enregistrent que des offres au staff ; l'offert à un client mécontent est réservé au principal — l'argent et les clients restent à la caisse
 - 2026-10-15 — Un serveur ne travaille jamais seul de 8h à 22h : il y a toujours une passation entre le Shift 1 et le Shift 2, donc une clôture par créneau — usage du café
