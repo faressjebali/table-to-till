@@ -2,6 +2,9 @@
 
 Une ligne par décision, la plus récente en haut. Format : `AAAA-MM-JJ — décision — pourquoi`.
 
+- 2026-10-17 — Les notes ne sont jamais tapées en caisse (le bouton NOTE de LegacyPOS n'est pas utilisé) ; le serveur les transmet oralement — usage du café
+- 2026-10-17 — Tables d'offre : tout ce qui y est commandé est offert (0 DT, hors CA, stock, PDF), jamais tapé en caisse ; serveurs en shift : saisie directe sur toute table d'offre ; managers : leur table et les tables sans compte ; comptable : sa table — remplace la table réservée à chaque manager ; le café offre aussi à des personnes sans compte
+- 2026-10-17 — Rôle Comptable (`accountant`) : rapports, clôtures, stock et écarts, commandes sur sa table ; managers et patrons gardent le même rôle `manager`, avec un titre affiché sans droits — un rôle sert à donner des droits, pas à dire qui est qui
 - 2026-10-16 — Tables : 24 réelles (1–12, 14, 17–23, 25–27, 100), 16 fictives (15, 16, 55 et toutes les tables à 3 ou 4 chiffres sauf 100) ; plan dans `docs/tables.csv` — relevé sur le plan de LegacyPOS
 - 2026-10-17 — Parmi les fictives, 11 tables d'offre (managers, patrons, comptable, table de test, propriétaire du local, artistes, deux invitées) et 5 tables de vente directe (15, 16, 55, 106, 333) — usage du café ; règles des offres dans le contrat v1.9
 - 2026-10-16 — Une tâche caisse en échec bloque les tâches suivantes de sa table (les autres tables continuent) ; une table fictive n'est réutilisée qu'après l'encaissement réel en caisse ; une annulation, remise ou un transfert d'un article pas encore tapé passe simplement après sa saisie — sinon une commande s'ajoute à une ancienne addition dans LegacyPOS
@@ -34,7 +37,7 @@ Une ligne par décision, la plus récente en haut. Format : `AAAA-MM-JJ — déc
 - 2026-10-15 — Nouvel article : créé d'abord dans LegacyPOS (code), puis dans l'app avec le même prix ; un changement de prix se fait dans les deux le même jour — l'agent vérifie le total avant d'encaisser
 - 2026-10-15 — Seule la clôture de l'app sert au café (pas celle de LegacyPOS) — elle contient les offerts et elle est archivée en PDF
 - 2026-10-15 — Panne d'Internet : rattrapage des ventes tapées directement en caisse, à définir plus tard
-- 2026-10-15 — Commandes des managers : chaque compte manager a sa table fictive réservée ; sa commande est notifiée aux serveurs en shift, confirmée par un serveur qui la transmet oralement, jamais tapée en caisse ; c'est un offert (hors CA, sort du stock) dans la clôture du créneau ; refusée sans serveur en shift — les managers et patrons consomment sur place sans passer par la caisse
+- 2026-10-15 — Commandes des managers : chaque compte manager a sa table fictive réservée ; sa commande est notifiée aux serveurs en shift, confirmée par un serveur qui la transmet oralement, jamais tapée en caisse ; c'est un offert (hors CA, sort du stock) dans la clôture du créneau ; refusée sans serveur en shift (depuis : tables d'offre, avec ou sans compte, voir plus haut) — les managers et patrons consomment sur place sans passer par la caisse
 - 2026-10-15 — Rôle manager : 2 managers et 3 patrons, tous avec le rôle `manager` ; un manager peut offrir un article à un client (offre client, à son nom) — pas besoin d'un rôle Patron
 - 2026-10-15 — ~~Offres du barista et du cuisinier (staff, patrons) : dans la clôture du serveur en shift — chaque offert apparaît dans une clôture~~ (remplacée : une seule caisse, voir plus haut)
 - 2026-10-15 — Café ou thé des formules : les thés à 6,5 DT et les cafés jusqu'à 8,5 DT de la carte (remplace « n'importe quel café ou thé ») — règle du café

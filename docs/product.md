@@ -2,7 +2,7 @@
 
 Ce que nous construisons et quand une fonctionnalité est « terminée ». Si quelque chose manque ou n'est pas clair : demander, ne pas inventer.
 
-Version 2 — refonte du 15 octobre 2026. Clôture de shift et rapports de la manager ajoutés le 15 octobre 2026 (v1.7 du contrat). Caisse unique (principal et renfort), passation, commandes des managers : 15 octobre 2026 (v1.8). Fin de journée sans blocage, numéro des clôtures, file caisse après un échec : 16 octobre 2026 (v1.8.2).
+Version 2 — refonte du 15 octobre 2026. Clôture de shift et rapports de la manager ajoutés le 15 octobre 2026 (v1.7 du contrat). Caisse unique (principal et renfort), passation, commandes des managers : 15 octobre 2026 (v1.8). Fin de journée sans blocage, numéro des clôtures, file caisse après un échec : 16 octobre 2026 (v1.8.2). Comptable, tables d'offre, notes jamais en caisse : 17 octobre 2026 (v1.9).
 
 ## 1. Contexte
 
@@ -44,7 +44,7 @@ Version 2 — refonte du 15 octobre 2026. Clôture de shift et rapports de la ma
   - Les jus de saison changent : pour l'instant, seulement **Grenade**. La liste doit être modifiable par la manager.
   - Les choix sont enregistrés dans l'app pour le **calcul du stock** (traçabilité).
   - En caisse, l'agent tape **seulement la formule**, sans les choix ; il n'ajoute jamais la boisson, le jus ou les œufs inclus. Le bar et la cuisine connaissent les choix **oralement**, par le serveur.
-- **Une note libre par ligne** (max 200 caractères, ex. « sans sucre »), en plus des choix. Sur une formule, elle n'est **pas tapée en caisse** : elle reste dans l'app et le serveur la dit au bar ou à la cuisine.
+- **Une note libre par ligne** (max 200 caractères, ex. « sans sucre »), en plus des choix. Elle n'est **jamais tapée en caisse** (le bouton NOTE de LegacyPOS n'est pas utilisé) : elle reste dans l'app et le serveur la dit au bar ou à la cuisine.
 - **Horaires de disponibilité** (fuseau Africa/Tunis), appliqués automatiquement :
   - Formules petit-déjeuner : 8h00–12h00
   - Œufs : 8h00–15h00
@@ -88,18 +88,19 @@ Version 2 — refonte du 15 octobre 2026. Clôture de shift et rapports de la ma
 ### Rôles (privilèges détaillés au fur et à mesure)
 | Rôle | Privilèges connus |
 | --- | --- |
-| Serveur | **En shift seulement** (voir Shifts : principal ou renfort) : plan des tables, commandes, confirmer/rejeter les commandes QR et celles des managers, saisir une commande, transfert d'article, changement de table, imprimer l'addition, ruptures de tout article. **Principal seulement** : encaisser, remise staff 20 %, annulation, offrir un article, dépenses, clôture et passation. Hors shift : seulement « Démarrer mon shift » |
+| Serveur | **En shift seulement** (voir Shifts : principal ou renfort) : plan des tables, commandes, confirmer/rejeter les commandes QR et les commandes offertes des managers et du comptable, saisir une commande (y compris sur une table d'offre), transfert d'article, changement de table, imprimer l'addition, ruptures de tout article. **Principal seulement** : encaisser, remise staff 20 %, annulation, offrir un article, dépenses, clôture et passation. Hors shift : seulement « Démarrer mon shift » |
 | Barista | Saisir et encaisser une vente directe (comptoir), ruptures des articles du bar (+ articles `both`), achats, pointer l'arrivage de marchandise, déclarer les avaries, enregistrer les offres **au staff** (pas aux clients) |
 | Cuisinier | Ruptures des articles de la cuisine (+ articles `both`), pointer les arrivages de la cuisine, déclarer les avaries de la cuisine, saisir l'inventaire de la cuisine, signaler les besoins (ce qu'il faut racheter), enregistrer les offres **au staff** (pas aux clients) |
-| Manager | Comptes et rôles, édition du menu (articles, photos, prix, codes, horaires, Plat de la semaine, jus de saison), ruptures, rapports (CA, articles sortis, clôtures, statistiques), rapports de stock et d'écarts, **commander pour sa table** et y offrir un article à un client (voir Commandes des managers). **Pas** d'accès au plan des tables ni aux commandes des clients |
+| Manager | Comptes et rôles, édition du menu (articles, photos, prix, codes, horaires, Plat de la semaine, jus de saison), ruptures, rapports (CA, articles sortis, clôtures, statistiques), rapports de stock et d'écarts, **commander sur sa table d'offre** et sur les tables d'offre sans compte, pour soi ou pour offrir à un client (voir Tables d'offre). **Pas** d'accès au plan des tables ni aux commandes des clients |
+| Comptable | Rapports (CA, espèces / carte, dépenses, articles sortis, clôtures et PDF), rapports de stock et d'écarts, **commander sur sa table d'offre**. Ne modifie rien (ni menu, ni prix, ni comptes) ; **pas** d'accès au plan des tables ni aux commandes |
 
-Le rôle Manager regroupe les **2 managers et les 3 patrons** : tous ont le même rôle et les mêmes droits.
+Le rôle Manager regroupe les **2 managers et les 3 patrons** : tous ont le même rôle et les mêmes droits. Chaque compte a un **titre affiché** (Manager, Patron, Patronne, Comptable…) sur le PDF et dans le journal, sans droits particuliers. Le **comptable** a son propre rôle, parce que ses droits sont différents.
 
 La manager ne peut pas changer le rôle d'un serveur en shift ni le désactiver : il doit d'abord terminer son shift.
 
 Tout le monde a la PWA sur son téléphone et peut y accéder à tout moment ; ce qu'il voit dépend de son rôle. Le staff a des iPhone : sur iPhone, la PWA doit être **installée sur l'écran d'accueil** (iOS 16.4+), sinon les notifications ne marchent pas ; l'app le demande.
 
-Le plan des tables et les commandes sont gérés **entièrement par les serveurs en shift**, consultation comprise : ni la manager (sauf ses propres commandes), ni le barista, ni le cuisinier, ni un serveur hors shift n'y ont accès. Un serveur hors shift voit seulement « Démarrer mon shift ».
+Le plan des tables et les commandes sont gérés **entièrement par les serveurs en shift**, consultation comprise : ni la manager ni le comptable (sauf leurs propres commandes offertes), ni le barista, ni le cuisinier, ni un serveur hors shift n'y ont accès. Un serveur hors shift voit seulement « Démarrer mon shift ».
 
 ### Shifts : principal et renfort
 - **Une seule caisse.** À tout moment, il y a au plus **un serveur principal** : il encaisse, gère l'argent, saisit les dépenses, fait la clôture. D'habitude, il est seul.
@@ -111,7 +112,7 @@ Le plan des tables et les commandes sont gérés **entièrement par les serveurs
 - **Clôture forcée** : si le principal part sans clôturer (oubli, téléphone déchargé, urgence), la manager le remplace depuis l'app par un autre serveur en shift, qui compte les espèces et devient principal ; en fin de journée sans autre serveur, elle termine le shift elle-même avec le montant compté, même s'il reste des tables ouvertes : elles sont fermées **non encaissées**, signalées sur le PDF et régularisées à la main en caisse. C'est noté au journal et sur le PDF (« clôture forcée par X »).
 - **Fin de journée** : la dernière clôture (sans passation) est refusée tant qu'une table est ouverte ou qu'une commande attend une confirmation. Toutes les tables sont encaissées et fermées. Les renforts encore en shift terminent leur shift avec elle.
 - **Shift oublié** : un shift resté ouvert se termine automatiquement dans la nuit (4h00, réglable). Si le principal n'avait pas clôturé, une **clôture automatique** est faite sans espèces comptées (« clôture manquante » sur le PDF, au journal et notifiée aux managers) ; ses tables encore ouvertes sont fermées non encaissées. Le lendemain matin, le menu QR n'accepte donc pas de commande tant que personne n'a démarré son shift.
-- Les nouvelles commandes (QR et managers) sont notifiées (son + notification push) **à tous les serveurs en shift** ; le premier disponible confirme.
+- Les nouvelles commandes (QR et commandes offertes depuis l'app) sont notifiées (son + notification push) **à tous les serveurs en shift** ; le premier disponible confirme.
 
 ### Clôture
 - Le principal appuie sur **Clôturer**, compte les espèces de la caisse et saisit le montant compté ; puis passation (voir plus haut) ou fin de journée.
@@ -119,15 +120,16 @@ Le plan des tables et les commandes sont gérés **entièrement par les serveurs
   - les articles vendus (quantités et montants) et le **CA** : toutes les commandes confirmées, envoyées en caisse, moins les remises staff et les annulations **faites pendant le créneau**, même sur un article commandé au créneau précédent (le PDF déjà archivé ne change jamais) ;
   - les encaissements **espèces** et **carte** ;
   - les **dépenses** ;
-  - les articles **offerts** (clients mécontents, staff) et les **commandes des managers et patrons**, mentionnés à 0 DT avec qui les a offerts ou commandés : ils ne comptent pas dans le CA mais sortent du stock ;
+  - les articles **offerts** (clients mécontents, staff) et les **commandes des tables d'offre** (managers, patrons, comptable, invités), mentionnés à 0 DT avec la table d'offre et qui les a offerts ou commandés : ils ne comptent pas dans le CA mais sortent du stock ;
   - les articles **annulés**, avec leur note, en séparant ceux **déjà préparés** (perte de stock) et ceux **pas préparés**, et les annulations retirées (payées par le serveur) ;
   - les **espèces attendues** (espèces encaissées − dépenses ; pas de fond de caisse), les **espèces comptées** et l'**écart** ;
   - les tables passées au principal suivant, et les tables fermées **non encaissées** (clôture forcée ou automatique).
 
-### Commandes des managers
-- Chaque compte manager (managers et patrons) a **sa table**, une table fictive qui lui est réservée (jamais utilisée pour les ventes directes ni affichée sur le plan).
-- Le manager commande dans l'app pour sa table (articles, choix, notes), pour lui-même ou comme **offre à un client** (il le dit aussi oralement au serveur). Les **serveurs en shift sont notifiés** ; un serveur **confirme** et dit la commande oralement au barista ou au cuisinier. Sans serveur en shift, la commande est refusée. Comme une commande QR, elle expire si personne ne la confirme.
-- Elle n'est **jamais tapée en caisse**. C'est un **offert** : 0 DT, hors CA, elle sort du stock et figure dans le PDF de clôture, au nom du manager (« commande de X » ou « offert à un client par X »).
+### Tables d'offre
+- Des **tables fictives d'offre** (liste dans `docs/tables.csv`) servent à tout ce qui est offert hors clients mécontents et staff : une par manager, patron et comptable, et des tables sans compte (propriétaire du local, artistes, invitées, table de test). Elles ne servent jamais aux ventes directes et ne sont pas sur le plan.
+- Tout ce qui est commandé sur une table d'offre est un **offert** : 0 DT, hors CA, **jamais tapé en caisse**, sorti du stock, et inscrit dans le PDF de clôture avec la table d'offre et qui l'a demandé (« commande de X », « offert à un client par X », « Hedi Mansour »…).
+- Les **serveurs en shift** (principal et renfort) saisissent directement sur n'importe quelle table d'offre, sans confirmation.
+- Un **manager** commande depuis son app sur sa table ou sur une table d'offre sans compte ; le **comptable** seulement sur sa table. Pour soi ou comme **offre à un client** (il le dit aussi oralement au serveur). Les **serveurs en shift sont notifiés** ; un serveur **confirme** et dit la commande oralement au barista ou au cuisinier. Sans serveur en shift, la commande est refusée. Comme une commande QR, elle expire si personne ne la confirme.
 
 ### Dépenses
 - Le principal saisit chaque dépense payée en espèces de la caisse : montant, motif (fournisseur, extra payé en espèces, achat courant comme les boîtes takeaway ou le papier, autre), note, photo du ticket facultative.
@@ -141,7 +143,7 @@ Le plan des tables et les commandes sont gérés **entièrement par les serveurs
 
 ### Écrans du serveur (mini-caisse)
 - **Plan des tables** : reproduit la **disposition de la salle** ; état de chaque table (libre / occupée), montant en cours. Les tables fictives (ventes directes) n'y figurent pas ; l'app en attribue une libre automatiquement à chaque vente directe et affiche son numéro. Une table fictive n'est réutilisée qu'une fois la vente réellement encaissée dans LegacyPOS.
-- **Commandes entrantes** (QR et managers) : table ou manager, lignes, notes, heure → **Confirmer** (après vérification avec la table) ou **Rejeter**.
+- **Commandes entrantes** (QR et commandes offertes depuis l'app) : table ou personne, lignes, notes, heure → **Confirmer** (après vérification avec la table) ou **Rejeter**.
 - **Saisir une commande** pour un client sans téléphone : choisir la table, ajouter articles + notes, envoyer. Pas de confirmation nécessaire.
 - **Encaisser une table** : le principal prend l'argent et appuie sur **Espèces** ou **Carte** dans l'app ; l'agent encaisse ensuite dans LegacyPOS. Une table se paie **en une seule fois** : pas de division de l'addition, pas de paiement mixte.
 - **Imprimer l'addition** depuis l'app : l'agent lance l'impression dans LegacyPOS.
@@ -150,7 +152,7 @@ Le plan des tables et les commandes sont gérés **entièrement par les serveurs
   - Deux types d'annulation, à choisir à chaque fois : **déjà préparé** (l'article sort du stock : perte) ou **pas préparé** (rien ne sort du stock). En caisse, c'est le même −1. Annuler une partie d'une ligne (1 capuccino sur 3) **coupe la ligne en deux** : la ligne d'origine garde 2 capuccinos, une nouvelle ligne de 1 est annulée avec sa note.
 - **Transférer un article** d'une table à une autre. Saisi en caisse par l'agent. Transférer une partie d'une ligne la coupe en deux de la même façon.
 - **Changer de table** (déplacer toute la table vers une autre). Saisi en caisse par l'agent.
-- **Offrir un article** : enregistré **uniquement dans l'app**, à part des commandes, **jamais tapé en caisse**. Un article est offert **dès le départ** : on n'offre jamais un article déjà tapé. Cas : client mécontent, offres du staff. Qui, quoi, à qui, pourquoi (note). Le barista et le cuisinier enregistrent aussi les offres **au staff** ; l'offert à un client mécontent est réservé au principal. Les managers et patrons ne passent pas par là : ils commandent depuis leur table, y compris pour offrir à un client (voir Commandes des managers). L'article offert **sort du stock**.
+- **Offrir un article** : enregistré **uniquement dans l'app**, à part des commandes, **jamais tapé en caisse**. Un article est offert **dès le départ** : on n'offre jamais un article déjà tapé. Cas : client mécontent, offres du staff. Qui, quoi, à qui, pourquoi (note). Le barista et le cuisinier enregistrent aussi les offres **au staff** ; l'offert à un client mécontent est réservé au principal. Les managers, patrons et le comptable ne passent pas par là : ils commandent sur les tables d'offre, y compris pour offrir à un client (voir Tables d'offre). L'article offert **sort du stock**.
 
 - Une tâche en échec côté caisse est signalée clairement à tous les serveurs en shift : chacun peut la **réessayer** ; seul le principal peut la marquer **faite à la main** au comptoir. Tant qu'elle n'est pas réglée, les tâches suivantes de **la même table** attendent (les autres tables continuent) : par exemple, si l'encaissement de la table 5 a échoué, la commande des clients suivants de la table 5 ne s'ajoute pas à l'ancienne addition. Une annulation, une remise ou un transfert d'un article pas encore tapé en caisse passe simplement après sa saisie.
 
@@ -217,6 +219,6 @@ Restent :
 - But : **tout calculer pour minimiser les écarts inexpliqués** entre le stock théorique et le stock réel.
 - **Toutes les ventes passent par l'app** (QR, saisie serveur, comptoir) : une vente tapée directement en caisse sans l'app serait un écart inexpliqué.
 - Consommation théorique de chaque article vendu à partir des **fiches techniques** (bar et cuisine), y compris les choix précis dans les formules (type de café, thé, jus, œufs).
-- Sorties hors ventes : offerts (principal, barista, cuisinier), commandes des managers et patrons, annulations d'articles déjà préparés.
+- Sorties hors ventes : offerts (principal, barista, cuisinier), commandes des tables d'offre, annulations d'articles déjà préparés.
 - Approvisionnement : achats, arrivages, avaries.
 - Règles détaillées du calcul et de l'approvisionnement : à définir ensemble.
