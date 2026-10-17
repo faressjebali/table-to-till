@@ -46,6 +46,8 @@ export interface SeedChoiceGroup {
   nameEn: string;
   /** Noms français des articles proposés, dans l'ordre. */
   options: string[];
+  /** Liste tenue par la manager dans l'app : le seed ne l'écrit que si le groupe est encore vide. */
+  managedInApp: boolean;
 }
 
 export interface SeedMenu {
@@ -71,6 +73,7 @@ const CHOICE_GROUPS: {
   nameFr: string;
   nameEn: string;
   options: (items: SeedItem[]) => string[];
+  managedInApp?: true;
 }[] = [
   {
     key: 'hot_drink',
@@ -92,6 +95,7 @@ const CHOICE_GROUPS: {
     nameEn: 'Seasonal juice',
     // Modifiable ensuite par la manager ; pour l'instant seulement Grenade.
     options: () => ['Grenade'],
+    managedInApp: true,
   },
   {
     key: 'eggs',
@@ -257,6 +261,7 @@ export function parseMenuCsv(text: string): SeedMenu {
     nameFr: g.nameFr,
     nameEn: g.nameEn,
     options: g.options(items),
+    managedInApp: g.managedInApp ?? false,
   }));
 
   // Références : extras, groupes et options doivent exister.

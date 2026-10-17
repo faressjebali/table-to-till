@@ -240,6 +240,36 @@ describe('seedMenu (base de test)', () => {
     expect(rows).toEqual([{ sold_out: true }]);
   });
 
+  it('garde la liste des jus de saison de la manager, réécrit les autres groupes', async () => {
+    const optionsOf = async (key: string) => {
+      const { rows } = await client.query<{ name_fr: string }>(
+        `SELECT m.name_fr FROM choice_group_options o JOIN menu_items m ON m.id = o.menu_item_id
+          WHERE o.group_key = $1 ORDER BY o.sort_order, m.name_fr`,
+        [key],
+      );
+      return rows.map((r) => r.name_fr);
+    };
+    // La manager remplace la Grenade par la Fraise ; quelqu'un retire l'Americano des cafés.
+    await client.query(
+      `UPDATE choice_group_options SET menu_item_id = (SELECT id FROM menu_items WHERE name_fr = 'Fraise')
+        WHERE group_key = 'seasonal_juice'`,
+    );
+    await client.query(
+      `DELETE FROM choice_group_options
+        WHERE group_key = 'hot_drink'
+          AND menu_item_id = (SELECT id FROM menu_items WHERE name_fr = 'Americano')`,
+    );
+
+    await seedMenu(client, menu);
+    expect(await optionsOf('seasonal_juice')).toEqual(['Fraise']);
+    expect(await optionsOf('hot_drink')).toContain('Americano');
+
+    // Groupe vide (nouvelle base, ou liste vidée) : le seed remet la valeur de départ.
+    await client.query(`DELETE FROM choice_group_options WHERE group_key = 'seasonal_juice'`);
+    await seedMenu(client, menu);
+    expect(await optionsOf('seasonal_juice')).toEqual(['Grenade']);
+  });
+
   it('écrit l’aide de note dans les deux langues', async () => {
     const withHint = {
       ...menu,
@@ -257,7 +287,9 @@ describe('seedMenu (base de test)', () => {
   it('n’écrit rien si une étape échoue', async () => {
     const broken = {
       ...menu,
-      choiceGroups: [{ key: 'x', nameFr: 'x', nameEn: 'x', options: ['Inconnu'] }],
+      choiceGroups: [
+        { key: 'x', nameFr: 'x', nameEn: 'x', options: ['Inconnu'], managedInApp: false },
+      ],
     };
     await client.query("UPDATE menu_items SET price = 1000 WHERE name_fr = 'Avocat'");
     await expect(seedMenu(client, broken)).rejects.toThrow('article inconnu Inconnu');

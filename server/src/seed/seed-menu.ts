@@ -101,6 +101,14 @@ export async function seedMenu(client: ClientBase, menu: SeedMenu): Promise<Seed
          ON CONFLICT (key) DO UPDATE SET name_fr = EXCLUDED.name_fr, name_en = EXCLUDED.name_en`,
         [group.key, group.nameFr, group.nameEn],
       );
+      // Jus de saison : la liste de la manager survit au seed du matin (scripts/start-day.sh).
+      if (group.managedInApp) {
+        const { rowCount } = await client.query(
+          'SELECT 1 FROM choice_group_options WHERE group_key = $1 LIMIT 1',
+          [group.key],
+        );
+        if (rowCount) continue;
+      }
       await client.query('DELETE FROM choice_group_options WHERE group_key = $1', [group.key]);
       for (const [index, option] of group.options.entries()) {
         await client.query(
