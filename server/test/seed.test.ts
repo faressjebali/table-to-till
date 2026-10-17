@@ -39,9 +39,10 @@ describe('parseAvailability', () => {
       availableFrom: null,
       availableUntil: null,
     });
+    // « until » part de l'ouverture du café (docs/menu/README.md).
     expect(parseAvailability('until 12:00', 2)).toEqual({
       days: [1, 2, 3, 4, 5, 6, 7],
-      availableFrom: null,
+      availableFrom: '08:00',
       availableUntil: '12:00',
     });
     expect(parseAvailability('mon-fri 08:00-15:00', 2)).toEqual({

@@ -1,4 +1,5 @@
 import { parse } from 'csv-parse/sync';
+import { OPENING_TIME } from '../menu/availability.js';
 
 // Lecture et validation de docs/menu/menu.csv (format décrit dans docs/menu/README.md).
 // Fonctions pures : aucune écriture en base ici.
@@ -27,7 +28,7 @@ export interface SeedItem {
   station: Station;
   /** 1 = lundi … 7 = dimanche. */
   days: number[];
-  /** "HH:MM" ; null = depuis l'ouverture du café. */
+  /** "HH:MM" ; null = sans début propre (« until » part de l'ouverture : 08:00). */
   availableFrom: string | null;
   /** "HH:MM" ; null = jusqu'à la fermeture du café. */
   availableUntil: string | null;
@@ -168,7 +169,9 @@ export function parseAvailability(
     days = ALL_DAYS.filter((d) => d >= start && d <= end);
   }
 
-  const availableFrom = from ?? null;
+  // « until 12:00 » part de l'ouverture du café (docs/menu/README.md) : sans ce début,
+  // le staff, qui n'est pas borné par l'ouverture, pourrait commander une formule à 7h30.
+  const availableFrom = from ?? (until !== undefined ? OPENING_TIME : null);
   const availableUntil = until ?? to ?? null;
   for (const time of [availableFrom, availableUntil]) {
     if (time !== null && !/^([01]\d|2[0-3]):[0-5]\d$/.test(time)) {

@@ -21,6 +21,8 @@ const menu = parseMenuCsv(
 const MONDAY_10H = new Date('2026-10-19T10:00:00+01:00');
 const MONDAY_13H = new Date('2026-10-19T13:00:00+01:00');
 const SATURDAY_10H = new Date('2026-10-24T10:00:00+01:00');
+const MONDAY_7H30 = new Date('2026-10-19T07:30:00+01:00');
+const MONDAY_22H30 = new Date('2026-10-19T22:30:00+01:00');
 
 type MenuResponse = {
   categories: {
@@ -73,14 +75,15 @@ afterEach(() => {
 
 const app = () => createApp({ db, config });
 
-async function getMenu(): Promise<MenuResponse> {
-  const res = await request(app()).get('/api/menu');
+async function getMenu(token?: string): Promise<MenuResponse> {
+  const req = request(app()).get('/api/menu');
+  const res = await (token === undefined ? req : req.set('Authorization', `Bearer ${token}`));
   expect(res.status).toBe(200);
   return res.body as MenuResponse;
 }
 
-async function findItem(nameFr: string): Promise<MenuItem | undefined> {
-  const { categories } = await getMenu();
+async function findItem(nameFr: string, token?: string): Promise<MenuItem | undefined> {
+  const { categories } = await getMenu(token);
   return categories.flatMap((c) => c.items).find((item) => item.name.fr === nameFr);
 }
 
@@ -160,7 +163,7 @@ describe('GET /menu', () => {
     expect(savory?.choiceGroups).toEqual(['hot_drink', 'eggs']);
     expect(savory?.availability).toEqual({
       days: [1, 2, 3, 4, 5, 6, 7],
-      from: null,
+      from: '08:00',
       until: '12:00',
     });
   });
@@ -206,6 +209,66 @@ describe('GET /menu', () => {
   });
 });
 
+describe('GET /menu avec un jeton staff', () => {
+  it('renvoie le posCode de chaque article', async () => {
+    const token = await tokenFor('barista');
+    expect(await findItem('Fondant au chocolat', token)).toMatchObject({ posCode: '53' });
+    expect(await findItem('Grenade', token)).toMatchObject({ posCode: '134' });
+  });
+
+  it.each([
+    ['22h30', MONDAY_22H30],
+    ['7h30', MONDAY_7H30],
+  ])('à %s : le staff commande hors ouverture, sauf les horaires propres', async (_label, time) => {
+    const token = await tokenFor('waiter', { onShift: false });
+    vi.setSystemTime(time);
+    expect(await findItem('Espresso', token)).toMatchObject({
+      available: true,
+      unavailableReason: null,
+    });
+    for (const nameFr of ['Classic Start', 'Œufs brouillés']) {
+      expect(await findItem(nameFr, token)).toMatchObject({
+        available: false,
+        unavailableReason: 'outside_hours',
+      });
+    }
+    // Sans jeton (menu QR) : tout est masqué hors ouverture.
+    const { categories } = await getMenu();
+    const items = categories.flatMap((c) => c.items);
+    expect(items.every((item) => item.unavailableReason === 'outside_hours')).toBe(true);
+    expect(items.some((item) => 'posCode' in item)).toBe(false);
+  });
+
+  it('applique les ruptures et les jours du Plat de la semaine', async () => {
+    const token = await tokenFor('manager');
+    await db.query(`UPDATE menu_items SET price = 32000 WHERE name_fr = 'Plat de la semaine'`);
+    await db.query(`UPDATE menu_items SET sold_out = true WHERE name_fr = 'Espresso'`);
+    vi.setSystemTime(MONDAY_22H30);
+    expect(await findItem('Espresso', token)).toMatchObject({ unavailableReason: 'sold_out' });
+    expect(await findItem('Plat de la semaine', token)).toMatchObject({
+      unavailableReason: 'outside_hours',
+    });
+    vi.setSystemTime(SATURDAY_10H);
+    expect(await findItem('Plat de la semaine', token)).toMatchObject({
+      unavailableReason: 'outside_hours',
+    });
+  });
+
+  it('refuse un jeton invalide au lieu de servir le menu client', async () => {
+    const res = await request(app()).get('/api/menu').set('Authorization', 'Bearer inconnu');
+    expect(res.status).toBe(401);
+    expect(res.body).toMatchObject({ error: { code: 'UNAUTHORIZED' } });
+  });
+
+  it('refuse un compte désactivé', async () => {
+    const token = await tokenFor('chef');
+    await db.query(`UPDATE users SET disabled_at = now() WHERE login = 'chef'`);
+    const res = await request(app()).get('/api/menu').set('Authorization', `Bearer ${token}`);
+    expect(res.status).toBe(403);
+    expect(res.body).toMatchObject({ error: { code: 'ACCOUNT_DISABLED' } });
+  });
+});
+
 describe('PATCH /menu-items/:id/availability', () => {
   it('marque une rupture puis la retire, visible tout de suite dans le menu', async () => {
     await db.query(`UPDATE menu_items SET pos_code = '1234' WHERE name_fr = 'Cheese Burger'`);
@@ -235,6 +298,12 @@ describe('PATCH /menu-items/:id/availability', () => {
       { action: 'menu_item.sold_out', entity_id: id('Espresso') },
       { action: 'menu_item.back_in_stock', entity_id: id('Espresso') },
     ]);
+  });
+
+  it('répond avec la disponibilité du staff après la fermeture', async () => {
+    vi.setSystemTime(MONDAY_22H30);
+    const res = await setAvailable('manager', 'Espresso', true);
+    expect(res.body).toMatchObject({ available: true, posCode: '10' });
   });
 
   it('reste hors horaire même sans rupture', async () => {

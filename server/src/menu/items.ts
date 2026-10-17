@@ -1,10 +1,10 @@
 import type { Db } from '../db.js';
-import { computeAvailability, type UnavailableReason } from './availability.js';
+import { computeAvailability, type Audience, type UnavailableReason } from './availability.js';
 
 export type Station = 'bar' | 'kitchen' | 'both';
 export type Localized = { fr: string; en: string };
 
-// Forme MenuItem de docs/api.md § 2. `posCode` seulement pour le staff et l'agent.
+// Forme MenuItem de docs/api.md § 2. `posCode` et disponibilité du staff seulement pour le staff.
 export type MenuItem = {
   id: number;
   categoryId: number;
@@ -79,7 +79,7 @@ export async function loadMenuItems(db: Db, ids?: readonly number[]): Promise<It
   return rows;
 }
 
-export function toMenuItem(row: ItemRow, now: Date, { withPosCode }: { withPosCode: boolean }) {
+export function toMenuItem(row: ItemRow, now: Date, audience: Audience) {
   const availability = {
     days: row.days,
     from: hhmm(row.available_from),
@@ -92,13 +92,13 @@ export function toMenuItem(row: ItemRow, now: Date, { withPosCode }: { withPosCo
     description: localized(row.description_fr, row.description_en),
     price: row.price,
     photoUrl: row.photo_url,
-    ...computeAvailability({ ...availability, soldOut: row.sold_out }, now),
+    ...computeAvailability({ ...availability, soldOut: row.sold_out }, now, audience),
     availability,
     suggestedExtraIds: row.suggested_extra_ids,
     choiceGroups: row.choice_groups,
     noteHint: localized(row.note_hint_fr, row.note_hint_en),
     station: row.station,
   };
-  if (withPosCode) item.posCode = row.pos_code;
+  if (audience === 'staff') item.posCode = row.pos_code;
   return item;
 }

@@ -36,7 +36,25 @@ export function requireStaff(db: Db, config: Config, options: Options = {}): Req
   };
 }
 
+// Jeton facultatif (GET /menu) : sans en-tête, l'appel passe comme client ;
+// avec un en-tête, mêmes contrôles que requireStaff (jeton invalide → 401, pas de repli silencieux).
+export function optionalStaff(db: Db, config: Config): RequestHandler {
+  const required = requireStaff(db, config);
+  return async (req, res, next) => {
+    if (req.get('Authorization') === undefined) {
+      next();
+      return;
+    }
+    await required(req, res, next);
+  };
+}
+
 // À appeler seulement derrière requireStaff.
 export function getAuth(res: Response): AuthContext {
   return res.locals['auth'] as AuthContext;
+}
+
+// Derrière optionalStaff : undefined pour un client.
+export function findAuth(res: Response): AuthContext | undefined {
+  return res.locals['auth'] as AuthContext | undefined;
 }

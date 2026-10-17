@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { z } from 'zod';
-import { getAuth, requireStaff } from '../auth/middleware.js';
+import { findAuth, getAuth, optionalStaff, requireStaff } from '../auth/middleware.js';
 import type { Role } from '../auth/sessions.js';
 import type { Config } from '../config.js';
 import { audit, type Db } from '../db.js';
@@ -31,8 +31,10 @@ type ChoiceGroupRow = {
 export function menuRoutes(db: Db, config: Config): Router {
   const router = Router();
 
-  router.get('/menu', async (_req, res) => {
+  // Avec un jeton staff : posCode et disponibilité du staff (docs/api.md § 3).
+  router.get('/menu', optionalStaff(db, config), async (_req, res) => {
     const now = new Date();
+    const audience = findAuth(res) ? 'staff' : 'customer';
     const [{ rows: categories }, items, { rows: groups }] = await Promise.all([
       db.query<CategoryRow>(
         `SELECT id, name_fr, name_en, sort_order FROM categories ORDER BY sort_order, id`,
@@ -55,7 +57,7 @@ export function menuRoutes(db: Db, config: Config): Router {
         sortOrder: category.sort_order,
         items: items
           .filter((row) => row.category_id === category.id)
-          .map((row) => toMenuItem(row, now, { withPosCode: false })),
+          .map((row) => toMenuItem(row, now, audience)),
       })),
       choiceGroups: groups.map((group) => ({
         key: group.key,
@@ -100,7 +102,7 @@ export function menuRoutes(db: Db, config: Config): Router {
         // TODO : émettre `menu:updated` { menuItemId, available, unavailableReason }.
       }
 
-      res.json(toMenuItem({ ...row, sold_out: soldOut }, new Date(), { withPosCode: true }));
+      res.json(toMenuItem({ ...row, sold_out: soldOut }, new Date(), 'staff'));
     },
   );
 

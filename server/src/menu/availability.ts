@@ -8,10 +8,14 @@ export const CLOSING_TIME = '22:00';
 
 export type UnavailableReason = 'sold_out' | 'outside_hours';
 
+// Le menu QR suit l'ouverture du café ; le staff seulement les horaires propres des articles
+// (docs/api.md § 5 : avant 8h et après 22h, seul le menu QR est bloqué).
+export type Audience = 'customer' | 'staff';
+
 export type AvailabilityRule = {
   // 1 = lundi … 7 = dimanche.
   days: readonly number[];
-  // "HH:MM" ou "HH:MM:SS" (format renvoyé par PostgreSQL), null = ouverture ou fermeture du café.
+  // "HH:MM" ou "HH:MM:SS" (format renvoyé par PostgreSQL), null = pas de borne propre à l'article.
   from: string | null;
   until: string | null;
   soldOut: boolean;
@@ -39,13 +43,19 @@ function toMinutes(time: string): number {
   return Number(hours) * 60 + Number(minutes);
 }
 
-// L'horaire propre d'un article s'applique en plus de l'ouverture du café.
+// L'horaire propre d'un article s'applique toujours ; pour le client, l'ouverture du café en plus.
 // L'heure de fin est exclue : à 12h00 pile, les formules ne sont plus servies.
-export function isWithinHours(rule: Omit<AvailabilityRule, 'soldOut'>, now: Date): boolean {
+export function isWithinHours(
+  rule: Omit<AvailabilityRule, 'soldOut'>,
+  now: Date,
+  audience: Audience = 'customer',
+): boolean {
   const { day, minutes } = localTime(now);
   if (!rule.days.includes(day)) return false;
-  const from = Math.max(toMinutes(OPENING_TIME), toMinutes(rule.from ?? OPENING_TIME));
-  const until = Math.min(toMinutes(CLOSING_TIME), toMinutes(rule.until ?? CLOSING_TIME));
+  const [opening, closing] =
+    audience === 'customer' ? [toMinutes(OPENING_TIME), toMinutes(CLOSING_TIME)] : [0, 24 * 60];
+  const from = Math.max(opening, rule.from === null ? 0 : toMinutes(rule.from));
+  const until = Math.min(closing, rule.until === null ? 24 * 60 : toMinutes(rule.until));
   return minutes >= from && minutes < until;
 }
 
@@ -53,8 +63,11 @@ export function isWithinHours(rule: Omit<AvailabilityRule, 'soldOut'>, now: Date
 export function computeAvailability(
   rule: AvailabilityRule,
   now: Date,
+  audience: Audience = 'customer',
 ): { available: boolean; unavailableReason: UnavailableReason | null } {
-  if (!isWithinHours(rule, now)) return { available: false, unavailableReason: 'outside_hours' };
+  if (!isWithinHours(rule, now, audience)) {
+    return { available: false, unavailableReason: 'outside_hours' };
+  }
   if (rule.soldOut) return { available: false, unavailableReason: 'sold_out' };
   return { available: true, unavailableReason: null };
 }
