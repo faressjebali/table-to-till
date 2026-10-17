@@ -1,6 +1,6 @@
 # Contrat d'API — Coffee QR
 
-> Brouillon v1.9.1 (17 octobre 2026). À relire ensemble. Toute modification passe par une PR dédiée, annoncée à l'autre.
+> Brouillon v1.9.2 (17 octobre 2026). À relire ensemble. Toute modification passe par une PR dédiée, annoncée à l'autre.
 
 ## 1. Règles générales
 
@@ -278,10 +278,10 @@ Règles `POST /orders` :
 
 | Méthode | Chemin | Corps | Réponse |
 | --- | --- | --- | --- |
-| POST | `/auth/login` | `{ login, password }` | `{ token, user: { id, name, role, mustChangePassword } }` |
+| POST | `/auth/login` | `{ login, password }` | `{ token, user: { id, name, role, title, mustChangePassword } }` |
 | POST | `/auth/change-password` | `{ currentPassword, newPassword }` | 204 |
 | POST | `/auth/logout` | — | 204 |
-| GET | `/me` | — | `{ id, name, role, onShift, principal }` (`principal` : vrai si serveur principal en shift) |
+| GET | `/me` | — | `{ id, name, role, title, onShift, principal }` (`title` : titre affiché, voir User ; `principal` : vrai si serveur principal en shift) |
 
 ## 5. Serveur (rôle `waiter` en shift, sauf mention)
 
@@ -354,7 +354,7 @@ Vente directe (`/direct-sales`) : le serveur attribue une **table fictive libre*
 | POST | `/pos/jobs/:id/retry` | — | `failed` → `queued` |
 | POST | `/pos/jobs/:id/resolve-manually` | `{ note? }` | `failed` → `manual` (fait à la main au comptoir) ; commande `pos.status = "manual"` — principal |
 
-## 6. Manager (rôle `manager` ; le comptable, rôle `accountant`, a seulement `/reports/sales`, `/closures` et les statistiques)
+## 6. Manager (rôle `manager` ; le comptable, rôle `accountant`, a seulement `/reports/sales`, `/closures` et les statistiques, plus ses commandes offertes du § 5 bis)
 
 | Méthode | Chemin | Rôle |
 | --- | --- | --- |
@@ -385,7 +385,7 @@ Comptes (`/users`) :
 
 Statistiques (articles les plus / moins vendus, ventes d'un article sur une période, courbes) : endpoints ajoutés plus tard, pour les managers et le comptable.
 
-Rôles barista / chef / comptable : endpoints ajoutés avec le stock (achats, arrivages, avaries, inventaire, besoins, offres staff, rapports d'écarts).
+Rôles barista / chef / comptable : endpoints ajoutés avec le stock (demandes d'achat, arrivages, avaries, inventaire hebdomadaire, rapports d'écarts ; les offres au staff sont déjà dans `/gifts`).
 
 ## 7. Agent caisse
 
@@ -434,6 +434,7 @@ Après reconnexion, chaque client recharge via REST.
 
 | Version | Date | Changement |
 | --- | --- | --- |
+| v1.9.2 brouillon | 2026-10-17 | `title` dans `GET /me` et dans `user` de `POST /auth/login` ; en-tête du § 6 : le comptable a aussi `/offer-orders` et `/offer-tables` ; endpoints de stock prévus (demandes d'achat, arrivages, avaries, inventaire) |
 | v1.9.1 brouillon | 2026-10-17 | `GET /offer-tables` (tables d'offre permises à l'appelant : serveur en shift, manager, comptable) ; statistiques aussi pour le comptable ; `NO_FREE_VIRTUAL_TABLE` = méthode classique |
 | v1.9 brouillon | 2026-10-17 | Rôle `accountant` (comptable : rapports, clôtures, commandes sur sa table d'offre) ; `User.title` ; tables d'offre `Table.offer` (`{ label, userId }`, remplace `managerId`) : avec ou sans compte, tout y est offert ; `/manager-orders` → `/offer-orders` (`tableId?`, managers et comptable), source `manager` → `offer`, `Order.manager` → `Order.offer` ; `/staff-orders` aussi sur une table d'offre (offerte, sans confirmation) ; `ShiftClosure.managerOrders` → `offerOrders` ; `gifts.reason` `offer` / `offer_for_client` ; `report:updated` aussi au comptable ; notes jamais tapées en caisse (plus de `note` dans `enter_order`) |
 | v1.8.2 brouillon | 2026-10-16 | Fin de journée : les renforts terminent leur shift avec la dernière clôture (`OPEN_TABLES` sans `supportWaiterIds`) ; clôture forcée sans autre serveur jamais bloquée (tables `unpaid`, `ShiftClosure.unpaidTables`) ; fin automatique des shifts oubliés (`SHIFT_AUTO_END_TIME`, `ShiftClosure.automatic`) ; `TableSession.status` `paid` / `unpaid` ; `ShiftClosure.slot` = rang de la clôture dans la journée ; remises et annulations comptées dans la période où elles sont faites (clôtures et rapports, `cancelledLines.confirmedAt`) ; file caisse : une tâche `failed` bloque les tâches suivantes de sa table (`blockedByJobId`), table fictive libre seulement après l'encaissement en caisse, remise / annulation / transfert d'une ligne pas encore saisie ; `GET /menu` avec jeton staff (`posCode`, horaires du staff) ; format du lien QR ; `pos:status` aussi aux serveurs en shift ; limite QR 10 / 10 min ; exemple `ShiftClosure` corrigé (195 500) |

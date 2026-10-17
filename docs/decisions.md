@@ -2,6 +2,13 @@
 
 Une ligne par décision, la plus récente en haut. Format : `AAAA-MM-JJ — décision — pourquoi`.
 
+- 2026-10-17 — Tests de l'agent dans la vraie caisse : uniquement sur de vraies commandes, jamais de saisie fictive — chaque saisie est une vente dans la caisse fiscale
+- 2026-10-17 — Inventaire manuel hebdomadaire obligatoire (bar et cuisine), rappelé le vendredi au Shift 2 au serveur en shift, au barista et au cuisinier ; arrivages, avaries et inventaire pointés seulement par le barista (bar) et le cuisinier (cuisine), pas par les managers — usage du café
+- 2026-10-17 — « Achats » du barista et « besoins » du cuisinier = demandes d'achat envoyées aux managers, qui appellent les fournisseurs ; aucun argent — c'est la manager qui commande
+- 2026-10-17 — Dépenses : achats courants (femme de ménage) et fournisseurs payés de la caisse → dépense du principal avec photo de la facture (facultative) ; fournisseur payé plus tard → réglé par la manager hors de l'app, mais l'arrivage est toujours pointé — l'argent de la caisse tombe juste, le stock aussi
+- 2026-10-17 — Jus de saison en rupture : la manager le remplace dans la liste des jus de saison (pas de règle automatique) — usage du café
+- 2026-10-17 — Notes et choix restent transmis à l'oral au bar et à la cuisine ; pas d'écran de bons pour le barista et le cuisinier (confirmé) — usage du café
+- 2026-10-17 — `title` renvoyé par `/me` et `/auth/login` — l'app staff affiche le titre du compte connecté ; contrat v1.9.2
 - 2026-10-17 — La clôture de journée et les shifts de LegacyPOS restent faits à la main par l'équipe ; l'agent n'y touche jamais — usage du café, caisse fiscale
 - 2026-10-17 — Vente directe sans table fictive libre (5 tables, agent en retard ou arrêté) : refusée, le comptoir passe à la méthode classique ; on ne réutilise pas une table dont la vente n'est pas encaissée en caisse — deux ventes ne doivent jamais se mélanger sur une addition
 - 2026-10-17 — Tables d'offre listées par `GET /offer-tables`, selon les droits de l'appelant ; statistiques aussi pour le comptable — contrat v1.9.1

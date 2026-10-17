@@ -2,7 +2,7 @@
 
 Ce que nous construisons et quand une fonctionnalité est « terminée ». Si quelque chose manque ou n'est pas clair : demander, ne pas inventer.
 
-Version 2 — refonte du 15 octobre 2026. Clôture de shift et rapports de la manager ajoutés le 15 octobre 2026 (v1.7 du contrat). Caisse unique (principal et renfort), passation, commandes des managers : 15 octobre 2026 (v1.8). Fin de journée sans blocage, numéro des clôtures, file caisse après un échec : 16 octobre 2026 (v1.8.2). Comptable, tables d'offre, notes jamais en caisse : 17 octobre 2026 (v1.9).
+Version 2 — refonte du 15 octobre 2026. Clôture de shift et rapports de la manager ajoutés le 15 octobre 2026 (v1.7 du contrat). Caisse unique (principal et renfort), passation, commandes des managers : 15 octobre 2026 (v1.8). Fin de journée sans blocage, numéro des clôtures, file caisse après un échec : 16 octobre 2026 (v1.8.2). Comptable, tables d'offre, notes jamais en caisse : 17 octobre 2026 (v1.9). Demandes d'achat, dépenses fournisseurs, inventaire hebdomadaire : 17 octobre 2026 (v1.9.2).
 
 ## 1. Contexte
 
@@ -41,7 +41,7 @@ Version 2 — refonte du 15 octobre 2026. Clôture de shift et rapports de la ma
   Dans les deux cas, ils arrivent en caisse comme **une ligne séparée**.
 - **Formules et articles à choix** (formules petit-déj, Kids Menu) : le client **choisit dans des listes** (café ou thé, jus, œufs), pas dans une note libre. Le Kids Menu (cookie ou pancakes) et le Cookie (chocolat ou pomme cannelle) sont chacun **deux articles distincts** en caisse ; le choix du jus du Kids Menu reste une liste.
   - Dans une formule, le client peut prendre un **thé à 6,5 DT** ou un **café jusqu'à 8,5 DT** de la carte, et **n'importe quel jus de saison**.
-  - Les jus de saison changent : pour l'instant, seulement **Grenade**. La liste doit être modifiable par la manager.
+  - Les jus de saison changent : pour l'instant, seulement **Grenade**. La liste doit être modifiable par la manager. Si le jus de saison est en rupture, la manager le remplace dans la liste par un autre jus de la carte (sinon les formules avec jus ne peuvent plus être commandées).
   - Les choix sont enregistrés dans l'app pour le **calcul du stock** (traçabilité).
   - En caisse, l'agent tape **seulement la formule**, sans les choix ; il n'ajoute jamais la boisson, le jus ou les œufs inclus. Le bar et la cuisine connaissent les choix **oralement**, par le serveur.
 - **Une note libre par ligne** (max 200 caractères, ex. « sans sucre »), en plus des choix. Elle n'est **jamais tapée en caisse** (le bouton NOTE de LegacyPOS n'est pas utilisé) : elle reste dans l'app et le serveur la dit au bar ou à la cuisine.
@@ -89,9 +89,9 @@ Version 2 — refonte du 15 octobre 2026. Clôture de shift et rapports de la ma
 | Rôle | Privilèges connus |
 | --- | --- |
 | Serveur | **En shift seulement** (voir Shifts : principal ou renfort) : plan des tables, commandes, confirmer/rejeter les commandes QR et les commandes offertes des managers et du comptable, saisir une commande (y compris sur une table d'offre), transfert d'article, changement de table, imprimer l'addition, ruptures de tout article. **Principal seulement** : encaisser, remise staff 20 %, annulation, offrir un article, dépenses, clôture et passation. Hors shift : seulement « Démarrer mon shift » |
-| Barista | Saisir et encaisser une vente directe (comptoir), ruptures des articles du bar (+ articles `both`), achats, pointer l'arrivage de marchandise, déclarer les avaries, enregistrer les offres **au staff** (pas aux clients) |
-| Cuisinier | Ruptures des articles de la cuisine (+ articles `both`), pointer les arrivages de la cuisine, déclarer les avaries de la cuisine, saisir l'inventaire de la cuisine, signaler les besoins (ce qu'il faut racheter), enregistrer les offres **au staff** (pas aux clients) |
-| Manager | Comptes et rôles, édition du menu (articles, photos, prix, codes, horaires, Plat de la semaine, jus de saison), ruptures, rapports (CA, articles sortis, clôtures, statistiques), rapports de stock et d'écarts, **commander sur sa table d'offre** et sur les tables d'offre sans compte, pour soi ou pour offrir à un client (voir Tables d'offre). **Pas** d'accès au plan des tables ni aux commandes des clients |
+| Barista | Saisir et encaisser une vente directe (comptoir), ruptures des articles du bar (+ articles `both`), **demandes d'achat** (envoyées aux managers), pointer les arrivages du bar, déclarer les avaries du bar, saisir l'inventaire du bar, enregistrer les offres **au staff** (pas aux clients) |
+| Cuisinier | Ruptures des articles de la cuisine (+ articles `both`), pointer les arrivages de la cuisine, déclarer les avaries de la cuisine, saisir l'inventaire de la cuisine, **demandes d'achat** (ce qu'il faut racheter, envoyées aux managers), enregistrer les offres **au staff** (pas aux clients) |
+| Manager | Comptes et rôles, édition du menu (articles, photos, prix, codes, horaires, Plat de la semaine, jus de saison), ruptures, rapports (CA, articles sortis, clôtures, statistiques), rapports de stock et d'écarts, reçoit les **demandes d'achat** (et appelle les fournisseurs), **commander sur sa table d'offre** et sur les tables d'offre sans compte, pour soi ou pour offrir à un client (voir Tables d'offre). **Pas** d'accès au plan des tables ni aux commandes des clients |
 | Comptable | Rapports (CA, espèces / carte, dépenses, articles sortis, clôtures et PDF, statistiques), rapports de stock et d'écarts, **commander sur sa table d'offre**. Ne modifie rien (ni menu, ni prix, ni comptes) ; **pas** d'accès au plan des tables ni aux commandes |
 
 Le rôle Manager regroupe les **2 managers et les 3 patrons** : tous ont le même rôle et les mêmes droits. Chaque compte a un **titre affiché** (Manager, Patron, Patronne, Comptable…) sur le PDF et dans le journal, sans droits particuliers. Le **comptable** a son propre rôle, parce que ses droits sont différents.
@@ -134,6 +134,12 @@ Le plan des tables et les commandes sont gérés **entièrement par les serveurs
 ### Dépenses
 - Le principal saisit chaque dépense payée en espèces de la caisse : montant, motif (fournisseur, extra payé en espèces, achat courant comme les boîtes takeaway ou le papier, autre), note, photo du ticket facultative.
 - Elle est déduite des espèces attendues de la clôture et inscrite au journal d'actions.
+- Cas habituels :
+  - **achats courants** (essuie-tout, pailles, boîtes takeaway…) : demandés oralement au serveur, achetés par la femme de ménage avec l'argent de la caisse ; à son retour, le principal photographie la facture et saisit la dépense ;
+  - **fournisseur payé tout de suite** : il livre, le principal le paie avec la caisse, photographie la facture et saisit la dépense ;
+  - **fournisseur payé plus tard** : réglé par la manager, rien n'est saisi côté argent dans l'app.
+- Dans tous les cas, la marchandise livrée est **pointée comme arrivage** par le barista ou le cuisinier (§ 12), payée ou non.
+- Les **demandes d'achat** du barista et du cuisinier ne sont pas des dépenses : elles disent aux managers quoi commander aux fournisseurs.
 
 ### Rapports de la manager
 - **En temps réel** : CA, espèces / carte, dépenses et articles sortis (combien de jus, cafés…), pour la journée, le Shift 1 (8h–15h) ou le Shift 2 (15h–22h). Les créneaux des rapports se comptent **par horaire**, quelles que soient les clôtures ; une remise ou une annulation compte à l'heure où elle est faite ; l'argent compté est sur les PDF de clôture.
@@ -220,5 +226,6 @@ Restent :
 - **Toutes les ventes passent par l'app** (QR, saisie serveur, comptoir) : une vente tapée directement en caisse sans l'app serait un écart inexpliqué.
 - Consommation théorique de chaque article vendu à partir des **fiches techniques** (bar et cuisine), y compris les choix précis dans les formules (type de café, thé, jus, œufs).
 - Sorties hors ventes : offerts (principal, barista, cuisinier), commandes des tables d'offre, annulations d'articles déjà préparés.
-- Approvisionnement : achats, arrivages, avaries.
+- Approvisionnement : arrivages (pointés à chaque livraison, payée ou non), avaries ; demandes d'achat aux managers. Seuls le **barista** (bar) et le **cuisinier** (cuisine) pointent arrivages, avaries et inventaire.
+- **Inventaire manuel hebdomadaire obligatoire** (bar et cuisine). Rappel chaque **vendredi** au Shift 2 : notification au serveur en shift, au barista et au cuisinier ; les managers voient si l'inventaire n'a pas été fait.
 - Règles détaillées du calcul et de l'approvisionnement : à définir ensemble.
