@@ -2,6 +2,7 @@
 
 Une ligne par décision, la plus récente en haut. Format : `AAAA-MM-JJ — décision — pourquoi`.
 
+- 2026-10-17 — Code `CAFE_CLOSED` pour le menu QR quand le café est fermé, `OUTSIDE_HOURS` seulement pour un article hors de ses horaires ; contrat v2.0.1 — le client doit savoir s'il doit retirer un article ou commander au comptoir
 - 2026-10-17 — Passation : deux principaux en même temps ; à 15h00, le serveur arrivé à partir de 14h00 devient principal automatiquement (rien à accepter) ; l'ancien finit ses tables ou les passe en clôturant ; chaque clôture ne montre que la caisse de son principal (ses tables, et le hors-table quand il était principal en cours) ; contrat v2.0 — le Shift 1 doit pouvoir finir ses tables pendant que le Shift 2 travaille, sans bloquer l'argent
 - 2026-10-17 — Clôture forcée : le serveur désigné par la manager devient principal tout de suite, sans pouvoir refuser — la caisse ne doit jamais rester bloquée
 - 2026-10-17 — Vente directe ouverte jusqu'à l'encaissement depuis l'app (Espèces / Carte, par le barista ou le principal), puis encaissée par l'agent ; avant, remise staff et annulation possibles — une erreur au comptoir doit pouvoir se corriger

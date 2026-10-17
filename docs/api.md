@@ -1,6 +1,6 @@
 # Contrat d'API — Coffee QR
 
-> Brouillon v2.0 (17 octobre 2026). À relire ensemble. Toute modification passe par une PR dédiée, annoncée à l'autre.
+> Brouillon v2.0.1 (17 octobre 2026). À relire ensemble. Toute modification passe par une PR dédiée, annoncée à l'autre.
 
 ## 1. Règles générales
 
@@ -45,7 +45,8 @@ Un compte désactivé est refusé partout (`ACCOUNT_DISABLED`) et ses connexions
 | 403 | `ACCOUNT_DISABLED` | Compte désactivé par la manager |
 | 404 | `NOT_FOUND`, `TABLE_NOT_FOUND` | Ressource ou jeton de table inconnu |
 | 409 | `ITEM_UNAVAILABLE` | Article en rupture |
-| 409 | `OUTSIDE_HOURS` | Article hors de ses horaires |
+| 409 | `OUTSIDE_HOURS` | Article hors de ses horaires (`details: { menuItemId }`) : le client le retire de son panier, le reste peut passer |
+| 409 | `CAFE_CLOSED` | Menu QR seulement : café fermé (avant 8h00 ou après 22h00), toute la commande est refusée ; le menu QR affiche « le café est fermé, demandez au serveur » |
 | 409 | `INVALID_STATUS` | Action impossible dans l'état actuel (ex. commande déjà confirmée par un autre serveur, ou expirée) |
 | 409 | `NO_WAITER_ON_SHIFT` | Commande QR, commande offerte depuis l'app d'un manager ou du comptable, ou vente directe refusée : aucun serveur en shift |
 | 409 | `OPEN_TABLES` | Fin de journée impossible : tables ouvertes (ventes directes non encaissées comprises) ou commandes en attente. `details: { tableIds, pendingOrderIds }` |
@@ -278,6 +279,7 @@ Lien imprimé sur le QR d'une table : `<CUSTOMER_WEB_URL>/t/<tableToken>` (ex. `
 Règles `POST /orders` :
 - 1–30 lignes, quantité 1–20, note ≤ 200 caractères, articles disponibles **à l'heure actuelle**. Le serveur calcule tous les prix. Limite : voir anti-abus.
 - `choices: [ { group, menuItemId } ]` : obligatoire et complet pour un article ayant des `choiceGroups` (sinon `VALIDATION_ERROR`) ; interdit sinon.
+- Café fermé (avant 8h00 ou après 22h00) → 409 `CAFE_CLOSED`, vérifié avant tout le reste ; article hors de ses horaires → 409 `OUTSIDE_HOURS` avec `details.menuItemId`.
 - Aucun serveur en shift → 409 `NO_WAITER_ON_SHIFT` (le menu QR affiche « commandez au comptoir »).
 
 ## 4. Authentification staff
@@ -304,7 +306,7 @@ Le plan des tables et les commandes sont gérés **seulement par les serveurs en
 - Si le serveur du Shift 2 est en retard, le principal reste seul principal. Il peut passer la caisse à un renfort avec `POST /principal/transfer` : ce renfort devient principal en cours tout de suite.
 - Chaque changement est envoyé aux serveurs en shift (`principal:changed`) et écrit au journal d'actions.
 
-Après la fermeture du café (22h00) et avant l'ouverture (8h00), `/staff-orders`, `/direct-sales` et `/offer-orders` restent possibles : seul le menu QR (`POST /orders`) est refusé (`OUTSIDE_HOURS`). Les horaires propres des articles (`availability.from` / `until`, `days`) s'appliquent toujours.
+Après la fermeture du café (22h00) et avant l'ouverture (8h00), `/staff-orders`, `/direct-sales` et `/offer-orders` restent possibles : seul le menu QR (`POST /orders`) est refusé (`CAFE_CLOSED`). Les horaires propres des articles (`availability.from` / `until`, `days`) s'appliquent toujours.
 
 | Méthode | Chemin | Corps | Réponse |
 | --- | --- | --- | --- |
@@ -449,6 +451,7 @@ Après reconnexion, chaque client recharge via REST.
 
 | Version | Date | Changement |
 | --- | --- | --- |
+| v2.0.1 brouillon | 2026-10-17 | `CAFE_CLOSED` (menu QR, café fermé) distinct de `OUTSIDE_HOURS` (un article hors de ses horaires, `details.menuItemId`) |
 | v2.0 brouillon | 2026-10-17 | **Deux principaux pendant la passation** : bascule automatique à `SHIFT_2_START` (15h00) du serveur arrivé à partir de `SHIFT_2_ARRIVAL_FROM` (14h00), principal en cours, `TableSession.principal`, `Table.principalId`, `currentPrincipal` dans `/me` et `/shifts/current`, `POST /principal/transfer`, événement `principal:changed` ; une clôture par principal (sa caisse : ses tables et le hors-table de sa période de principal en cours) ; `POST /shifts/end` sans `handoverTo` (les tables de l'ancien principal passent au principal en cours) ; **supprimés** : `/handovers/*`, `handover:*`, `HANDOVER_PENDING` ; `/admin/force-handover` `{ principalId, toWaiterId, countedCash }`, sans acceptation. **Vente directe ouverte jusqu'à l'encaissement** : `/direct-sales` sans `method`, encaissée par `POST /tables/:id/pay` (barista ou principal), `GET /direct-sales?status=open`, remise et annulation possibles avant ; table fictive libre seulement une fois sa session fermée. **Remise toujours sur toute la table** (plus de `lineIds`). **Transfert et changement de table seulement entre tables `real`** |
 | v1.9.3 brouillon | 2026-10-17 | `/staff-orders` sur une table d'offre : `requestedById` et `forClient` obligatoires (`Order.offer.requestedBy` jamais `null`) ; `requesters` dans `GET /offer-tables` pour les serveurs ; table encaissée : plus de remise, d'annulation ni de transfert (409 `INVALID_STATUS`) ; `MenuItem.description` et `photoUrl` peuvent valoir `null` |
 | v1.9.2 brouillon | 2026-10-17 | `title` dans `GET /me` et dans `user` de `POST /auth/login` ; en-tête du § 6 : le comptable a aussi `/offer-orders` et `/offer-tables` ; endpoints de stock prévus (demandes d'achat, arrivages, avaries, inventaire) |

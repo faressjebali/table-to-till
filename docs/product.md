@@ -71,6 +71,7 @@ Version 2 — refonte du 15 octobre 2026. Clôture de shift et rapports de la ma
 - Panier : lignes, quantités, total, modifier/supprimer. Envoi → écran « Commande envoyée, un serveur va la confirmer ».
 - Erreur (réseau, article devenu indisponible) : le panier est conservé, message clair.
 - La table peut commander plusieurs fois.
+- **Café fermé** (avant 8h00 ou après 22h00) : la commande QR est refusée avec son propre message (« le café est fermé, demandez au serveur »), différent de celui d'un article hors de ses horaires, que le client retire simplement de son panier.
 - **Aucun serveur en shift** (après la clôture du soir par exemple) : la commande QR est refusée, avec un message clair (« commandez au comptoir »).
 - Une commande non confirmée **expire après 5 minutes** (délai réglable) ; le client en est informé (« appelez un serveur »), son panier est conservé.
 - Rapide sur données mobiles (photos compressées, chargement progressif).
