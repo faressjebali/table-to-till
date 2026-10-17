@@ -2,6 +2,11 @@
 
 Une ligne par décision, la plus récente en haut. Format : `AAAA-MM-JJ — décision — pourquoi`.
 
+- 2026-10-17 — Saisie d'un serveur sur une table d'offre : il choisit qui l'a demandée (manager ou comptable, mêmes tables permises) et si c'est pour un client — le PDF doit dire qui a offert ; contrat v1.9.3
+- 2026-10-17 — Table encaissée : libre, plus aucune remise, annulation ni transfert sur ses articles (vente directe comprise) — l'addition est close dans la caisse aussi
+- 2026-10-17 — Plan de l'app : toutes les tables en case carrée 1×1, comme dans LegacyPOS (corrigeable par la manager) ; `offer_for` de `docs/tables.csv` = nom seul de la table d'offre — rien à relever, le PDF affiche le nom
+- 2026-10-17 — Articles de la caisse absents du menu (gâteaux entiers, Brownie, Banana bread, Hot chocolate, Café turc, Lait, Parmesan…) : plus vendus, ignorés — confirmé par l'équipe
+- 2026-10-17 — Transfert et changement de table : pas de restriction sur la table d'arrivée dans le contrat pour l'instant ; à trancher en codant — choix de l'équipe
 - 2026-10-17 — Jus de grenade à 11 DT (prix de la caisse), au lieu de 13 DT sur le menu papier — le prix de l'app doit être celui de la caisse
 - 2026-10-17 — Tests de l'agent dans la vraie caisse : uniquement sur de vraies commandes, jamais de saisie fictive — chaque saisie est une vente dans la caisse fiscale
 - 2026-10-17 — Inventaire manuel hebdomadaire obligatoire (bar et cuisine), rappelé le vendredi au Shift 2 au serveur en shift, au barista et au cuisinier ; arrivages, avaries et inventaire pointés seulement par le barista (bar) et le cuisinier (cuisine), pas par les managers — usage du café
@@ -42,7 +47,7 @@ Une ligne par décision, la plus récente en haut. Format : `AAAA-MM-JJ — déc
 - 2026-10-15 — Une seule caisse : un serveur principal à la fois (le premier arrivé) encaisse, gère remises, annulations, offerts, dépenses et clôture ; un renfort (jours chargés) prend et confirme les commandes, sert, transfère, change de table et imprime l'addition, sans jamais toucher à l'argent ; tout compte dans la caisse du principal, le journal garde le vrai nom — c'est ainsi que travaille le café ; remplace l'attribution par serveur et la clôture par serveur
 - 2026-10-15 — Une clôture par créneau (Shift 1, Shift 2), faite par le principal ; passation au principal suivant (il accepte, reçoit les tables ouvertes et les commandes en attente) ; le principal ne part pas avec des tables ouvertes ; en fin de journée, toutes les tables sont encaissées et fermées — pas de table ni d'argent sans responsable
 - 2026-10-15 — Vente directe, offres du barista et du cuisinier, commandes des managers, dépenses : dans la caisse du principal en cours (plus de « pour le compte d'un serveur ») — une seule caisse
-- 2026-10-15 — Un manager offre à un client depuis sa propre table (« offre client »), confirmée par un serveur comme ses commandes — un seul écran pour la manager
+- 2026-10-15 — Un manager offre à un client depuis sa propre table (depuis : aussi depuis les tables d'offre sans compte, voir « Tables d'offre ») (« offre client »), confirmée par un serveur comme ses commandes — un seul écran pour la manager
 - 2026-10-15 — Ruptures : le serveur seulement en shift ; hors shift il voit seulement « Démarrer mon shift » — cohérence de l'écran hors shift
 - 2026-10-15 — Pas de changement de rôle ni de désactivation d'un serveur en shift — un principal ne peut pas perdre sa caisse sans clôture
 - 2026-10-15 — Après 22h (et avant 8h), seul le menu QR est bloqué ; les serveurs peuvent saisir, les horaires propres des articles restent appliqués — un client encore là doit pouvoir commander

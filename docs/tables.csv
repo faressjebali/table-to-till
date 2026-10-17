@@ -26,16 +26,16 @@ number,kind,layout_x,layout_y,offer_for
 27,real,11,2,
 55,virtual,,,
 100,real,2,7,
-101,virtual,,,Karim Haddad (comptable)
-102,virtual,,,Sami Trabelsi (patron)
-103,virtual,,,Nour Ben Salem (patronne)
+101,virtual,,,Karim Haddad
+102,virtual,,,Sami Trabelsi
+103,virtual,,,Nour Ben Salem
 104,virtual,,,Table de test
-105,virtual,,,Rania (manager)
+105,virtual,,,Rania
 106,virtual,,,
-107,virtual,,,"Walid (manager, cuisine et achats)"
-109,virtual,,,Hedi Mansour (propriétaire du local)
+107,virtual,,,Walid
+109,virtual,,,Hedi Mansour
 111,virtual,,,Table des artistes
 333,virtual,,,
 817,virtual,,,Yasmine Ben Salem
 888,virtual,,,Rania Gharbi
-1010,virtual,,,Walid Chaabane (patron)
+1010,virtual,,,Walid Chaabane

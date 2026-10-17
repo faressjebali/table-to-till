@@ -1,6 +1,6 @@
 # Contrat d'API — Coffee QR
 
-> Brouillon v1.9.2 (17 octobre 2026). À relire ensemble. Toute modification passe par une PR dédiée, annoncée à l'autre.
+> Brouillon v1.9.3 (17 octobre 2026). À relire ensemble. Toute modification passe par une PR dédiée, annoncée à l'autre.
 
 ## 1. Règles générales
 
@@ -82,6 +82,7 @@ Limites anti-abus (valeurs de départ, réglables dans `.env`) : 10 commandes QR
 }
 ```
 - `availability.days` : 1 = lundi … 7 = dimanche. `from`/`until` : `"HH:MM"` ou `null`. Sans horaire propre, un article est disponible pendant l'ouverture du café (8h00–22h00) pour le menu QR, et à toute heure pour le staff (voir `GET /menu`).
+- `description` : `null` pour un article sans description (extras, cookies, Espresso…). `photoUrl` : `null` tant que l'article n'a pas de photo.
 - `available` : vrai si commandable **maintenant**.
 - `unavailableReason` : `null`, `"sold_out"` (rupture → **grisé** chez le client) ou `"outside_hours"` (hors horaire → **masqué** chez le client).
 - `choiceGroups` : clés des groupes de choix obligatoires des formules et du Kids Menu (voir ChoiceGroup), ex. `["hot_drink", "eggs", "seasonal_juice"]` ; `[]` pour les autres articles.
@@ -134,7 +135,7 @@ Limites anti-abus (valeurs de départ, réglables dans `.env`) : 10 commandes QR
 }
 ```
 - `source` : `qr` (client), `waiter` (saisie serveur, sur une table réelle ou une table d'offre), `direct` (vente directe au comptoir, sur une table fictive) ou `offer` (commande passée depuis l'app d'un manager ou du comptable sur une table d'offre, voir § 5 bis).
-- `offer` : pour toute commande sur une **table d'offre** (voir Table `offer`) : `{ label, forClient, requestedBy: { id, name, title } | null }` (`label` : la table d'offre, ex. « Hedi Mansour » ; `forClient: true` = offerte à un client ; `requestedBy` : le manager ou le comptable pour une commande `offer`, `null` si un serveur l'a saisie). Sinon `null`.
+- `offer` : pour toute commande sur une **table d'offre** (voir Table `offer`) : `{ label, forClient, requestedBy: { id, name, title } }` (`label` : la table d'offre, ex. « Hedi Mansour » ; `forClient: true` = offerte à un client ; `requestedBy` : le manager ou le comptable qui l'a demandée : l'auteur d'une commande `offer`, ou celui que le serveur a indiqué dans `/staff-orders`). Sinon `null`.
 - `confirmedBy` : `{ id, name }` de la personne qui a confirmé ou saisi la commande (serveur principal ou renfort, barista pour une vente directe), pour le journal ; `null` tant qu'elle est `pending`. La vente compte dans la caisse du principal.
 - `status` : `pending` → `confirmed` | `rejected` | `expired`. Une commande `waiter` ou `direct` est créée directement `confirmed`.
 - `expired` : commande `pending` (`qr` ou `offer`) non traitée après `ORDER_PENDING_TTL_SECONDS` (300 s par défaut, même délai pour les deux). La table ou la personne qui a commandé en est informée (`order:updated`).
@@ -302,12 +303,12 @@ Après la fermeture du café (22h00) et avant l'ouverture (8h00), `/staff-orders
 | GET | `/expenses?closure=current` | — | `{ items: [Expense] }` (dépenses du créneau en cours) — principal |
 | GET | `/shifts/current` | — | `{ waiters: [ { id, name, startedAt, principal } ] }` (tout le staff) |
 | GET | `/tables` | — | `{ tables: [Table] }` (tables `real`, pour le plan de la salle) |
-| GET | `/offer-tables` | — | `{ tables: [ { id, number, label, userId } ] }` : les tables d'offre **permises à l'appelant**, triées par `label` — serveur en shift : toutes ; manager : la sienne et celles sans compte ; comptable : la sienne (rôles `waiter` en shift, `manager`, `accountant`) |
+| GET | `/offer-tables` | — | `{ tables: [ { id, number, label, userId } ], requesters }` : les tables d'offre **permises à l'appelant**, triées par `label` — serveur en shift : toutes ; manager : la sienne et celles sans compte ; comptable : la sienne (rôles `waiter` en shift, `manager`, `accountant`). `requesters` (serveur en shift seulement, sinon absent) : `[ { id, name, title, role } ]`, les managers et comptables actifs, pour choisir qui a demandé une saisie sur une table d'offre |
 | GET | `/tables/:id/session` | — | `{ session: TableSession, orders: [Order], gifts: [Gift] }` (session ouverte) |
 | GET | `/orders?status=pending` | — | `{ items: [Order], nextCursor }` (commandes QR et commandes `offer`) |
 | POST | `/orders/:id/confirm` | — | Order (409 `INVALID_STATUS` si déjà traitée ou expirée). Commande `offer` : confirmée sans session ni tâche caisse |
 | POST | `/orders/:id/reject` | `{ reason? }` | Order |
-| POST | `/staff-orders` | `{ clientRequestId, tableId, lines: [ { menuItemId, quantity, note, choices? } ] }` (`tableId` : une table `real` ou une table d'offre) | 201 Order (`source: "waiter"`, `confirmed`) ; sur une table d'offre : offerte (0 DT, sans session ni tâche caisse, voir Order `offer`) |
+| POST | `/staff-orders` | `{ clientRequestId, tableId, requestedById?, forClient?, lines: [ { menuItemId, quantity, note, choices? } ] }` (`tableId` : une table `real` ou une table d'offre ; `requestedById` et `forClient` : **obligatoires** sur une table d'offre, interdits sinon, `VALIDATION_ERROR`) | 201 Order (`source: "waiter"`, `confirmed`) ; sur une table d'offre : offerte (0 DT, sans session ni tâche caisse, voir Order `offer`) ; `requestedById` doit être un manager ou un comptable actif à qui cette table est permise (voir § 5 bis), sinon 400 `VALIDATION_ERROR` sur `requestedById` |
 | POST | `/direct-sales` | `{ clientRequestId, lines: [ { menuItemId, quantity, note, choices? } ], method: "cash" \| "card" }` | 201 Order (`source: "direct"`, `confirmed`) — principal ou barista ; comptée dans la caisse du principal ; aucun serveur en shift → 409 `NO_WAITER_ON_SHIFT` |
 | PATCH | `/menu-items/:id/availability` | `{ available }` | MenuItem — serveur **en shift** (sinon `NOT_ON_SHIFT`), manager : tout article ; barista : `station` `bar` ou `both` ; chef : `kitchen` ou `both` ; sinon `FORBIDDEN` |
 | POST | `/push/subscribe` | abonnement Web Push | 204 (tout le staff) |
@@ -329,6 +330,7 @@ Vente directe (`/direct-sales`) : le serveur attribue une **table fictive libre*
 | POST | `/tables/:id/pay` | `{ method: "cash" \| "card" }` | tâche `pay_table` ; la session est fermée (`paid`) tout de suite dans l'app ; si la tâche échoue, les tâches suivantes de la table attendent (voir PosJob) ; 409 `CANCEL_WAITING` si une annulation de la table est `waiting` |
 | POST | `/tables/:id/print-bill` | — | tâche `print_bill` |
 
+- **Table encaissée** : une fois la session fermée (`paid` ou `unpaid`, vente directe comprise), la table est libre et ses lignes ne changent plus : `discount`, `cancel`, `withdraw-cancel` et `transfer` sur une ligne d'une session fermée → 409 `INVALID_STATUS`.
 - **Offrir** : un article est offert **dès le départ**, jamais après avoir été tapé en caisse. L'offert crée un Gift (rattaché à la session ouverte de la table si `tableId`), jamais une ligne de commande ; il sort du stock. Rôles : principal (`unhappy_customer` ou `staff`), barista et chef (`staff` seulement, sinon 403 `FORBIDDEN`) ; les offres du barista et du cuisinier comptent dans la clôture en cours. Les managers et le comptable n'utilisent pas `/gifts` : leurs offres sont des commandes sur une table d'offre.
 - Toutes ces actions sont écrites dans le journal d'actions.
 
@@ -341,7 +343,7 @@ Vente directe (`/direct-sales`) : le serveur attribue une **table fictive libre*
 | GET | `/offer-tables` | — | tables d'offre permises (voir § 5) |
 
 - Tables permises : manager → sa table d'offre et les tables d'offre **sans compte** (`offer.userId: null`, ex. Hedi Mansour, artistes, table de test) ; comptable → seulement sa table d'offre.
-- Les serveurs en shift peuvent aussi saisir directement sur **n'importe quelle** table d'offre avec `/staff-orders` (sans confirmation).
+- Les serveurs en shift peuvent aussi saisir directement sur **n'importe quelle** table d'offre avec `/staff-orders` (sans confirmation), en indiquant qui l'a demandée (`requestedById`, parmi les `requesters` de `GET /offer-tables`, avec les mêmes tables permises) et si c'est pour un client (`forClient`) : le PDF dit « commande de X » ou « offert à un client par X ».
 - Mêmes règles de lignes que `POST /orders` (quantités, notes, choix, ruptures, horaires propres des articles).
 - Les serveurs en shift sont notifiés (`order:new`) ; l'un d'eux confirme ou rejette (`/orders/:id/confirm`, `/orders/:id/reject`). Sans réponse, la commande expire comme une commande QR.
 - Jamais tapée en caisse ; 0 DT ; dans la clôture du créneau (`offerOrders`).
@@ -434,6 +436,7 @@ Après reconnexion, chaque client recharge via REST.
 
 | Version | Date | Changement |
 | --- | --- | --- |
+| v1.9.3 brouillon | 2026-10-17 | `/staff-orders` sur une table d'offre : `requestedById` et `forClient` obligatoires (`Order.offer.requestedBy` jamais `null`) ; `requesters` dans `GET /offer-tables` pour les serveurs ; table encaissée : plus de remise, d'annulation ni de transfert (409 `INVALID_STATUS`) ; `MenuItem.description` et `photoUrl` peuvent valoir `null` |
 | v1.9.2 brouillon | 2026-10-17 | `title` dans `GET /me` et dans `user` de `POST /auth/login` ; en-tête du § 6 : le comptable a aussi `/offer-orders` et `/offer-tables` ; endpoints de stock prévus (demandes d'achat, arrivages, avaries, inventaire) |
 | v1.9.1 brouillon | 2026-10-17 | `GET /offer-tables` (tables d'offre permises à l'appelant : serveur en shift, manager, comptable) ; statistiques aussi pour le comptable ; `NO_FREE_VIRTUAL_TABLE` = méthode classique |
 | v1.9 brouillon | 2026-10-17 | Rôle `accountant` (comptable : rapports, clôtures, commandes sur sa table d'offre) ; `User.title` ; tables d'offre `Table.offer` (`{ label, userId }`, remplace `managerId`) : avec ou sans compte, tout y est offert ; `/manager-orders` → `/offer-orders` (`tableId?`, managers et comptable), source `manager` → `offer`, `Order.manager` → `Order.offer` ; `/staff-orders` aussi sur une table d'offre (offerte, sans confirmation) ; `ShiftClosure.managerOrders` → `offerOrders` ; `gifts.reason` `offer` / `offer_for_client` ; `report:updated` aussi au comptable ; notes jamais tapées en caisse (plus de `note` dans `enter_order`) |
