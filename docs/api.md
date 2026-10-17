@@ -1,6 +1,6 @@
 # Contrat d'API — Coffee QR
 
-> Brouillon v2.0.1 (17 octobre 2026). À relire ensemble. Toute modification passe par une PR dédiée, annoncée à l'autre.
+> Brouillon v2.0.2 (17 octobre 2026). À relire ensemble. Toute modification passe par une PR dédiée, annoncée à l'autre.
 
 ## 1. Règles générales
 
@@ -172,6 +172,14 @@ Limites anti-abus (valeurs de départ, réglables dans `.env`) : 10 commandes QR
 - `principalId` : principal de la session ouverte (voir TableSession `principal`), `null` si la table est libre. Pendant une passation, chaque principal voit quelles tables sont les siennes.
 - `layout` : position sur le plan de la salle, en cases d'une grille (`shape` : `square` ou `round`) ; `null` pour une table `virtual`.
 - `offer` : pour une **table d'offre** (table `virtual` dont tout est offert : managers, patrons, comptable, invités, table de test ; liste dans `docs/tables.csv`), `{ label, userId }` : `label` = pour qui (ex. « Hedi Mansour », « Table des artistes ») ; `userId` = le compte à qui elle est réservée (manager ou comptable), ou `null` pour une table sans compte. Sinon `null`. Une table d'offre n'est jamais utilisée pour une vente directe, jamais tapée en caisse et jamais affichée sur le plan des tables.
+
+### AdminTable (administration des tables, manager)
+```json
+{ "id": 7, "number": 7, "kind": "real", "layout": { "x": 7, "y": 2, "w": 1, "h": 1, "shape": "square" },
+  "offer": null, "tableToken": "k3J9x…" }
+```
+- Même `kind`, `layout` et `offer` que Table. `tableToken` : jeton du QR d'une table `real` (pour imprimer son QR, lien `<CUSTOMER_WEB_URL>/t/<tableToken>`), `null` pour une table `virtual`.
+- Pas d'état, de montant ni de principal : la manager n'a pas accès au plan des tables ni aux commandes.
 
 ### Gift (offert, jamais tapé en caisse)
 ```json
@@ -382,7 +390,9 @@ Vente directe (`/direct-sales`) : le serveur attribue une **table fictive libre*
 | POST | `/users/:id/reset-password` | — → `{ user: User, temporaryPassword }` |
 | GET/POST/PUT/DELETE | `/categories`, `/menu-items` | édition du menu (noms FR/EN, prix, code, horaires, extras suggérés, `station`, `choiceGroups`) ; dont le Plat de la semaine |
 | GET/PUT | `/admin/choice-groups/:key` | options d'un groupe de choix (ex. `seasonal_juice` : `{ optionIds: [..] }`) |
-| GET/POST/PATCH | `/admin/tables` | lister, créer, renommer les tables ; `kind` (`real` / `virtual`), `layout` (plan de la salle) et `offer` (`{ label, userId }` : table d'offre, voir Table) |
+| GET | `/admin/tables` | `{ tables: [AdminTable] }` (toutes les tables, réelles et fictives, triées par numéro) |
+| POST | `/admin/tables` | `{ number, kind, layout?, offer? }` → 201 AdminTable (voir « Tables » plus bas) |
+| PATCH | `/admin/tables/:id` | `{ number?, layout?, offer? }` (changer le numéro, la case du plan, ou faire d'une table fictive une table d'offre et inversement avec `offer: null`) → AdminTable |
 | POST | `/admin/tables/:id/rotate-token` | nouveau jeton QR (l'ancien QR ne marche plus) → `{ tableToken }` ; 409 `INVALID_STATUS` pour une table `virtual` |
 | POST | `/uploads` | photo (jpg/png ≤ 5 Mo) → `{ photoUrl }` (redimensionnée 800 px, WebP) |
 | GET | `/audit-log` | journal d'actions, paginé |
@@ -400,6 +410,13 @@ Comptes (`/users`) :
 - On ne peut pas se désactiver soi-même ni retirer son propre rôle `manager`, et il reste toujours au moins un manager actif → 409 `INVALID_STATUS`.
 - Un serveur en shift ne peut être ni désactivé ni changé de rôle tant que son shift n'est pas terminé → 409 `INVALID_STATUS`.
 - Toutes ces actions sont écrites dans le journal d'actions.
+
+Tables (`/admin/tables`) :
+- `kind` est choisi à la création et ne change plus. Une table `real` reçoit un jeton QR aléatoire et a une `layout` obligatoire (`{ x, y, w?, h?, shape? }` ; `w` et `h` valent 1 et `shape` `square` par défaut) ; une table `virtual` n'a ni `layout` ni jeton. Sinon 400 `VALIDATION_ERROR`.
+- `offer` (`{ label, userId }`) seulement sur une table `virtual` ; `label` : 1–100 caractères ; `userId` : `null` (table sans compte) ou un compte **manager ou comptable actif**, qui n'a pas déjà une autre table d'offre. Sinon 400 `VALIDATION_ERROR` sur `offer` ou `offer.userId`.
+- `number` : entier positif, numéro de la table dans LegacyPOS, unique. Déjà pris → 400 `VALIDATION_ERROR` sur `number`.
+- `PATCH` refusé (409 `INVALID_STATUS`) tant que la table est en cours d'utilisation : session ouverte, commande en attente, ou tâche caisse `queued`, `in_progress` ou `failed`.
+- Toutes ces actions et `rotate-token` sont écrites dans le journal d'actions.
 
 Statistiques (articles les plus / moins vendus, ventes d'un article sur une période, courbes) : endpoints ajoutés plus tard, pour les managers et le comptable.
 
@@ -451,6 +468,7 @@ Après reconnexion, chaque client recharge via REST.
 
 | Version | Date | Changement |
 | --- | --- | --- |
+| v2.0.2 brouillon | 2026-10-17 | `/admin/tables` détaillé : forme `AdminTable` (avec `tableToken`, sans état ni montant), corps de `POST` et `PATCH /admin/tables/:id`, `kind` fixe, `offer.userId` manager ou comptable actif avec une table d'offre au plus par compte, `PATCH` refusé sur une table en cours d'utilisation |
 | v2.0.1 brouillon | 2026-10-17 | `CAFE_CLOSED` (menu QR, café fermé) distinct de `OUTSIDE_HOURS` (un article hors de ses horaires, `details.menuItemId`) |
 | v2.0 brouillon | 2026-10-17 | **Deux principaux pendant la passation** : bascule automatique à `SHIFT_2_START` (15h00) du serveur arrivé à partir de `SHIFT_2_ARRIVAL_FROM` (14h00), principal en cours, `TableSession.principal`, `Table.principalId`, `currentPrincipal` dans `/me` et `/shifts/current`, `POST /principal/transfer`, événement `principal:changed` ; une clôture par principal (sa caisse : ses tables et le hors-table de sa période de principal en cours) ; `POST /shifts/end` sans `handoverTo` (les tables de l'ancien principal passent au principal en cours) ; **supprimés** : `/handovers/*`, `handover:*`, `HANDOVER_PENDING` ; `/admin/force-handover` `{ principalId, toWaiterId, countedCash }`, sans acceptation. **Vente directe ouverte jusqu'à l'encaissement** : `/direct-sales` sans `method`, encaissée par `POST /tables/:id/pay` (barista ou principal), `GET /direct-sales?status=open`, remise et annulation possibles avant ; table fictive libre seulement une fois sa session fermée. **Remise toujours sur toute la table** (plus de `lineIds`). **Transfert et changement de table seulement entre tables `real`** |
 | v1.9.3 brouillon | 2026-10-17 | `/staff-orders` sur une table d'offre : `requestedById` et `forClient` obligatoires (`Order.offer.requestedBy` jamais `null`) ; `requesters` dans `GET /offer-tables` pour les serveurs ; table encaissée : plus de remise, d'annulation ni de transfert (409 `INVALID_STATUS`) ; `MenuItem.description` et `photoUrl` peuvent valoir `null` |
