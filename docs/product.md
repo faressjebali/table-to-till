@@ -32,7 +32,7 @@ Version 2 — refonte du 15 octobre 2026. Clôture de shift et rapports de la ma
   - Boissons (41) : Jus (6), Fresh Blends (4), Thé & Infusion (9), Cafés (13), Matcha (4), Healthy Shots (3), Eau (2).
   - Sur le menu papier, « Accompagnements » et « Extras sucrés » sont titrés « Extras ». Les extras Œuf, Steak et Pommes cannelle caramélisées n'apparaissent qu'en suggestion (« + ») sous un plat.
 - **Pas de tailles.** Chaque article a un prix fixe.
-- **Chaque article a un code produit** LegacyPOS. L'agent saisit par **code**, jamais par nom.
+- **Chaque article a un code produit** LegacyPOS, affiché sur son bouton en caisse. L'agent reconnaît l'article à ce **code**, jamais à son nom (on ne peut pas taper un code : il ouvre la catégorie et touche le bouton qui porte le code).
 - **Une photo par article.**
 - **Deux menus complets : français et anglais** (noms et descriptions). « مرطبات اليوم » reste tel quel.
 - **Extras** (avocat, champignons, bacon…) : ce sont des **articles normaux** avec leur prix et leur code. Ils apparaissent :
@@ -177,7 +177,7 @@ Commande tapée par un serveur : on démarre directement à l'étape 4.
 
 - Python + pywinauto, sur le PC de caisse Windows, à côté de LegacyPOS.
 - Pilote uniquement l'**interface** de LegacyPOS. Jamais sa base de données ni ses fichiers.
-- Repère les contrôles **par nom** (les boutons de LegacyPOS ont des noms visibles), jamais par coordonnées.
+- Repère les contrôles **par identifiant, nom ou texte** exposés à Windows (UI Automation, voir `docs/pos.md`), jamais par coordonnées. Trouve chaque article par le code affiché sur son bouton, en parcourant les catégories.
 - **Un seul PIN caisse** dédié, stocké uniquement dans le `.env` du PC de caisse. Si l'écran PIN apparaît, l'agent le tape et continue.
 - **File unique** : une action à la fois (commande, encaissement, addition…).
 - **Partage de la caisse avec les humains** :
@@ -189,7 +189,7 @@ Commande tapée par un serveur : on démarre directement à l'étape 4.
 
 ## 8. Émulateur LegacyPOS (`pos-emulator/`)
 
-- Application Windows qui reproduit les écrans de LegacyPOS utilisés par l'agent, **avec les mêmes noms de contrôles** : écran PIN, plan des tables, saisie par code produit, note, validation, retour au plan ; puis encaissement et addition.
+- Application Windows qui reproduit les écrans de LegacyPOS utilisés par l'agent, **avec les mêmes noms de contrôles** : écran PIN, plan des tables, saisie de table (catégories, boutons d'articles avec leur code), validation, retour au plan ; puis encaissement et addition.
 - Construit à partir de la vidéo de saisie réelle (`docs/pos.md`).
 - Sert à tester tous les cas d'erreur avant livraison : code inconnu, écran inattendu, PIN redemandé, humain qui clique pendant la saisie, LegacyPOS fermé, lenteurs.
 - L'agent ne doit pas savoir s'il parle à l'émulateur ou au vrai LegacyPOS.
@@ -210,9 +210,9 @@ Tranchées le 15/10/2026 (voir §5 et `docs/decisions.md`) : encaissement depuis
 
 Restent :
 
-1. Après validation, LegacyPOS revient-il bien au plan des tables sans PIN ? Qu'est-ce qui fait sortir du plan des tables ?
+1. ~~Après validation, LegacyPOS revient-il au plan sans PIN ?~~ Oui (vidéo du 16/10) ; le PIN est redemandé quand on ferme le plan (✕).
 2. ~~Tables réelles, disposition, tables fictives et tables d'offre~~ : relevées le 16/10/2026, `docs/tables.csv`.
-3. Écrans d'encaissement, d'impression de l'addition, de remise, de transfert et de changement de table (à filmer).
+3. Écrans de remise, d'annulation (−1 sans code), de transfert et de changement de table, quantité > 1 (à filmer ; encaissement et addition filmés le 16/10).
 
 ## 12. Stock (fonctionnalité principale — à détailler)
 

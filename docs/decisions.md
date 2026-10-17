@@ -2,6 +2,9 @@
 
 Une ligne par décision, la plus récente en haut. Format : `AAAA-MM-JJ — décision — pourquoi`.
 
+- 2026-10-17 — On ne peut pas taper un code produit dans LegacyPOS : l'agent ouvre la catégorie et touche le bouton dont le texte du code vaut `posCode` ; il construit au démarrage un index code → catégorie en parcourant les catégories, et le refait si un code manque — reste fiable (jamais par nom) et suit les nouveaux articles sans configuration
+- 2026-10-17 — Après Espèces, CARTE ou NOTE, l'agent choisit toujours l'icône « sièges » de « Choisir une action » (retour au plan) — usage du café
+- 2026-10-17 — On n'utilise ni ne décompile les fichiers de LegacyPOS, même copiés avec l'accord de la gérante ; on travaille seulement avec captures, vidéos et relevés UI Automation — propriété de l'éditeur, caisse fiscale
 - 2026-10-17 — Les notes ne sont jamais tapées en caisse (le bouton NOTE de LegacyPOS n'est pas utilisé) ; le serveur les transmet oralement — usage du café
 - 2026-10-17 — Tables d'offre : tout ce qui y est commandé est offert (0 DT, hors CA, stock, PDF), jamais tapé en caisse ; serveurs en shift : saisie directe sur toute table d'offre ; managers : leur table et les tables sans compte ; comptable : sa table — remplace la table réservée à chaque manager ; le café offre aussi à des personnes sans compte
 - 2026-10-17 — Rôle Comptable (`accountant`) : rapports, clôtures, stock et écarts, commandes sur sa table ; managers et patrons gardent le même rôle `manager`, avec un titre affiché sans droits — un rôle sert à donner des droits, pas à dire qui est qui
@@ -77,7 +80,7 @@ Une ligne par décision, la plus récente en haut. Format : `AAAA-MM-JJ — déc
 - 2026-10-15 — L'agent partage la caisse avec les humains : file unique, attente d'inactivité, bandeau, arrêt si un humain touche — une seule souris/clavier
 - 2026-10-15 — Émulateur LegacyPOS sous Windows pour tester l'agent avant livraison — on ne peut pas tester sur la vraie caisse
 - 2026-10-15 — Un seul PIN caisse dédié pour l'agent, stocké seulement sur le PC de caisse — plus simple
-- 2026-10-15 — L'agent saisit par code produit, pas par nom — plus fiable ; les boutons LegacyPOS ont des noms visibles
+- 2026-10-15 — L'agent saisit par code produit, pas par nom — plus fiable ; les boutons LegacyPOS ont des noms visibles (depuis : on ne peut pas taper un code, l'agent touche le bouton qui affiche le code, voir plus haut)
 - 2026-10-15 — Pas de tailles ; les extras sont des articles normaux, saisis comme lignes séparées — reflète la caisse actuelle
 - 2026-10-15 — ~~Formules et articles à choix : le choix va dans la note — c'est ainsi que la caisse fonctionne aujourd'hui~~ (remplacée : choix dans des listes, jamais tapés en caisse, voir plus haut)
 - 2026-10-15 — Horaires automatiques : formules jusqu'à 12h, œufs jusqu'à 15h, plat de la semaine lun–ven 8h–15h
