@@ -2,6 +2,7 @@
 
 Une ligne par décision, la plus récente en haut. Format : `AAAA-MM-JJ — décision — pourquoi`.
 
+- 2026-10-17 — Jus de grenade à 11 DT (prix de la caisse), au lieu de 13 DT sur le menu papier — le prix de l'app doit être celui de la caisse
 - 2026-10-17 — Tests de l'agent dans la vraie caisse : uniquement sur de vraies commandes, jamais de saisie fictive — chaque saisie est une vente dans la caisse fiscale
 - 2026-10-17 — Inventaire manuel hebdomadaire obligatoire (bar et cuisine), rappelé le vendredi au Shift 2 au serveur en shift, au barista et au cuisinier ; arrivages, avaries et inventaire pointés seulement par le barista (bar) et le cuisinier (cuisine), pas par les managers — usage du café
 - 2026-10-17 — « Achats » du barista et « besoins » du cuisinier = demandes d'achat envoyées aux managers, qui appellent les fournisseurs ; aucun argent — c'est la manager qui commande
