@@ -7,7 +7,7 @@ Une ligne par décision, la plus récente en haut. Format : `AAAA-MM-JJ — déc
 - 2026-10-17 — Vente directe ouverte jusqu'à l'encaissement depuis l'app (Espèces / Carte, par le barista ou le principal), puis encaissée par l'agent ; avant, remise staff et annulation possibles — une erreur au comptoir doit pouvoir se corriger
 - 2026-10-17 — Remise staff toujours sur toute la table — LegacyPOS ne remise pas un seul article
 - 2026-10-17 — Transfert et changement de table seulement entre tables réelles, jamais vers ou depuis une table d'offre ou de vente directe — un article déjà tapé ne devient jamais offert (tranche la décision « pas de restriction » ci-dessous)
-- 2026-10-17 — L'agent utilise le code admin de LegacyPOS (pas un PIN dédié) et n'en utilise jamais les fonctions d'admin — il doit pouvoir ouvrir n'importe quelle table, même ouverte par un serveur
+- 2026-10-17 — L'agent utilise le code admin de LegacyPOS (pas un PIN dédié) et n'en utilise jamais les fonctions d'admin — il doit pouvoir ouvrir n'importe quelle table, même ouverte par un serveur (confirmé le 17/10 : le code admin ouvre toutes les tables sans « Warning »)
 - 2026-10-17 — Saisie d'un serveur sur une table d'offre : il choisit qui l'a demandée (manager ou comptable, mêmes tables permises) et si c'est pour un client — le PDF doit dire qui a offert ; contrat v1.9.3
 - 2026-10-17 — Table encaissée : libre, plus aucune remise, annulation ni transfert sur ses articles (vente directe comprise) — l'addition est close dans la caisse aussi
 - 2026-10-17 — Plan de l'app : toutes les tables en case carrée 1×1, comme dans LegacyPOS (corrigeable par la manager) ; `offer_for` de `docs/tables.csv` = nom seul de la table d'offre — rien à relever, le PDF affiche le nom
