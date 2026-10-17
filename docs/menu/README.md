@@ -20,7 +20,7 @@
 
 ## À compléter
 
-- [ ] `pos_code` pour **chaque** article (visite au café)
+- [x] `pos_code` pour chaque article : relevés le 16/10/2026 sur les captures de la caisse (sauf le Plat de la semaine, saisi chaque semaine par la manager)
 - [x] `name_en` et `description_en` (menu anglais) : traduits le 15/10/2026 ; les noms propres ou déjà anglais (Early Bird, Cheese Burger…) et « مرطبات اليوم » restent tels quels — à faire relire par la manager
 - [ ] `photo` pour chaque article
 - [ ] **Plat de la semaine** : absent du menu papier, la manager le met à jour chaque semaine dans l'app

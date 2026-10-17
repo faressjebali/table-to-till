@@ -1,6 +1,6 @@
 # Contrat d'API — Coffee QR
 
-> Brouillon v1.9 (17 octobre 2026). À relire ensemble. Toute modification passe par une PR dédiée, annoncée à l'autre.
+> Brouillon v1.9.1 (17 octobre 2026). À relire ensemble. Toute modification passe par une PR dédiée, annoncée à l'autre.
 
 ## 1. Règles générales
 
@@ -50,7 +50,7 @@ Un compte désactivé est refusé partout (`ACCOUNT_DISABLED`) et ses connexions
 | 409 | `NO_WAITER_ON_SHIFT` | Commande QR, commande offerte depuis l'app d'un manager ou du comptable, ou vente directe refusée : aucun serveur en shift |
 | 409 | `OPEN_TABLES` | Fin de journée impossible : tables ouvertes ou commandes en attente. `details: { tableIds, pendingOrderIds }` |
 | 409 | `HANDOVER_PENDING` | Une passation attend d'être acceptée : encaissement, vente directe, remise, annulation, offert et dépense bloqués jusque-là |
-| 409 | `NO_FREE_VIRTUAL_TABLE` | Vente directe impossible : aucune table fictive libre |
+| 409 | `NO_FREE_VIRTUAL_TABLE` | Vente directe impossible : aucune table fictive libre (l'agent a du retard ou est arrêté : le comptoir passe à la méthode classique, `docs/product.md` § 10) |
 | 409 | `CANCEL_WAITING` | Encaissement impossible : une annulation attend encore d'être saisie en caisse (voir PosJob `waiting`) ; attendre un autre article sur la table ou retirer l'annulation |
 | 413 | `FILE_TOO_LARGE` | Photo > 5 Mo |
 | 423 | `ACCOUNT_LOCKED` | Trop d'essais de connexion ratés (blocage temporaire) |
@@ -302,6 +302,7 @@ Après la fermeture du café (22h00) et avant l'ouverture (8h00), `/staff-orders
 | GET | `/expenses?closure=current` | — | `{ items: [Expense] }` (dépenses du créneau en cours) — principal |
 | GET | `/shifts/current` | — | `{ waiters: [ { id, name, startedAt, principal } ] }` (tout le staff) |
 | GET | `/tables` | — | `{ tables: [Table] }` (tables `real`, pour le plan de la salle) |
+| GET | `/offer-tables` | — | `{ tables: [ { id, number, label, userId } ] }` : les tables d'offre **permises à l'appelant**, triées par `label` — serveur en shift : toutes ; manager : la sienne et celles sans compte ; comptable : la sienne (rôles `waiter` en shift, `manager`, `accountant`) |
 | GET | `/tables/:id/session` | — | `{ session: TableSession, orders: [Order], gifts: [Gift] }` (session ouverte) |
 | GET | `/orders?status=pending` | — | `{ items: [Order], nextCursor }` (commandes QR et commandes `offer`) |
 | POST | `/orders/:id/confirm` | — | Order (409 `INVALID_STATUS` si déjà traitée ou expirée). Commande `offer` : confirmée sans session ni tâche caisse |
@@ -337,6 +338,7 @@ Vente directe (`/direct-sales`) : le serveur attribue une **table fictive libre*
 | --- | --- | --- | --- |
 | POST | `/offer-orders` | `{ clientRequestId, tableId?, forClient, lines: [ { menuItemId, quantity, note, choices? } ] }` (`forClient: true` = offerte à un client ; sans `tableId` : ma table d'offre) | 201 Order (`source: "offer"`, `pending`) ; aucun serveur en shift → 409 `NO_WAITER_ON_SHIFT` ; pas de table d'offre à mon nom et pas de `tableId` → 409 `INVALID_STATUS` ; table interdite → 403 `FORBIDDEN` |
 | GET | `/offer-orders` | — | `{ items: [Order], nextCursor }` (mes commandes, les plus récentes d'abord) |
+| GET | `/offer-tables` | — | tables d'offre permises (voir § 5) |
 
 - Tables permises : manager → sa table d'offre et les tables d'offre **sans compte** (`offer.userId: null`, ex. Hedi Mansour, artistes, table de test) ; comptable → seulement sa table d'offre.
 - Les serveurs en shift peuvent aussi saisir directement sur **n'importe quelle** table d'offre avec `/staff-orders` (sans confirmation).
@@ -352,7 +354,7 @@ Vente directe (`/direct-sales`) : le serveur attribue une **table fictive libre*
 | POST | `/pos/jobs/:id/retry` | — | `failed` → `queued` |
 | POST | `/pos/jobs/:id/resolve-manually` | `{ note? }` | `failed` → `manual` (fait à la main au comptoir) ; commande `pos.status = "manual"` — principal |
 
-## 6. Manager (rôle `manager` ; le comptable, rôle `accountant`, a seulement `/reports/sales` et `/closures`)
+## 6. Manager (rôle `manager` ; le comptable, rôle `accountant`, a seulement `/reports/sales`, `/closures` et les statistiques)
 
 | Méthode | Chemin | Rôle |
 | --- | --- | --- |
@@ -381,7 +383,7 @@ Comptes (`/users`) :
 - Un serveur en shift ne peut être ni désactivé ni changé de rôle tant que son shift n'est pas terminé → 409 `INVALID_STATUS`.
 - Toutes ces actions sont écrites dans le journal d'actions.
 
-Statistiques (articles les plus / moins vendus, ventes d'un article sur une période, courbes) : endpoints ajoutés plus tard.
+Statistiques (articles les plus / moins vendus, ventes d'un article sur une période, courbes) : endpoints ajoutés plus tard, pour les managers et le comptable.
 
 Rôles barista / chef / comptable : endpoints ajoutés avec le stock (achats, arrivages, avaries, inventaire, besoins, offres staff, rapports d'écarts).
 
@@ -432,6 +434,7 @@ Après reconnexion, chaque client recharge via REST.
 
 | Version | Date | Changement |
 | --- | --- | --- |
+| v1.9.1 brouillon | 2026-10-17 | `GET /offer-tables` (tables d'offre permises à l'appelant : serveur en shift, manager, comptable) ; statistiques aussi pour le comptable ; `NO_FREE_VIRTUAL_TABLE` = méthode classique |
 | v1.9 brouillon | 2026-10-17 | Rôle `accountant` (comptable : rapports, clôtures, commandes sur sa table d'offre) ; `User.title` ; tables d'offre `Table.offer` (`{ label, userId }`, remplace `managerId`) : avec ou sans compte, tout y est offert ; `/manager-orders` → `/offer-orders` (`tableId?`, managers et comptable), source `manager` → `offer`, `Order.manager` → `Order.offer` ; `/staff-orders` aussi sur une table d'offre (offerte, sans confirmation) ; `ShiftClosure.managerOrders` → `offerOrders` ; `gifts.reason` `offer` / `offer_for_client` ; `report:updated` aussi au comptable ; notes jamais tapées en caisse (plus de `note` dans `enter_order`) |
 | v1.8.2 brouillon | 2026-10-16 | Fin de journée : les renforts terminent leur shift avec la dernière clôture (`OPEN_TABLES` sans `supportWaiterIds`) ; clôture forcée sans autre serveur jamais bloquée (tables `unpaid`, `ShiftClosure.unpaidTables`) ; fin automatique des shifts oubliés (`SHIFT_AUTO_END_TIME`, `ShiftClosure.automatic`) ; `TableSession.status` `paid` / `unpaid` ; `ShiftClosure.slot` = rang de la clôture dans la journée ; remises et annulations comptées dans la période où elles sont faites (clôtures et rapports, `cancelledLines.confirmedAt`) ; file caisse : une tâche `failed` bloque les tâches suivantes de sa table (`blockedByJobId`), table fictive libre seulement après l'encaissement en caisse, remise / annulation / transfert d'une ligne pas encore saisie ; `GET /menu` avec jeton staff (`posCode`, horaires du staff) ; format du lien QR ; `pos:status` aussi aux serveurs en shift ; limite QR 10 / 10 min ; exemple `ShiftClosure` corrigé (195 500) |
 | v1.8.1 brouillon | 2026-10-15 | Fin de journée avec un renfort encore en shift : 409 `OPEN_TABLES` (comme au § 1), plus de `VALIDATION_ERROR` sur `handoverTo` ; `/gifts` : barista et chef seulement avec `reason: "staff"` ; variables `.env` de la limite des commandes QR ; `ORDER_PENDING_TTL_SECONDS` vaut aussi pour les commandes des managers |

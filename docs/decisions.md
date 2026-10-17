@@ -2,6 +2,10 @@
 
 Une ligne par décision, la plus récente en haut. Format : `AAAA-MM-JJ — décision — pourquoi`.
 
+- 2026-10-17 — La clôture de journée et les shifts de LegacyPOS restent faits à la main par l'équipe ; l'agent n'y touche jamais — usage du café, caisse fiscale
+- 2026-10-17 — Vente directe sans table fictive libre (5 tables, agent en retard ou arrêté) : refusée, le comptoir passe à la méthode classique ; on ne réutilise pas une table dont la vente n'est pas encaissée en caisse — deux ventes ne doivent jamais se mélanger sur une addition
+- 2026-10-17 — Tables d'offre listées par `GET /offer-tables`, selon les droits de l'appelant ; statistiques aussi pour le comptable — contrat v1.9.1
+- 2026-10-17 — Parmi les fictives, 11 tables d'offre (managers, patrons, comptable, table de test, propriétaire du local, artistes, deux invitées) et 5 tables de vente directe (15, 16, 55, 106, 333) — usage du café ; règles des offres dans le contrat v1.9
 - 2026-10-17 — On ne peut pas taper un code produit dans LegacyPOS : l'agent ouvre la catégorie et touche le bouton dont le texte du code vaut `posCode` ; il construit au démarrage un index code → catégorie en parcourant les catégories, et le refait si un code manque — reste fiable (jamais par nom) et suit les nouveaux articles sans configuration
 - 2026-10-17 — Après Espèces, CARTE ou NOTE, l'agent choisit toujours l'icône « sièges » de « Choisir une action » (retour au plan) — usage du café
 - 2026-10-17 — On n'utilise ni ne décompile les fichiers de LegacyPOS, même copiés avec l'accord de la gérante ; on travaille seulement avec captures, vidéos et relevés UI Automation — propriété de l'éditeur, caisse fiscale
@@ -9,7 +13,6 @@ Une ligne par décision, la plus récente en haut. Format : `AAAA-MM-JJ — déc
 - 2026-10-17 — Tables d'offre : tout ce qui y est commandé est offert (0 DT, hors CA, stock, PDF), jamais tapé en caisse ; serveurs en shift : saisie directe sur toute table d'offre ; managers : leur table et les tables sans compte ; comptable : sa table — remplace la table réservée à chaque manager ; le café offre aussi à des personnes sans compte
 - 2026-10-17 — Rôle Comptable (`accountant`) : rapports, clôtures, stock et écarts, commandes sur sa table ; managers et patrons gardent le même rôle `manager`, avec un titre affiché sans droits — un rôle sert à donner des droits, pas à dire qui est qui
 - 2026-10-16 — Tables : 24 réelles (1–12, 14, 17–23, 25–27, 100), 16 fictives (15, 16, 55 et toutes les tables à 3 ou 4 chiffres sauf 100) ; plan dans `docs/tables.csv` — relevé sur le plan de LegacyPOS
-- 2026-10-17 — Parmi les fictives, 11 tables d'offre (managers, patrons, comptable, table de test, propriétaire du local, artistes, deux invitées) et 5 tables de vente directe (15, 16, 55, 106, 333) — usage du café ; règles des offres dans le contrat v1.9
 - 2026-10-16 — Une tâche caisse en échec bloque les tâches suivantes de sa table (les autres tables continuent) ; une table fictive n'est réutilisée qu'après l'encaissement réel en caisse ; une annulation, remise ou un transfert d'un article pas encore tapé passe simplement après sa saisie — sinon une commande s'ajoute à une ancienne addition dans LegacyPOS
 - 2026-10-16 — Remises et annulations comptées dans la clôture (et le créneau de rapport) où elles sont faites, même sur un article d'un créneau précédent — les PDF ne changent jamais et leur somme égale le CA
 - 2026-10-16 — Les clôtures sont numérotées dans l'ordre de la journée (passation = Shift 1, dernière = Shift 2), plus selon l'heure de début — une passation à 14h30 donnait deux « Shift 1 »
@@ -23,7 +26,7 @@ Une ligne par décision, la plus récente en haut. Format : `AAAA-MM-JJ — déc
 - 2026-10-15 — Le jus de saison est aussi vendu seul (ex. Grenade dans « Jus »), en plus des formules et du Kids Menu — carte actuelle
 - 2026-10-15 — Granola, Fruits et Extras sucrés : poste `both` (barista ou cuisinier) ; Espresso premium et Décaféiné premium exclus des formules (cafés jusqu'à 8,5 DT) — confirmé par l'équipe
 - 2026-10-15 — Rapports de la manager : Shift 1 = 8h–15h, Shift 2 = 15h–22h, par horaire, indépendamment des clôtures — jours comparables
-- 2026-10-15 — Plus d'offre « patron » par le barista ou le principal : patrons et managers passent toujours par leurs commandes dans l'app — une seule façon de faire, stock fiable
+- 2026-10-15 — Plus d'offre « patron » par le barista ou le principal : patrons et managers passent toujours par leurs commandes dans l'app (depuis : tables d'offre, où un serveur en shift peut aussi saisir, voir plus haut) — une seule façon de faire, stock fiable
 - 2026-10-15 — Annulation : choix obligatoire « déjà préparé » (sort du stock, perte) ou « pas préparé » (ne sort pas) — le stock doit savoir ce qui a été consommé
 - 2026-10-15 — Annulation du dernier article d'une table : on attend un autre article sur la table (commande du client suivant) ; sinon (fin de journée) le principal retire l'annulation et la table est encaissée normalement, le serveur paie l'article — c'est ce que fait le café, la caisse et l'app restent d'accord
 - 2026-10-15 — Tâche caisse en échec : tout serveur en shift peut réessayer, seul le principal peut la marquer faite à la main — « fait à la main » peut toucher à l'argent
@@ -66,7 +69,7 @@ Une ligne par décision, la plus récente en haut. Format : `AAAA-MM-JJ — déc
 - 2026-10-15 — ~~Chef : ruptures, arrivages, avaries, inventaire et besoins de la cuisine ; Patron : droits de la manager + rapports de stock et d'écarts — rôles réels~~ (remplacée : quatre rôles, plus de Patron, voir plus haut)
 - 2026-10-15 — Vente directe : le barista ou le serveur la saisit dans l'app, l'agent la tape sur une table fictive (ex. 333) ; rien n'est jamais tapé directement en caisse — toutes les ventes passent par l'app pour le stock
 - 2026-10-15 — Encaissement depuis l'app : bouton Espèces / Carte, l'agent encaisse dans LegacyPOS — on prend l'argent sans attendre la caisse
-- 2026-10-15 — Kids Menu (Cookie / Pancakes) et Cookie (chocolat / pomme cannelle) en deux articles chacun, comme en caisse ; note libre gardée sur chaque ligne, non tapée en caisse pour une formule — reflète la caisse
+- 2026-10-15 — Kids Menu (Cookie / Pancakes) et Cookie (chocolat / pomme cannelle) en deux articles chacun, comme en caisse ; note libre gardée sur chaque ligne, non tapée en caisse pour une formule (depuis : jamais tapée en caisse, voir plus haut) — reflète la caisse
 - 2026-10-15 — Formules et articles à choix : choix dans des listes (café ou thé — depuis : thés à 6,5 DT et cafés jusqu'à 8,5 DT, voir plus haut —, jus de saison), enregistrés pour le stock ; l'agent ne tape que la formule, sans note — la caisse n'a pas de note pour les formules, le stock a besoin de choix exacts
 - 2026-10-15 — Plat de la semaine : la manager le crée dans LegacyPOS et entre son code dans l'app (même si le code change chaque semaine) ; l'agent le saisit par code — l'agent ne crée jamais d'article en caisse
 - 2026-10-15 — Aucun serveur en shift → commande QR refusée ; commande non confirmée expirée après 5 min (réglable) — le serveur doit avoir le temps d'aller vérifier à la table

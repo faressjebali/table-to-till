@@ -92,7 +92,7 @@ Version 2 — refonte du 15 octobre 2026. Clôture de shift et rapports de la ma
 | Barista | Saisir et encaisser une vente directe (comptoir), ruptures des articles du bar (+ articles `both`), achats, pointer l'arrivage de marchandise, déclarer les avaries, enregistrer les offres **au staff** (pas aux clients) |
 | Cuisinier | Ruptures des articles de la cuisine (+ articles `both`), pointer les arrivages de la cuisine, déclarer les avaries de la cuisine, saisir l'inventaire de la cuisine, signaler les besoins (ce qu'il faut racheter), enregistrer les offres **au staff** (pas aux clients) |
 | Manager | Comptes et rôles, édition du menu (articles, photos, prix, codes, horaires, Plat de la semaine, jus de saison), ruptures, rapports (CA, articles sortis, clôtures, statistiques), rapports de stock et d'écarts, **commander sur sa table d'offre** et sur les tables d'offre sans compte, pour soi ou pour offrir à un client (voir Tables d'offre). **Pas** d'accès au plan des tables ni aux commandes des clients |
-| Comptable | Rapports (CA, espèces / carte, dépenses, articles sortis, clôtures et PDF), rapports de stock et d'écarts, **commander sur sa table d'offre**. Ne modifie rien (ni menu, ni prix, ni comptes) ; **pas** d'accès au plan des tables ni aux commandes |
+| Comptable | Rapports (CA, espèces / carte, dépenses, articles sortis, clôtures et PDF, statistiques), rapports de stock et d'écarts, **commander sur sa table d'offre**. Ne modifie rien (ni menu, ni prix, ni comptes) ; **pas** d'accès au plan des tables ni aux commandes |
 
 Le rôle Manager regroupe les **2 managers et les 3 patrons** : tous ont le même rôle et les mêmes droits. Chaque compte a un **titre affiché** (Manager, Patron, Patronne, Comptable…) sur le PDF et dans le journal, sans droits particuliers. Le **comptable** a son propre rôle, parce que ses droits sont différents.
 
@@ -139,7 +139,7 @@ Le plan des tables et les commandes sont gérés **entièrement par les serveurs
 - **En temps réel** : CA, espèces / carte, dépenses et articles sortis (combien de jus, cafés…), pour la journée, le Shift 1 (8h–15h) ou le Shift 2 (15h–22h). Les créneaux des rapports se comptent **par horaire**, quelles que soient les clôtures ; une remise ou une annulation compte à l'heure où elle est faite ; l'argent compté est sur les PDF de clôture.
 - **Par date** : les mêmes chiffres pour hier ou n'importe quel jour.
 - **Clôtures** : tous les PDF de clôture, anciens compris.
-- **Statistiques** (plus tard) : articles les plus et les moins vendus sur une période, ventes d'un article sur une période (ex. fondants vendus la semaine dernière), courbes.
+- **Statistiques** (plus tard, aussi pour le comptable) : articles les plus et les moins vendus sur une période, ventes d'un article sur une période (ex. fondants vendus la semaine dernière), courbes.
 
 ### Écrans du serveur (mini-caisse)
 - **Plan des tables** : reproduit la **disposition de la salle** ; état de chaque table (libre / occupée), montant en cours. Les tables fictives (ventes directes) n'y figurent pas ; l'app en attribue une libre automatiquement à chaque vente directe et affiche son numéro. Une table fictive n'est réutilisée qu'une fois la vente réellement encaissée dans LegacyPOS.
@@ -202,7 +202,7 @@ Commande tapée par un serveur : on démarre directement à l'étape 4.
 ## 10. Panne
 
 - Internet coupé : données mobiles, ou retour à la méthode classique (le serveur saisit à la caisse). C'est la seule exception à « rien n'est tapé directement en caisse » ; il faudra rattraper ces ventes pour le stock (à définir).
-- Agent en panne : la caisse reste utilisable à la main ; les serveurs en shift et la manager voient que l'agent ne répond plus ; les commandes en attente sont signalées.
+- Agent en panne : la caisse reste utilisable à la main ; les serveurs en shift et la manager voient que l'agent ne répond plus ; les commandes en attente sont signalées. Les ventes directes occupent chacune une table fictive jusqu'à leur encaissement en caisse : avec 5 tables de vente directe, la 6ᵉ est refusée tant que l'agent n'a pas rattrapé son retard, et le comptoir passe à la méthode classique.
 
 ## 11. Questions ouvertes (à trancher après la vidéo)
 
