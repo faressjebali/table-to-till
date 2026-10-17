@@ -151,6 +151,47 @@ describe('seedTables (base de test)', () => {
     });
   });
 
+  it('charge le nom des 11 tables d’offre et garde le compte lié par la manager', async () => {
+    await seedTables(client, tables);
+    const offers = async () =>
+      (
+        await client.query<{ number: number; offer_label: string; offer_user_id: number | null }>(
+          `SELECT number, offer_label, offer_user_id FROM tables
+            WHERE offer_label IS NOT NULL ORDER BY number`,
+        )
+      ).rows;
+    expect((await offers()).map((r) => [r.number, r.offer_label])).toEqual([
+      [101, 'Karim Haddad'],
+      [102, 'Sami Trabelsi'],
+      [103, 'Nour Ben Salem'],
+      [104, 'Table de test'],
+      [105, 'Rania'],
+      [107, 'Walid'],
+      [109, 'Hedi Mansour'],
+      [111, 'Table des artistes'],
+      [817, 'Yasmine Ben Salem'],
+      [888, 'Rania Gharbi'],
+      [1010, 'Walid Chaabane'],
+    ]);
+
+    // La manager lie la table 105 à son compte ; le seed du matin ne le défait pas.
+    const { rows } = await client.query<{ id: number }>(
+      `INSERT INTO users (login, name, password_hash, role) VALUES ('rania', 'Rania', 'x', 'manager')
+       RETURNING id`,
+    );
+    const rania = rows[0]?.id;
+    await client.query('UPDATE tables SET offer_user_id = $1 WHERE number = 105', [rania]);
+    await seedTables(client, tables);
+    expect((await offers()).find((r) => r.number === 105)?.offer_user_id).toBe(rania);
+
+    // Retirée des tables d'offre dans le CSV : plus de nom ni de compte.
+    await seedTables(
+      client,
+      tables.map((t) => (t.number === 105 ? { ...t, offerFor: null } : t)),
+    );
+    expect((await offers()).find((r) => r.number === 105)).toBeUndefined();
+  });
+
   it('garde une table absente du CSV qui a déjà servi', async () => {
     await client.query(`INSERT INTO tables (number, kind) VALUES (331, 'virtual')`);
     await client.query(

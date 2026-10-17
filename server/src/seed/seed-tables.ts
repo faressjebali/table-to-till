@@ -1,5 +1,5 @@
-import { randomBytes } from 'node:crypto';
 import type { ClientBase } from 'pg';
+import { newTableToken } from '../tables/token.js';
 import type { SeedTable } from './tables-csv.js';
 
 export interface SeedTablesResult {
@@ -10,15 +10,11 @@ export interface SeedTablesResult {
   kept: number[];
 }
 
-// Jeton aléatoire du QR (docs/api.md § 3) : jamais le numéro de la table.
-export function newTableToken(): string {
-  return randomBytes(16).toString('base64url');
-}
-
 /**
  * Aligne la table `tables` sur docs/tables.csv, dans une seule transaction. Relançable :
  * une table est reconnue par son numéro et garde son jeton QR (un QR imprimé ne casse jamais).
- * Le type et la case du plan sont réécrits ; la taille et la forme corrigées par la manager restent.
+ * Le type, la case du plan et le nom de la table d'offre sont réécrits ; la taille, la forme et le
+ * compte lié à une table d'offre (choisis par la manager dans l'app) restent.
  * Une table absente du CSV est supprimée seulement si elle n'a jamais servi.
  */
 export async function seedTables(
@@ -46,16 +42,22 @@ export async function seedTables(
              layout_y = EXCLUDED.layout_y,
              layout_w = coalesce(tables.layout_w, 1),
              layout_h = coalesce(tables.layout_h, 1),
-             layout_shape = coalesce(tables.layout_shape, 'square')`,
+             layout_shape = coalesce(tables.layout_shape, 'square'),
+             offer_label = NULL,
+             offer_user_id = NULL`,
           [table.number, newTableToken(), layout.x, layout.y],
         );
       } else {
         await client.query(
-          `INSERT INTO tables (number, kind) VALUES ($1, 'virtual')
+          `INSERT INTO tables (number, kind, offer_label) VALUES ($1, 'virtual', $2)
            ON CONFLICT (number) DO UPDATE SET
              kind = 'virtual', qr_token = NULL, layout_x = NULL, layout_y = NULL,
-             layout_w = NULL, layout_h = NULL, layout_shape = NULL`,
-          [table.number],
+             layout_w = NULL, layout_h = NULL, layout_shape = NULL,
+             offer_label = EXCLUDED.offer_label,
+             -- Plus une table d'offre : le compte lié n'a plus de sens.
+             offer_user_id = CASE WHEN EXCLUDED.offer_label IS NULL THEN NULL
+                                  ELSE tables.offer_user_id END`,
+          [table.number, table.offerFor],
         );
       }
       if (rowCount) result.updated += 1;
