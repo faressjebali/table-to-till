@@ -14,7 +14,7 @@
     "migrate": "node --env-file=../.env node_modules/node-pg-migrate/bin/node-pg-migrate.js up",
     "migrate:down": "node --env-file=../.env node_modules/node-pg-migrate/bin/node-pg-migrate.js down",
     "seed": "tsx --env-file=../.env src/seed/index.ts",
-    "seed:dev-tables": "tsx --env-file=../.env src/seed/dev-tables.ts"
+    "tables:links": "tsx --env-file=../.env src/seed/table-links.ts"
   },
   "dependencies": {
     "argon2": "^0.45.1",
