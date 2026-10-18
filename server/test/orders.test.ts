@@ -698,3 +698,199 @@ describe('expiration automatique', () => {
     expect(log).toEqual([{ user_id: null, entity_id: old }]);
   });
 });
+
+describe('POST /staff-orders', () => {
+  function postStaffOrder(token: string, body: Record<string, unknown>) {
+    return api()
+      .post('/api/staff-orders')
+      .set(auth(token))
+      .send({ clientRequestId: randomUUID(), tableId: 1, lines: [burger()], ...body });
+  }
+
+  it('confirmée tout de suite : session au nom du principal, file caisse, journal', async () => {
+    const principal = await waiterOnShift('amira');
+    const backup = await waiterOnShift('karim');
+    // Le renfort saisit : la table compte quand même dans la caisse du principal.
+    const res = await postStaffOrder(backup.token, {
+      lines: [
+        { ...burger(), quantity: 2, unitPrice: 1 },
+        {
+          menuItemId: item('Classic Start'),
+          quantity: 1,
+          note: 'sans sucre',
+          choices: [{ group: 'hot_drink', menuItemId: item('Capuccino') }],
+        },
+      ],
+    });
+    expect(res.status).toBe(201);
+    const order = res.body as Order;
+    expect(order).toMatchObject({
+      table: { id: 1, number: 7 },
+      tableSessionId: 1,
+      source: 'waiter',
+      status: 'confirmed',
+      confirmedBy: { id: backup.id, name: 'Nom karim' },
+      confirmedAt: MONDAY_10H.toISOString(),
+      // Prix de la base, jamais celui envoyé par le téléphone.
+      total: 48500,
+      offer: null,
+      pos: { status: 'queued', error: null },
+      lines: [
+        { quantity: 2, unitPrice: 28500, note: 'sans oignon' },
+        {
+          quantity: 1,
+          unitPrice: 14500,
+          note: 'sans sucre',
+          choices: [{ group: 'hot_drink', menuItemId: item('Capuccino') }],
+        },
+      ],
+    });
+
+    const { rows: sessions } = await db.query('SELECT table_id, principal_id FROM table_sessions');
+    expect(sessions).toEqual([{ table_id: 1, principal_id: principal.id }]);
+
+    // Ni notes ni choix en caisse : seulement les codes produits et les quantités.
+    const { rows: jobs } = await db.query(
+      'SELECT type, status, table_id, order_id, payload FROM pos_jobs',
+    );
+    expect(jobs).toEqual([
+      {
+        type: 'enter_order',
+        status: 'queued',
+        table_id: 1,
+        order_id: order.id,
+        payload: {
+          lines: [
+            { orderLineId: order.lines[0]?.id, posCode: '50', quantity: 2 },
+            { orderLineId: order.lines[1]?.id, posCode: '16', quantity: 1 },
+          ],
+        },
+      },
+    ]);
+
+    const { rows: log } = await db.query(
+      `SELECT user_id, action, entity_id, table_id FROM audit_log WHERE action = 'order.entered'`,
+    );
+    expect(log).toEqual([
+      { user_id: backup.id, action: 'order.entered', entity_id: order.id, table_id: 1 },
+    ]);
+  });
+
+  it('rejoint la session ouverte de la table', async () => {
+    const waiter = await waiterOnShift();
+    await api()
+      .post(`/api/orders/${String(await pendingOrder())}/confirm`)
+      .set(auth(waiter.token));
+    const res = await postStaffOrder(waiter.token, {});
+    expect(res.body).toMatchObject({ tableSessionId: 1 });
+    const { rows } = await db.query<{ sessions: number; jobs: number }>(
+      `SELECT (SELECT count(*) FROM table_sessions)::int AS sessions,
+              (SELECT count(*) FROM pos_jobs)::int AS jobs`,
+    );
+    expect(rows).toEqual([{ sessions: 1, jobs: 2 }]);
+  });
+
+  it('même clientRequestId : même commande, rien de recréé, même en même temps', async () => {
+    const waiter = await waiterOnShift();
+    const clientRequestId = randomUUID();
+    const results = await Promise.all([
+      postStaffOrder(waiter.token, { clientRequestId }),
+      postStaffOrder(waiter.token, { clientRequestId }),
+    ]);
+    const again = await postStaffOrder(waiter.token, { clientRequestId });
+    for (const res of [...results, again]) {
+      expect(res.status).toBe(201);
+      expect(res.body).toMatchObject({ id: 1, tableSessionId: 1 });
+    }
+    const { rows } = await db.query(
+      `SELECT (SELECT count(*) FROM orders)::int AS orders,
+              (SELECT count(*) FROM table_sessions)::int AS sessions,
+              (SELECT count(*) FROM pos_jobs)::int AS jobs`,
+    );
+    expect(rows).toEqual([{ orders: 1, sessions: 1, jobs: 1 }]);
+
+    // Un clientRequestId déjà pris par une commande QR ne renvoie pas cette commande.
+    const qrRequestId = randomUUID();
+    await postOrder([burger()], { clientRequestId: qrRequestId });
+    const reused = await postStaffOrder(waiter.token, { clientRequestId: qrRequestId });
+    expect(reused.status).toBe(400);
+    expect(reused.body).toMatchObject({
+      error: { code: 'VALIDATION_ERROR', details: { fields: [{ field: 'clientRequestId' }] } },
+    });
+  });
+
+  it('possible après 22h et avant 8h ; les horaires des articles comptent toujours', async () => {
+    const waiter = await waiterOnShift();
+    vi.setSystemTime(MONDAY_22H);
+    expect((await postStaffOrder(waiter.token, {})).status).toBe(201);
+    vi.setSystemTime(MONDAY_7H30);
+    expect((await postStaffOrder(waiter.token, {})).status).toBe(201);
+
+    vi.setSystemTime(MONDAY_13H);
+    const formula = await postStaffOrder(waiter.token, {
+      lines: [
+        {
+          menuItemId: item('Classic Start'),
+          quantity: 1,
+          choices: [{ group: 'hot_drink', menuItemId: item('Capuccino') }],
+        },
+      ],
+    });
+    expect(formula.status).toBe(409);
+    expect(formula.body).toMatchObject({
+      error: { code: 'OUTSIDE_HOURS', details: { menuItemId: item('Classic Start') } },
+    });
+  });
+
+  it('article en rupture : ITEM_UNAVAILABLE, rien de créé', async () => {
+    const waiter = await waiterOnShift();
+    await db.query('UPDATE menu_items SET sold_out = true WHERE id = $1', [item('Cheese Burger')]);
+    const res = await postStaffOrder(waiter.token, {});
+    expect(res.status).toBe(409);
+    expect(res.body).toMatchObject({
+      error: { code: 'ITEM_UNAVAILABLE', details: { menuItemId: item('Cheese Burger') } },
+    });
+    const { rows } = await db.query(
+      `SELECT (SELECT count(*) FROM orders)::int AS orders,
+              (SELECT count(*) FROM table_sessions)::int AS sessions`,
+    );
+    expect(rows).toEqual([{ orders: 0, sessions: 0 }]);
+  });
+
+  it('table inconnue : NOT_FOUND ; table fictive ou champs des tables d’offre : VALIDATION_ERROR', async () => {
+    const waiter = await waiterOnShift();
+    await db.query(`INSERT INTO tables (number, kind) VALUES (333, 'virtual')`);
+
+    const unknown = await postStaffOrder(waiter.token, { tableId: 9999 });
+    expect(unknown.status).toBe(404);
+    expect(unknown.body).toMatchObject({ error: { code: 'NOT_FOUND' } });
+
+    const field = (res: { body: unknown }) =>
+      (res.body as { error: { details: { fields: { field: string }[] } } }).error.details.fields[0]
+        ?.field;
+    const virtual = await postStaffOrder(waiter.token, { tableId: 3 });
+    expect(virtual.status).toBe(400);
+    expect(field(virtual)).toBe('tableId');
+    const requestedBy = await postStaffOrder(waiter.token, { requestedById: waiter.id });
+    expect(requestedBy.status).toBe(400);
+    expect(field(requestedBy)).toBe('requestedById');
+    const forClient = await postStaffOrder(waiter.token, { forClient: true });
+    expect(forClient.status).toBe(400);
+    expect(field(forClient)).toBe('forClient');
+    const noLines = await postStaffOrder(waiter.token, { lines: [] });
+    expect(noLines.status).toBe(400);
+    expect(field(noLines)).toBe('lines');
+  });
+
+  it('réservée aux serveurs en shift', async () => {
+    await waiterOnShift();
+    await createUser('nour', 'barista');
+    await createUser('sami');
+    const barista = await postStaffOrder(await tokenFor('nour'), {});
+    expect(barista.status).toBe(403);
+    expect(barista.body).toMatchObject({ error: { code: 'FORBIDDEN' } });
+    const offShift = await postStaffOrder(await tokenFor('sami'), {});
+    expect(offShift.status).toBe(403);
+    expect(offShift.body).toMatchObject({ error: { code: 'NOT_ON_SHIFT' } });
+  });
+});

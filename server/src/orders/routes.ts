@@ -19,6 +19,15 @@ const createBody = z.object({
   lines: orderLinesSchema,
 });
 
+const staffOrderBody = z.object({
+  clientRequestId: z.uuid(),
+  tableId: z.number().int().positive(),
+  // Seulement sur une table d'offre : interdits sur une table réelle.
+  requestedById: z.number().int().positive().optional(),
+  forClient: z.boolean().optional(),
+  lines: orderLinesSchema,
+});
+
 const pendingQuery = z.object({
   status: z.literal('pending'),
   limit: z.coerce.number().int().min(1).max(100).default(50),
@@ -28,6 +37,15 @@ const pendingQuery = z.object({
 const rejectBody = z.object({ reason: z.string().max(200).nullable().optional() });
 
 type Created = { orderId: number; status: 'pending'; total: number; expiresAt: Date };
+
+function fieldError(field: string, message: string): HttpError {
+  return new HttpError(400, 'VALIDATION_ERROR', 'Invalid request body', {
+    fields: [{ field, message }],
+  });
+}
+
+// clientRequestId déjà enregistré par une requête concurrente : la transaction est annulée.
+class DuplicateRequest extends Error {}
 
 // Réponse de POST /orders, aussi renvoyée telle quelle pour un clientRequestId déjà reçu.
 async function createdResponse(db: Db | pg.PoolClient, orderId: number): Promise<Created> {
@@ -77,6 +95,66 @@ async function currentPrincipalId(client: pg.PoolClient): Promise<number | null>
       ORDER BY s.started_at DESC LIMIT 1`,
   );
   return rows[0]?.user_id ?? null;
+}
+
+// Session ouverte de la table, ouverte au nom du principal en cours si la table était libre.
+// Table verrouillée : deux commandes sur une table libre n'ouvrent qu'une session.
+async function openTableSession(client: pg.PoolClient, tableId: number, now: Date) {
+  await client.query(`SELECT 1 FROM tables WHERE id = $1 FOR UPDATE`, [tableId]);
+  const { rows: open } = await client.query<{ id: number }>(
+    `SELECT id FROM table_sessions WHERE table_id = $1 AND closed_at IS NULL`,
+    [tableId],
+  );
+  const existing = open[0]?.id;
+  if (existing !== undefined) return existing;
+  const { rows } = await client.query<{ id: number }>(
+    `INSERT INTO table_sessions (table_id, opened_at, principal_id) VALUES ($1, $2, $3)
+     RETURNING id`,
+    [tableId, now, await currentPrincipalId(client)],
+  );
+  const created = rows[0]?.id;
+  if (created === undefined) throw new Error('session de table non créée');
+  return created;
+}
+
+// Tâche enter_order d'une commande confirmée. L'agent tape seulement les articles, par leur code :
+// ni notes ni choix (docs/api.md § PosJob).
+async function queueEnterOrder(client: pg.PoolClient, orderId: number, tableId: number, now: Date) {
+  const { rows: lines } = await client.query<{
+    id: number;
+    pos_code: string | null;
+    quantity: number;
+    menu_item_id: number;
+    name_fr: string;
+  }>(
+    `SELECT l.id, i.pos_code, l.quantity, l.menu_item_id, l.name_fr
+       FROM order_lines l JOIN menu_items i ON i.id = l.menu_item_id
+      WHERE l.order_id = $1 ORDER BY l.id`,
+    [orderId],
+  );
+  // Code retiré depuis la commande : impossible à saisir en caisse.
+  const missing = lines.find((line) => line.pos_code === null);
+  if (missing) {
+    throw new HttpError(409, 'ITEM_UNAVAILABLE', `${missing.name_fr} has no product code`, {
+      menuItemId: missing.menu_item_id,
+    });
+  }
+  await client.query(
+    `INSERT INTO pos_jobs (type, table_id, order_id, payload, created_at)
+     VALUES ('enter_order', $1, $2, $3, $4)`,
+    [
+      tableId,
+      orderId,
+      {
+        lines: lines.map((line) => ({
+          orderLineId: line.id,
+          posCode: line.pos_code,
+          quantity: line.quantity,
+        })),
+      },
+      now,
+    ],
+  );
 }
 
 type PendingRow = { id: number; table_id: number; status: string; expires_at: Date };
@@ -242,22 +320,7 @@ export function orderRoutes(db: Db, config: Config): Router {
 
     await inTransaction(db, async (client) => {
       const order = await lockPending(client, id.data);
-
-      // Table verrouillée : deux confirmations sur une table libre n'ouvrent qu'une session.
-      await client.query(`SELECT 1 FROM tables WHERE id = $1 FOR UPDATE`, [order.table_id]);
-      const { rows: open } = await client.query<{ id: number }>(
-        `SELECT id FROM table_sessions WHERE table_id = $1 AND closed_at IS NULL`,
-        [order.table_id],
-      );
-      let sessionId = open[0]?.id;
-      if (sessionId === undefined) {
-        const { rows } = await client.query<{ id: number }>(
-          `INSERT INTO table_sessions (table_id, opened_at, principal_id) VALUES ($1, $2, $3)
-           RETURNING id`,
-          [order.table_id, now, await currentPrincipalId(client)],
-        );
-        sessionId = rows[0]?.id;
-      }
+      const sessionId = await openTableSession(client, order.table_id, now);
 
       await client.query(
         `UPDATE orders SET status = 'confirmed', table_session_id = $2, confirmed_at = $3,
@@ -265,43 +328,7 @@ export function orderRoutes(db: Db, config: Config): Router {
           WHERE id = $1`,
         [order.id, sessionId, now, user.id],
       );
-
-      // L'agent tape seulement les articles, par leur code : ni notes ni choix (docs/api.md § PosJob).
-      const { rows: lines } = await client.query<{
-        id: number;
-        pos_code: string | null;
-        quantity: number;
-        menu_item_id: number;
-        name_fr: string;
-      }>(
-        `SELECT l.id, i.pos_code, l.quantity, l.menu_item_id, l.name_fr
-           FROM order_lines l JOIN menu_items i ON i.id = l.menu_item_id
-          WHERE l.order_id = $1 ORDER BY l.id`,
-        [order.id],
-      );
-      // Code retiré depuis la commande : impossible à saisir en caisse.
-      const missing = lines.find((line) => line.pos_code === null);
-      if (missing) {
-        throw new HttpError(409, 'ITEM_UNAVAILABLE', `${missing.name_fr} has no product code`, {
-          menuItemId: missing.menu_item_id,
-        });
-      }
-      await client.query(
-        `INSERT INTO pos_jobs (type, table_id, order_id, payload, created_at)
-         VALUES ('enter_order', $1, $2, $3, $4)`,
-        [
-          order.table_id,
-          order.id,
-          {
-            lines: lines.map((line) => ({
-              orderLineId: line.id,
-              posCode: line.pos_code,
-              quantity: line.quantity,
-            })),
-          },
-          now,
-        ],
-      );
+      await queueEnterOrder(client, order.id, order.table_id, now);
 
       await audit(client, {
         userId: user.id,
@@ -347,6 +374,85 @@ export function orderRoutes(db: Db, config: Config): Router {
     });
 
     res.json(await loadOrder(db, id.data));
+  });
+
+  // Commande saisie par un serveur en shift (principal ou renfort) pour un client sans téléphone :
+  // directement confirmée et mise en file caisse (docs/api.md § 5, docs/product.md § 6).
+  router.post('/staff-orders', ...requireWaiterOnShift(db, config), async (req, res) => {
+    const parsed = staffOrderBody.safeParse(req.body);
+    if (!parsed.success) throw validationError(parsed.error);
+    const body = parsed.data;
+    const { user } = getAuth(res);
+    const now = new Date();
+
+    // Requête renvoyée (réseau coupé, double tap) : même commande, rien de recréé.
+    const replayId = async () => {
+      const { rows } = await db.query<{ id: number; source: string }>(
+        `SELECT id, source FROM orders WHERE client_request_id = $1`,
+        [body.clientRequestId],
+      );
+      const replay = rows[0];
+      if (replay && replay.source !== 'waiter') {
+        throw fieldError('clientRequestId', 'Already used');
+      }
+      return replay?.id ?? null;
+    };
+    const replay = await replayId();
+    if (replay !== null) {
+      res.status(201).json(await loadOrder(db, replay));
+      return;
+    }
+
+    const { rows: tables } = await db.query<{ id: number; kind: string }>(
+      `SELECT id, kind FROM tables WHERE id = $1`,
+      [body.tableId],
+    );
+    const table = tables[0];
+    if (!table) throw new HttpError(404, 'NOT_FOUND', 'Table not found');
+    // TODO : tables d'offre (commande offerte, requestedById et forClient obligatoires).
+    // Les tables de vente directe passent par /direct-sales.
+    if (table.kind !== 'real') throw fieldError('tableId', 'Must be a real table');
+    if (body.requestedById !== undefined) {
+      throw fieldError('requestedById', 'Only for an offer table');
+    }
+    if (body.forClient !== undefined) throw fieldError('forClient', 'Only for an offer table');
+
+    // Après 22h et avant 8h, la saisie reste possible ; seuls les horaires des articles comptent.
+    const lines = await prepareLines(db, body.lines, now, 'staff');
+
+    const orderId = await inTransaction(db, async (client) => {
+      const sessionId = await openTableSession(client, table.id, now);
+      // Même clientRequestId reçu deux fois en même temps : la seconde attend la première,
+      // puis tout est annulé (session comprise) et la première commande est renvoyée.
+      const { rows } = await client.query<{ id: number }>(
+        `INSERT INTO orders (client_request_id, table_id, table_session_id, source, status,
+                             created_by, created_at, confirmed_at, confirmed_by)
+         VALUES ($1, $2, $3, 'waiter', 'confirmed', $4, $5, $5, $4)
+         ON CONFLICT (client_request_id) DO NOTHING RETURNING id`,
+        [body.clientRequestId, table.id, sessionId, user.id, now],
+      );
+      const created = rows[0];
+      if (!created) throw new DuplicateRequest();
+      await insertLines(client, created.id, lines);
+      await queueEnterOrder(client, created.id, table.id, now);
+      await audit(client, {
+        userId: user.id,
+        action: 'order.entered',
+        entityType: 'order',
+        entityId: created.id,
+        tableId: table.id,
+        details: { tableSessionId: sessionId },
+      });
+      return created.id;
+    }).catch(async (err: unknown) => {
+      if (!(err instanceof DuplicateRequest)) throw err;
+      const first = await replayId();
+      if (first === null) throw new Error('commande en double introuvable');
+      return first;
+    });
+
+    // table:updated aux serveurs en shift, pos:job à l'agent : plus tard.
+    res.status(201).json(await loadOrder(db, orderId));
   });
 
   return router;
