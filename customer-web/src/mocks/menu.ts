@@ -3,8 +3,9 @@
 import type { MenuItem, MenuResponse } from '../api/types';
 
 const allDay: MenuItem['availability'] = { days: [1, 2, 3, 4, 5, 6, 7], from: null, until: null };
-const untilNoon: MenuItem['availability'] = { ...allDay, until: '12:00' };
-const untilThree: MenuItem['availability'] = { ...allDay, until: '15:00' };
+// « until » part de l'ouverture du café : le serveur renvoie from: '08:00'.
+const untilNoon: MenuItem['availability'] = { ...allDay, from: '08:00', until: '12:00' };
+const untilThree: MenuItem['availability'] = { ...allDay, from: '08:00', until: '15:00' };
 
 const base = {
   photoUrl: null,

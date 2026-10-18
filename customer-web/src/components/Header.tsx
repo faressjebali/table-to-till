@@ -1,6 +1,8 @@
+import type { ReactNode } from 'react';
 import { LanguageSwitch } from './LanguageSwitch';
 
-export function Header() {
+// En-tête fixe ; `children` : la barre des catégories, collée sous le nom du café.
+export function Header({ children }: { children?: ReactNode }) {
   return (
     <header className="header">
       <div className="header__inner">
@@ -13,6 +15,7 @@ export function Header() {
         </p>
         <LanguageSwitch />
       </div>
+      {children}
     </header>
   );
 }

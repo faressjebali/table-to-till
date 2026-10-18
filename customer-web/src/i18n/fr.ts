@@ -6,6 +6,16 @@ export const fr = {
   'menu.title': 'Notre carte',
   'menu.intro': 'Commandez depuis votre table, un serveur viendra confirmer.',
   'menu.counterHint': 'Pressé ? Commandez au comptoir.',
+  'menu.categories': 'Catégories',
+  'menu.soldOut': 'Épuisé',
+  'menu.loading': 'Chargement de la carte…',
+  'table.label': 'Table',
+  'table.unknown.title': 'QR non reconnu',
+  'table.unknown.body': 'Ce QR code ne correspond à aucune table. Demandez au serveur.',
+  'error.title': 'Carte indisponible',
+  'error.body':
+    'La carte n’a pas pu être chargée. Vérifiez votre connexion ou réessayez dans un instant.',
+  'error.retry': 'Réessayer',
 };
 
 export type MessageKey = keyof typeof fr;
