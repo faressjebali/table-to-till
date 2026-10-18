@@ -1,0 +1,151 @@
+.header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  max-width: var(--content-max);
+  margin: 0 auto;
+  min-height: 56px;
+  padding: env(safe-area-inset-top) max(var(--space-4), env(safe-area-inset-right)) 0
+    max(var(--space-4), env(safe-area-inset-left));
+}
+
+.header img {
+  border-radius: 8px;
+}
+
+.header__name {
+  font-weight: 700;
+}
+
+.main {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  max-width: var(--content-max);
+  margin: 0 auto;
+  padding: var(--space-6) max(var(--space-4), env(safe-area-inset-right))
+    max(var(--space-8), env(safe-area-inset-bottom)) max(var(--space-4), env(safe-area-inset-left));
+}
+
+.title {
+  font-size: var(--text-title);
+  line-height: 1.2;
+}
+
+.body {
+  color: var(--color-muted);
+}
+
+.button {
+  min-height: var(--tap-min);
+  padding: 0 var(--space-6);
+  border: 0;
+  border-radius: var(--radius);
+  background: var(--color-action);
+  color: var(--color-on-action);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+/* Proposition d'installation (Android, Chrome, Edge) */
+.install-banner {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  background: var(--color-surface);
+}
+
+/* Écran « Installez l'app » (iPhone) */
+.install {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-4);
+  max-width: 28rem;
+  min-height: 100dvh;
+  margin: 0 auto;
+  padding: max(var(--space-8), env(safe-area-inset-top)) var(--space-6)
+    max(var(--space-8), env(safe-area-inset-bottom));
+  text-align: center;
+}
+
+.install__icon {
+  border-radius: 22px;
+  box-shadow: 0 4px 16px rgb(0 0 0 / 0.12);
+}
+
+.install__title {
+  font-size: var(--text-title);
+  line-height: 1.2;
+}
+
+.install__why {
+  color: var(--color-muted);
+}
+
+.install__steps {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  width: 100%;
+  margin-top: var(--space-2);
+  padding: 0;
+  list-style: none;
+  counter-reset: step;
+  text-align: left;
+}
+
+.install__steps li {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-height: var(--tap-min);
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  background: var(--color-surface);
+  counter-increment: step;
+}
+
+.install__steps li::before {
+  content: counter(step);
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 999px;
+  background: var(--color-action);
+  color: var(--color-on-action);
+  font-weight: 700;
+}
+
+.install__step-text {
+  flex: 1;
+}
+
+.install__share {
+  flex: none;
+  color: var(--color-accent);
+}
+
+.button--secondary {
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  color: var(--color-ink);
+}
+
+.install__copy {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.install__url {
+  font-size: var(--text-small);
+  color: var(--color-muted);
+}

@@ -44,4 +44,10 @@ export default tseslint.config(
     files: ['**/*.js'],
     languageOptions: { globals: globals.node },
   },
+
+  // Service worker de l'app staff (installation, notifications push)
+  {
+    files: ['staff-app/public/sw.js'],
+    languageOptions: { globals: globals.serviceworker },
+  },
 );

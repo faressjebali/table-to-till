@@ -43,6 +43,8 @@ jobs:
         working-directory: server
       - run: npm ci
         working-directory: customer-web
+      - run: npm ci
+        working-directory: staff-app
       - run: npm run lint
       - run: npm run format:check
       - name: Serveur (types et tests)
@@ -50,6 +52,9 @@ jobs:
         run: npm run typecheck && npm test
       - name: Menu QR (types, tests et build)
         working-directory: customer-web
+        run: npm run typecheck && npm test && npm run build
+      - name: App staff (types, tests et build)
+        working-directory: staff-app
         run: npm run typecheck && npm test && npm run build
 
   python:
