@@ -19,7 +19,14 @@ const stationsByRole: Record<Role, readonly Station[]> = {
   chef: ['kitchen', 'both'],
 };
 
-type CategoryRow = { id: number; name_fr: string; name_en: string | null; sort_order: number };
+type CategoryRow = {
+  id: number;
+  name_fr: string;
+  name_en: string | null;
+  section: 'food' | 'drinks';
+  display: 'list' | 'grid';
+  sort_order: number;
+};
 type ChoiceGroupRow = {
   key: string;
   name_fr: string;
@@ -37,7 +44,7 @@ export function menuRoutes(db: Db, config: Config): Router {
     const audience = findAuth(res) ? 'staff' : 'customer';
     const [{ rows: categories }, items, { rows: groups }] = await Promise.all([
       db.query<CategoryRow>(
-        `SELECT id, name_fr, name_en, sort_order FROM categories ORDER BY sort_order, id`,
+        `SELECT id, name_fr, name_en, section, display, sort_order FROM categories ORDER BY sort_order, id`,
       ),
       loadMenuItems(db),
       db.query<ChoiceGroupRow>(
@@ -54,6 +61,8 @@ export function menuRoutes(db: Db, config: Config): Router {
       categories: categories.map((category) => ({
         id: category.id,
         name: localized(category.name_fr, category.name_en),
+        section: category.section,
+        display: category.display,
         sortOrder: category.sort_order,
         items: items
           .filter((row) => row.category_id === category.id)

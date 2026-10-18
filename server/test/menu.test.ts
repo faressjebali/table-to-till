@@ -28,6 +28,8 @@ type MenuResponse = {
   categories: {
     id: number;
     name: { fr: string; en: string };
+    section: 'food' | 'drinks';
+    display: 'list' | 'grid';
     sortOrder: number;
     items: MenuItem[];
   }[];
@@ -122,6 +124,25 @@ describe('GET /menu', () => {
     expect(categories[0]?.name).toEqual({ fr: 'Formules petit-déjeuner', en: 'Breakfast sets' });
     // 97 articles, moins le Plat de la semaine tant qu'il n'a pas de prix.
     expect(categories.flatMap((c) => c.items)).toHaveLength(96);
+  });
+
+  it('range chaque catégorie dans Food ou Drinks', async () => {
+    const { categories } = await getMenu();
+    const section = (nameFr: string) => categories.find((c) => c.name.fr === nameFr)?.section;
+    expect(section('Formules petit-déjeuner')).toBe('food');
+    expect(section('Plat de la semaine')).toBe('food');
+    expect(section('Jus')).toBe('drinks');
+    expect(section('Eau')).toBe('drinks');
+    // Food d'abord, puis Drinks, comme le menu papier.
+    const sections = categories.map((c) => c.section);
+    expect(sections.indexOf('drinks')).toBe(sections.lastIndexOf('food') + 1);
+  });
+
+  it('affiche seulement les Extras en tableau, comme le menu papier', async () => {
+    const { categories } = await getMenu();
+    expect(categories.filter((c) => c.display === 'grid').map((c) => c.name.fr)).toEqual([
+      'Extras',
+    ]);
   });
 
   it('renvoie un MenuItem au format du contrat, sans posCode', async () => {

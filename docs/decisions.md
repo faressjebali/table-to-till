@@ -2,6 +2,8 @@
 
 Une ligne par décision, la plus récente en haut. Format : `AAAA-MM-JJ — décision — pourquoi`.
 
+- 2026-10-18 — Les catégories ont un affichage `list` ou `grid` ; seuls les Extras sont en tableau (nom + prix), comme sur le menu papier (contrat v2.0.3) — le menu QR doit ressembler au menu papier sans dépendre du nom d'une catégorie
+- 2026-10-18 — Le menu QR sépare la carte en deux onglets, Food et Drinks, d'après la `section` de chaque catégorie (contrat v2.0.3) — un client qui veut un café ne doit pas descendre jusqu'en bas de la carte
 - 2026-10-17 — Administration des tables : la manager voit le jeton QR (impression) mais jamais l'état ni le montant des tables ; le type réel / fictif ne change pas après création ; une table d'offre au plus par compte ; pas de modification d'une table en cours d'utilisation ; contrat v2.0.2 — la manager n'a pas accès au plan, et une table ne doit pas changer pendant qu'une addition est ouverte en caisse
 - 2026-10-17 — Code `CAFE_CLOSED` pour le menu QR quand le café est fermé, `OUTSIDE_HOURS` seulement pour un article hors de ses horaires ; contrat v2.0.1 — le client doit savoir s'il doit retirer un article ou commander au comptoir
 - 2026-10-17 — Passation : deux principaux en même temps ; à 15h00, le serveur arrivé à partir de 14h00 devient principal automatiquement (rien à accepter) ; l'ancien finit ses tables ou les passe en clôturant ; chaque clôture ne montre que la caisse de son principal (ses tables, et le hors-table quand il était principal en cours) ; contrat v2.0 — le Shift 1 doit pouvoir finir ses tables pendant que le Shift 2 travaille, sans bloquer l'argent

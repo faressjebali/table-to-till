@@ -6,11 +6,13 @@ import { OPENING_TIME } from '../menu/availability.js';
 
 export type Section = 'food' | 'drinks';
 export type Station = 'bar' | 'kitchen' | 'both';
+export type CategoryDisplay = 'list' | 'grid';
 
 export interface SeedCategory {
   nameFr: string;
   nameEn: string;
   section: Section;
+  display: CategoryDisplay;
   sortOrder: number;
 }
 
@@ -66,6 +68,9 @@ const DRINK_CATEGORIES = new Set([
   'Healthy Shots',
   'Eau',
 ]);
+
+// Catégories affichées en tableau (nom + prix) dans le menu QR, comme sur le menu papier.
+const GRID_CATEGORIES = new Set(['Extras']);
 
 // Groupes de choix (docs/api.md § ChoiceGroup). Les options sont des articles du menu.
 const CHOICE_GROUPS: {
@@ -221,6 +226,7 @@ export function parseMenuCsv(text: string): SeedMenu {
         nameFr: row.category,
         nameEn: row.category_en,
         section: DRINK_CATEGORIES.has(row.category) ? 'drinks' : 'food',
+        display: GRID_CATEGORIES.has(row.category) ? 'grid' : 'list',
         sortOrder: categories.length + 1,
       };
       categories.push(category);

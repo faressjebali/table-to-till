@@ -70,6 +70,7 @@ describe('parseMenuCsv sur docs/menu/menu.csv', () => {
       section: 'food',
     });
     expect(menu.categories.filter((c) => c.section === 'drinks')).toHaveLength(7);
+    expect(menu.categories.find((c) => c.nameFr === 'Extras')?.display).toBe('grid');
     expect(menu.items.filter((i) => i.categoryFr === 'Extras').map((i) => i.sortOrder)).toEqual(
       Array.from({ length: 14 }, (_, i) => i + 1),
     );

@@ -21,11 +21,13 @@ export async function seedMenu(client: ClientBase, menu: SeedMenu): Promise<Seed
     const categoryIds = new Map<string, number>();
     for (const c of menu.categories) {
       const { rows } = await client.query<{ id: number }>(
-        `INSERT INTO categories (name_fr, name_en, section, sort_order) VALUES ($1, $2, $3, $4)
+        `INSERT INTO categories (name_fr, name_en, section, display, sort_order)
+         VALUES ($1, $2, $3, $4, $5)
          ON CONFLICT (name_fr) DO UPDATE
-           SET name_en = EXCLUDED.name_en, section = EXCLUDED.section, sort_order = EXCLUDED.sort_order
+           SET name_en = EXCLUDED.name_en, section = EXCLUDED.section, display = EXCLUDED.display,
+               sort_order = EXCLUDED.sort_order
          RETURNING id`,
-        [c.nameFr, c.nameEn, c.section, c.sortOrder],
+        [c.nameFr, c.nameEn, c.section, c.display, c.sortOrder],
       );
       categoryIds.set(c.nameFr, rowId(rows));
     }
