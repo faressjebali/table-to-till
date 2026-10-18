@@ -7,6 +7,11 @@ export type Config = {
   loginRateLimitPerMinute: number;
   firstManagerLogin: string;
   firstManagerTempPassword: string;
+  // Commande QR non confirmée : expirée après ce délai (docs/api.md § Order).
+  orderPendingTtlSeconds: number;
+  // Anti-abus : commandes QR par table sur une fenêtre (docs/api.md § Erreurs).
+  qrOrderRateLimit: number;
+  qrOrderRateWindowMinutes: number;
 };
 
 function positiveInt(name: string, fallback: number): number {
@@ -28,5 +33,8 @@ export function loadConfig(): Config {
     loginRateLimitPerMinute: positiveInt('LOGIN_RATE_LIMIT_PER_MINUTE', 10),
     firstManagerLogin: process.env.FIRST_MANAGER_LOGIN ?? '',
     firstManagerTempPassword: process.env.FIRST_MANAGER_TEMP_PASSWORD ?? '',
+    orderPendingTtlSeconds: positiveInt('ORDER_PENDING_TTL_SECONDS', 300),
+    qrOrderRateLimit: positiveInt('QR_ORDER_RATE_LIMIT', 10),
+    qrOrderRateWindowMinutes: positiveInt('QR_ORDER_RATE_WINDOW_MINUTES', 10),
   };
 }

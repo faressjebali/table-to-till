@@ -71,3 +71,9 @@ export function computeAvailability(
   if (rule.soldOut) return { available: false, unavailableReason: 'sold_out' };
   return { available: true, unavailableReason: null };
 }
+
+// Café ouvert (8h00–22h00, heure de Tunis) : en dehors, le menu QR refuse toute commande (CAFE_CLOSED).
+export function isCafeOpen(now: Date): boolean {
+  const { minutes } = localTime(now);
+  return minutes >= toMinutes(OPENING_TIME) && minutes < toMinutes(CLOSING_TIME);
+}
