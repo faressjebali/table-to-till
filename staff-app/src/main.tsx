@@ -14,8 +14,9 @@ createRoot(root).render(
   </StrictMode>,
 );
 
-// Service worker : installation de l'app, puis notifications push.
-if ('serviceWorker' in navigator) {
+// Service worker : installation de l'app, puis notifications push. Seulement dans la version
+// construite : en développement, il resterait dans le navigateur avec une ancienne version.
+if (import.meta.env.PROD && 'serviceWorker' in navigator) {
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('/sw.js').catch(() => {
       // Sans service worker (navigateur ancien, http sur le Wi-Fi) : l'app marche, sans installation.

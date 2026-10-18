@@ -3,7 +3,7 @@ import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { App } from './App';
 import { fr } from './i18n/fr';
-import { installGate, iosBrowser, isIos, type DeviceInfo } from './install';
+import { installGate, iosBrowser, iosVersion, isIos, type DeviceInfo } from './install';
 import manifestText from '../public/manifest.webmanifest?raw';
 
 const IPHONE =
@@ -16,6 +16,7 @@ const device = (over: Partial<DeviceInfo>): DeviceInfo => ({
   platform: 'Linux armv8l',
   maxTouchPoints: 5,
   standalone: false,
+  secure: true,
   ...over,
 });
 
@@ -28,6 +29,7 @@ function mockDevice(info: DeviceInfo) {
     configurable: true,
     get: () => info.maxTouchPoints,
   });
+  vi.stubGlobal('isSecureContext', info.secure);
   vi.stubGlobal(
     'matchMedia',
     vi.fn((query: string) => ({ matches: info.standalone && query.includes('standalone') })),
@@ -63,6 +65,28 @@ describe('installation', () => {
     expect(installGate(device({}), true)).toBe('none');
   });
 
+  it('ne bloque pas quand l’installation est impossible (adresse http)', () => {
+    const iphone = device({ userAgent: IPHONE, platform: 'iPhone', secure: false });
+    expect(installGate(iphone, true)).toBe('none');
+  });
+
+  it('iPhone avant iOS 16.4 : demande la mise à jour (pas de notifications)', () => {
+    const old = device({ userAgent: IPHONE.replace('17_5', '16_3'), platform: 'iPhone' });
+    expect(iosVersion(old)).toEqual([16, 3]);
+    expect(installGate(old, true)).toBe('update-ios');
+    expect(installGate({ ...old, userAgent: IPHONE.replace('17_5', '16_4') }, true)).toBe(
+      'install-ios',
+    );
+    // iPad récent : pas de version dans le navigateur, on ne bloque pas pour la version.
+    const ipad = device({ userAgent: 'Mozilla/5.0 (Macintosh)', platform: 'MacIntel' });
+    expect(iosVersion(ipad)).toBeNull();
+    expect(installGate(ipad, true)).toBe('install-ios');
+
+    mockDevice(old);
+    render(<App requireInstall />);
+    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent(fr['install.update.title']);
+  });
+
   it('iPhone dans Safari : écran « Installez l’app » avec les étapes', () => {
     mockDevice(device({ userAgent: IPHONE, platform: 'iPhone' }));
     render(<App requireInstall />);
@@ -96,6 +120,18 @@ describe('installation', () => {
     await userEvent.click(screen.getByRole('button', { name: fr['install.copy'] }));
     expect(writeText).toHaveBeenCalledWith(window.location.href);
     expect(screen.getByRole('status')).toHaveTextContent(fr['install.copied']);
+  });
+
+  it('copie refusée : l’adresse complète reste affichée, à recopier', async () => {
+    mockDevice(device({ userAgent: `${IPHONE} [FBAN/FBIOS;FBAV/480.0]`, platform: 'iPhone' }));
+    const writeText = vi.fn(() => Promise.reject(new Error('refusé')));
+    vi.stubGlobal(
+      'navigator',
+      Object.assign(Object.create(navigator) as Navigator, { clipboard: { writeText } }),
+    );
+    render(<App requireInstall />);
+    await userEvent.click(screen.getByRole('button', { name: fr['install.copy'] }));
+    expect(screen.getByRole('status')).toHaveTextContent(window.location.href);
   });
 
   it('iPhone ouvert depuis l’écran d’accueil : l’app s’ouvre', () => {
@@ -145,6 +181,7 @@ describe('installation', () => {
     expect(iosBrowser(iphone)).toBe('safari');
     expect(iosBrowser({ ...iphone, userAgent: `${IPHONE} EdgiOS/129` })).toBe('other');
     expect(iosBrowser({ ...iphone, userAgent: `${IPHONE} Instagram 300.0` })).toBe('in-app');
+    expect(iosBrowser({ ...iphone, userAgent: `${IPHONE} [LinkedInApp]` })).toBe('in-app');
   });
 });
 
@@ -152,6 +189,7 @@ describe('manifeste', () => {
   const manifest = JSON.parse(manifestText) as {
     display: string;
     start_url: string;
+    orientation?: string;
     icons: { src: string; sizes: string; purpose: string }[];
   };
   // Fichiers présents dans public/icons/ (chemins publiés : /icons/…).
@@ -162,6 +200,8 @@ describe('manifeste', () => {
   it('rend l’app installable : plein écran, icônes 192, 512 et maskable', () => {
     expect(manifest.display).toBe('standalone');
     expect(manifest.start_url).toBe('/');
+    // Pas de verrou : une tablette au comptoir peut passer en paysage.
+    expect(manifest.orientation).toBeUndefined();
     const icons = manifest.icons.map((i) => `${i.sizes} ${i.purpose}`);
     expect(icons).toEqual(
       expect.arrayContaining(['192x192 any', '512x512 any', '512x512 maskable']),

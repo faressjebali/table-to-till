@@ -15,6 +15,9 @@ export const fr = {
   'install.copy': 'Copier le lien',
   'install.copied': 'Lien copié. Collez-le dans Safari.',
   'install.shareIcon': 'Bouton Partager',
+  'install.update.title': 'Mettez à jour l’iPhone',
+  'install.update.body':
+    'Pour recevoir les nouvelles commandes, l’app a besoin d’iOS 16.4 ou plus récent : Réglages › Général › Mise à jour logicielle.',
   'install.button': 'Installer l’app',
   'install.hint': 'Installez l’app pour l’ouvrir comme les autres et recevoir les commandes.',
 };

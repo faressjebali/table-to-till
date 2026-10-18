@@ -47,7 +47,7 @@ function CopyLink() {
       await navigator.clipboard.writeText(window.location.href);
       setCopied(true);
     } catch {
-      // Presse-papiers refusé : l'adresse reste affichée en dessous, à recopier.
+      // Presse-papiers refusé : l'adresse complète reste affichée en dessous, à recopier.
     }
   };
 
@@ -57,7 +57,7 @@ function CopyLink() {
         {t('install.copy')}
       </button>
       <p className="install__url" role="status">
-        {copied ? t('install.copied') : window.location.host}
+        {copied ? t('install.copied') : window.location.href}
       </p>
     </div>
   );
@@ -83,5 +83,22 @@ function ShareIcon() {
         strokeLinejoin="round"
       />
     </svg>
+  );
+}
+
+// iPhone trop ancien (avant iOS 16.4) : pas de notifications possibles, il faut le mettre à jour.
+export function UpdateIosScreen() {
+  return (
+    <main className="install">
+      <img
+        className="install__icon"
+        src="/icons/apple-touch-icon.png"
+        alt=""
+        width={96}
+        height={96}
+      />
+      <h1 className="install__title">{t('install.update.title')}</h1>
+      <p className="install__why">{t('install.update.body')}</p>
+    </main>
   );
 }

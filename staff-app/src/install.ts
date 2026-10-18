@@ -7,6 +7,8 @@ export interface DeviceInfo {
   maxTouchPoints: number;
   /** Ouverte depuis l'écran d'accueil (mode « standalone »). */
   standalone: boolean;
+  /** HTTPS (ou localhost) : sans lui, ni installation ni notifications. */
+  secure: boolean;
 }
 
 export function currentDevice(): DeviceInfo {
@@ -16,6 +18,7 @@ export function currentDevice(): DeviceInfo {
     platform: nav.platform,
     maxTouchPoints: nav.maxTouchPoints,
     standalone: nav.standalone === true || window.matchMedia('(display-mode: standalone)').matches,
+    secure: window.isSecureContext,
   };
 }
 
@@ -38,20 +41,44 @@ export function isIos(device: DeviceInfo): boolean {
  */
 export function iosBrowser(device: DeviceInfo): 'safari' | 'other' | 'in-app' {
   const ua = device.userAgent;
-  if (/FBAN|FBAV|FB_IAB|Instagram|Line\/|GSA\/|Snapchat|TikTok/.test(ua)) return 'in-app';
+  if (
+    /FBAN|FBAV|FB_IAB|Instagram|Line\/|GSA\/|Snapchat|TikTok|LinkedInApp|Twitter|Pinterest/.test(ua)
+  ) {
+    return 'in-app';
+  }
   if (/CriOS|FxiOS|EdgiOS/.test(ua)) return 'other';
   return 'safari';
 }
 
+/** Version d'iOS lue dans le navigateur (« iPhone OS 17_5 ») ; `null` si absente (iPad récent). */
+export function iosVersion(device: DeviceInfo): [number, number] | null {
+  const match = /OS (\d+)_(\d+)/.exec(device.userAgent);
+  return match ? [Number(match[1]), Number(match[2])] : null;
+}
+
+/** Les notifications d'une app installée sur iPhone demandent iOS 16.4 ou plus. */
+const MIN_IOS: [number, number] = [16, 4];
+
 /**
  * - `install-ios` : iPhone pas encore installé → écran qui bloque et explique comment l'installer ;
+ * - `update-ios` : iPhone trop ancien pour les notifications → écran qui demande la mise à jour ;
  * - `none` : déjà installée, ou appareil sans exigence (Android, ordinateur).
- * En développement (`requireInstall` faux), un iPhone sur le Wi-Fi en http ne peut pas installer
- * l'app : on ne bloque pas.
+ * On ne bloque pas quand l'installation est impossible : avec `npm run dev` (`requireInstall`
+ * faux) ou sur une adresse http (`npm run preview` ouvert sur le Wi-Fi).
  */
-export function installGate(device: DeviceInfo, requireInstall: boolean): 'install-ios' | 'none' {
-  if (device.standalone || !requireInstall) return 'none';
-  return isIos(device) ? 'install-ios' : 'none';
+export function installGate(
+  device: DeviceInfo,
+  requireInstall: boolean,
+): 'install-ios' | 'update-ios' | 'none' {
+  if (device.standalone || !requireInstall || !device.secure || !isIos(device)) return 'none';
+  const version = iosVersion(device);
+  if (
+    version &&
+    (version[0] < MIN_IOS[0] || (version[0] === MIN_IOS[0] && version[1] < MIN_IOS[1]))
+  ) {
+    return 'update-ios';
+  }
+  return 'install-ios';
 }
 
 /** Événement `beforeinstallprompt` (Chrome, Edge, Android) : bouton « Installer » de l'app. */

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { InstallBanner } from './components/InstallBanner';
-import { InstallScreen } from './components/InstallScreen';
+import { InstallScreen, UpdateIosScreen } from './components/InstallScreen';
 import { t } from './i18n/fr';
 import { currentDevice, installGate, iosBrowser } from './install';
 import { useInstallPrompt } from './useInstallPrompt';
@@ -14,6 +14,7 @@ export function App({ requireInstall = import.meta.env.PROD }: { requireInstall?
   const install = useInstallPrompt();
 
   if (gate === 'install-ios') return <InstallScreen browser={iosBrowser(device)} />;
+  if (gate === 'update-ios') return <UpdateIosScreen />;
 
   return (
     <>
