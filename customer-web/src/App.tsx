@@ -1,20 +1,29 @@
 import { useEffect, useMemo, useState } from 'react';
-import { ApiError, getMenu, getTable, type TableInfo } from './api/client';
-import type { MenuResponse } from './api/types';
+import { ApiError, getMenu, getTable } from './api/client';
+import type { MenuResponse, MenuSectionKey } from './api/types';
 import { CategoryNav } from './components/CategoryNav';
 import { Header } from './components/Header';
 import { MenuSection } from './components/MenuSection';
+import { SectionTabs } from './components/SectionTabs';
 import { useLanguage } from './i18n/useLanguage';
-import { visibleCategories } from './menu-view';
+import {
+  availableSections,
+  itemsById,
+  sectionCategories,
+  sectionPanelId,
+  sectionTabId,
+  visibleCategories,
+} from './menu-view';
 import { tableTokenFromPath } from './table-link';
 
 type State =
   | { status: 'loading' }
   | { status: 'unknown-table' }
   | { status: 'error' }
-  | { status: 'ready'; table: TableInfo; menu: MenuResponse };
+  | { status: 'ready'; menu: MenuResponse };
 
-// Le client arrive par le lien du QR de sa table (/t/<jeton>, docs/api.md § 3).
+// Le client arrive par le lien du QR de sa table (/t/<jeton>, docs/api.md § 3). Le jeton est
+// vérifié, mais le numéro de la table n'est pas affiché : le client n'en a pas besoin.
 export function App() {
   const { t } = useLanguage();
   const tableToken = tableTokenFromPath(window.location.pathname);
@@ -22,13 +31,14 @@ export function App() {
     tableToken ? { status: 'loading' } : { status: 'unknown-table' },
   );
   const [attempt, setAttempt] = useState(0);
+  const [section, setSection] = useState<MenuSectionKey>('food');
 
   useEffect(() => {
     if (!tableToken) return;
     let ignore = false;
     Promise.all([getTable(tableToken), getMenu()])
-      .then(([table, menu]) => {
-        if (!ignore) setState({ status: 'ready', table, menu });
+      .then(([, menu]) => {
+        if (!ignore) setState({ status: 'ready', menu });
       })
       .catch((err: unknown) => {
         if (ignore) return;
@@ -45,14 +55,29 @@ export function App() {
     setAttempt((n) => n + 1);
   };
 
-  const categories = useMemo(
-    () => (state.status === 'ready' ? visibleCategories(state.menu) : []),
-    [state],
-  );
+  const menu = state.status === 'ready' ? state.menu : null;
+  const categories = useMemo(() => (menu ? visibleCategories(menu) : []), [menu]);
+  const items = useMemo(() => (menu ? itemsById(menu) : new Map()), [menu]);
+  const sections = availableSections(categories);
+  // Onglet choisi, ou le premier qui a des articles (ex. plus rien en Food).
+  const activeSection = sections.includes(section) ? section : sections[0];
+  const shown = activeSection ? sectionCategories(categories, activeSection) : [];
+
+  const changeSection = (next: MenuSectionKey) => {
+    setSection(next);
+    // Haut de la carte du nouvel onglet, sous la barre fixe.
+    document.getElementById(sectionPanelId)?.scrollIntoView?.({ block: 'start' });
+  };
 
   return (
     <>
-      <Header>{categories.length > 0 && <CategoryNav categories={categories} />}</Header>
+      <Header />
+      {activeSection && (
+        <div className="menu-bar">
+          <SectionTabs sections={sections} active={activeSection} onChange={changeSection} />
+          <CategoryNav categories={shown} />
+        </div>
+      )}
       <main className="main">
         {state.status === 'loading' && (
           <p className="status" role="status">
@@ -79,22 +104,26 @@ export function App() {
 
         {state.status === 'ready' && (
           <>
-            <p className="table-badge">
-              {t('table.label')} {state.table.number}
-            </p>
-            <h1 className="page-title">{t('menu.title')}</h1>
-            <p className="intro">{t('menu.intro')}</p>
-            {categories.map((category) => (
-              <MenuSection key={category.id} category={category} />
-            ))}
+            <div className="welcome">
+              <h1 className="page-title">{t('menu.title')}</h1>
+              <p className="intro">{t('menu.intro')}</p>
+              <p className="counter-hint">{t('menu.counterHint')}</p>
+            </div>
+            {activeSection && (
+              <div
+                id={sectionPanelId}
+                className="section-panel"
+                role="tabpanel"
+                aria-labelledby={sectionTabId(activeSection)}
+              >
+                {shown.map((category) => (
+                  <MenuSection key={category.id} category={category} items={items} />
+                ))}
+              </div>
+            )}
           </>
         )}
       </main>
-      {state.status === 'ready' && (
-        <footer className="footer">
-          <p className="counter-hint">{t('menu.counterHint')}</p>
-        </footer>
-      )}
     </>
   );
 }

@@ -64,13 +64,18 @@ describe('lien du QR', () => {
     expect(tableTokenFromPath('/t/a/b')).toBeNull();
   });
 
-  it('affiche le numéro de la table et la carte', async () => {
+  it('affiche la carte sans numéro de table, avec « Pressé ? » dès le haut', async () => {
     const fetchMock = mockApi({ '/api/tables/k3J9x': table7, '/api/menu': menuReply() });
     renderAt('/t/k3J9x');
 
     expect(screen.getByRole('status')).toHaveTextContent(fr['menu.loading']);
-    expect(await screen.findByText('Table 7')).toBeInTheDocument();
-    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent(fr['menu.title']);
+    expect(await screen.findByRole('heading', { level: 1 })).toHaveTextContent(fr['menu.title']);
+    expect(screen.queryByText(/Table 7/)).toBeNull();
+    // « Pressé ? » est avant la première catégorie.
+    const hint = screen.getByText(fr['menu.counterHint']);
+    const firstCategory = screen.getAllByRole('heading', { level: 2 })[0];
+    if (!firstCategory) throw new Error('aucune catégorie');
+    expect(hint.compareDocumentPosition(firstCategory)).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
     expect(fetchMock).toHaveBeenCalledTimes(2);
   });
 
@@ -86,6 +91,7 @@ describe('lien du QR', () => {
 
     expect(await screen.findByText(fr['table.unknown.body'])).toBeInTheDocument();
     expect(screen.queryByRole('heading', { level: 2 })).not.toBeInTheDocument();
+    expect(screen.queryByRole('tablist')).not.toBeInTheDocument();
   });
 
   it('sans jeton : même message, sans appeler le serveur', () => {
@@ -106,64 +112,131 @@ describe('lien du QR', () => {
     expect(await screen.findByRole('alert')).toHaveTextContent(fr['error.body']);
     routes['/api/tables/k3J9x'] = table7;
     await userEvent.click(screen.getByRole('button', { name: fr['error.retry'] }));
-    expect(await screen.findByText('Table 7')).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { level: 1 })).toHaveTextContent(fr['menu.title']);
   });
 });
+
+const outside = { available: false, unavailableReason: 'outside_hours' as const };
+
+/** La carte factice avec les catégories `names` entièrement hors horaire. */
+function menuWithout(...names: string[]): MenuResponse {
+  return {
+    ...mockMenu,
+    categories: mockMenu.categories.map((c) =>
+      names.includes(c.name.fr) ? { ...c, items: c.items.map((i) => ({ ...i, ...outside })) } : c,
+    ),
+  };
+}
+
+const categoryTitles = () => screen.getAllByRole('heading', { level: 2 }).map((h) => h.textContent);
 
 describe('carte', () => {
   async function renderMenu(menu: MenuResponse = mockMenu) {
     mockApi({ '/api/tables/k3J9x': table7, '/api/menu': menuReply(menu) });
     renderAt('/t/k3J9x');
-    await screen.findByText('Table 7');
+    await screen.findByRole('tablist');
   }
 
-  it('montre les catégories dans l’ordre du menu papier, avec la barre de navigation', async () => {
+  it('ouvre sur l’onglet Food, dans l’ordre du menu papier, avec la barre des catégories', async () => {
     await renderMenu();
-    const titles = screen.getAllByRole('heading', { level: 2 }).map((h) => h.textContent);
-    expect(titles).toEqual(['Formules petit-déjeuner', 'Extras', 'Œufs', 'Cafés']);
+    expect(screen.getByRole('tab', { name: 'Food' })).toHaveAttribute('aria-selected', 'true');
+    expect(categoryTitles()).toEqual(['Formules petit-déjeuner', 'Œufs', 'Extras', 'Salades']);
 
     const nav = screen.getByRole('navigation', { name: fr['menu.categories'] });
     const links = within(nav).getAllByRole('link');
-    expect(links.map((a) => a.textContent)).toEqual(titles);
-    expect(links[1]).toHaveAttribute('href', '#categorie-2');
-    expect(document.getElementById('categorie-2')).toHaveTextContent('Extras');
+    expect(links.map((a) => a.textContent)).toEqual(categoryTitles());
+    expect(links[2]).toHaveAttribute('href', '#categorie-3');
+    expect(document.getElementById('categorie-3')).toHaveTextContent('Extras');
+  });
+
+  it('l’onglet Boissons montre seulement les boissons', async () => {
+    await renderMenu();
+    await userEvent.click(screen.getByRole('tab', { name: fr['menu.section.drinks'] }));
+    expect(screen.getByRole('tab', { name: fr['menu.section.drinks'] })).toHaveAttribute(
+      'aria-selected',
+      'true',
+    );
+    expect(categoryTitles()).toEqual(['Cafés']);
+    expect(screen.getByRole('tabpanel')).toHaveTextContent('Espresso premium');
+  });
+
+  it('change d’onglet avec les flèches du clavier', async () => {
+    await renderMenu();
+    screen.getByRole('tab', { name: 'Food' }).focus();
+    await userEvent.keyboard('{ArrowRight}');
+    const drinks = screen.getByRole('tab', { name: fr['menu.section.drinks'] });
+    expect(drinks).toHaveAttribute('aria-selected', 'true');
+    expect(drinks).toHaveFocus();
   });
 
   it('affiche nom, description et prix de chaque article', async () => {
     await renderMenu();
-    const espresso = screen.getByRole('heading', { name: 'Espresso premium' }).closest('li');
-    expect(espresso).toHaveTextContent('7 DT');
     expect(
       screen.getByText('Café ou thé, pain toasté, confiture, miel, Eau 0,5L'),
     ).toBeInTheDocument();
-    expect(screen.getByRole('heading', { name: 'Épinards' }).closest('li')).toHaveTextContent(
-      '6 DT',
-    );
+    expect(
+      screen.getByRole('heading', { name: 'Salade classique' }).closest('li'),
+    ).toHaveTextContent('11,5 DT');
+  });
+
+  it('affiche les Extras en tableau nom + prix, une rupture grisée', async () => {
+    await renderMenu();
+    const extras = document.getElementById('categorie-3');
+    if (!extras) throw new Error('pas de section Extras');
+    const cells = within(extras).getAllByRole('listitem');
+    expect(cells.map((c) => c.textContent)).toEqual([
+      'Épinards6\u00a0DT',
+      `Avocat${fr['menu.soldOut']}`,
+      'Œuf2,5\u00a0DT',
+    ]);
+    expect(cells[1]).toHaveClass('extra--sold-out');
+  });
+
+  it('après 15h, les Extras passent sous les Salades : la carte ne commence pas par eux', async () => {
+    await renderMenu(menuWithout('Formules petit-déjeuner', 'Œufs'));
+    expect(categoryTitles()).toEqual(['Salades', 'Extras']);
+  });
+
+  it('montre les extras suggérés sous un article, une rupture grisée', async () => {
+    await renderMenu();
+    const salad = screen.getByRole('heading', { name: 'Salade classique' }).closest('li');
+    if (!salad) throw new Error('pas de Salade classique');
+    const suggestions = within(salad).getByRole('list', { name: fr['menu.suggestions'] });
+    const lines = within(suggestions).getAllByRole('listitem');
+    expect(lines.map((l) => l.textContent)).toEqual([
+      '+Œuf 2,5\u00a0DT',
+      `+Avocat ${fr['menu.soldOut']}`,
+    ]);
+    expect(lines[1]).toHaveClass('suggestion--sold-out');
   });
 
   it('grise un article en rupture, masque un article hors horaire et une catégorie vide', async () => {
-    const [breakfast, extras, eggs, coffees] = mockMenu.categories;
-    if (!breakfast || !extras || !eggs || !coffees) throw new Error('menu factice incomplet');
-    const outside = { available: false, unavailableReason: 'outside_hours' as const };
+    const [breakfast, eggs, ...rest] = mockMenu.categories;
+    if (!breakfast || !eggs) throw new Error('menu factice incomplet');
     await renderMenu({
       ...mockMenu,
       categories: [
         // Toutes les formules hors horaire (après 12h) : la catégorie disparaît.
         { ...breakfast, items: breakfast.items.map((i) => ({ ...i, ...outside })) },
-        extras,
-        { ...eggs, items: eggs.items.map((i, n) => (n === 0 ? { ...i, ...outside } : i)) },
-        coffees,
+        {
+          ...eggs,
+          items: eggs.items.map((i, n) =>
+            n === 0
+              ? { ...i, ...outside }
+              : { ...i, available: false, unavailableReason: 'sold_out' as const },
+          ),
+        },
+        ...rest,
       ],
     });
 
     expect(screen.queryByRole('heading', { name: 'Formules petit-déjeuner' })).toBeNull();
     expect(screen.queryByRole('link', { name: 'Formules petit-déjeuner' })).toBeNull();
     expect(screen.queryByRole('heading', { name: 'Omelette nature' })).toBeNull();
-    expect(screen.getByRole('heading', { name: 'Œufs brouillés' })).toBeInTheDocument();
 
-    const avocado = screen.getByRole('heading', { name: 'Avocat' }).closest('li');
-    expect(avocado).toHaveClass('item--sold-out');
-    expect(avocado).toHaveTextContent(fr['menu.soldOut']);
+    const scrambled = screen.getByRole('heading', { name: 'Œufs brouillés' }).closest('li');
+    expect(scrambled).toHaveClass('item--sold-out');
+    expect(scrambled).toHaveTextContent(fr['menu.soldOut']);
   });
 
   it('montre la photo en chargement différé, rien sans photo', async () => {
@@ -191,10 +264,11 @@ describe('carte', () => {
     await renderMenu();
     await userEvent.click(screen.getByRole('button', { name: 'English' }));
     expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent(en['menu.title']);
+    expect(screen.getByText(en['menu.counterHint'])).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Salads' })).toBeInTheDocument();
+    expect(screen.getByText('Spinach').closest('li')).toHaveTextContent('6 DT');
+    await userEvent.click(screen.getByRole('tab', { name: en['menu.section.drinks'] }));
     expect(screen.getByRole('heading', { name: 'Coffees' })).toBeInTheDocument();
-    expect(screen.getByRole('heading', { name: 'Spinach' }).closest('li')).toHaveTextContent(
-      '6 DT',
-    );
   });
 });
 

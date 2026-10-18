@@ -1,9 +1,17 @@
-import type { MenuCategory } from '../api/types';
+import type { MenuCategory, MenuItem } from '../api/types';
 import { useLanguage } from '../i18n/useLanguage';
 import { categoryAnchor } from '../menu-view';
+import { ExtrasGrid } from './ExtrasGrid';
 import { MenuItemRow } from './MenuItemRow';
 
-export function MenuSection({ category }: { category: MenuCategory }) {
+// Une catégorie : article par article, ou en tableau nom + prix (`display: grid`, les Extras).
+export function MenuSection({
+  category,
+  items,
+}: {
+  category: MenuCategory;
+  items: Map<number, MenuItem>;
+}) {
   const { lang } = useLanguage();
   const titleId = `${categoryAnchor(category.id)}-titre`;
 
@@ -12,11 +20,15 @@ export function MenuSection({ category }: { category: MenuCategory }) {
       <h2 className="category__title" id={titleId}>
         {category.name[lang]}
       </h2>
-      <ul className="category__items">
-        {category.items.map((item) => (
-          <MenuItemRow key={item.id} item={item} />
-        ))}
-      </ul>
+      {category.display === 'grid' ? (
+        <ExtrasGrid items={category.items} />
+      ) : (
+        <ul className="category__items">
+          {category.items.map((item) => (
+            <MenuItemRow key={item.id} item={item} items={items} />
+          ))}
+        </ul>
+      )}
     </section>
   );
 }

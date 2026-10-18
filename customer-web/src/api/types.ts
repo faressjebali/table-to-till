@@ -33,9 +33,15 @@ export interface MenuItem {
   station: 'bar' | 'kitchen' | 'both';
 }
 
+/** Partie de la carte : onglets Food / Drinks. */
+export type MenuSectionKey = 'food' | 'drinks';
+
 export interface MenuCategory {
   id: number;
   name: Localized;
+  section: MenuSectionKey;
+  /** `grid` : tableau compact nom + prix (Extras du menu papier) ; `list` : article par article. */
+  display: 'list' | 'grid';
   sortOrder: number;
   items: MenuItem[];
 }

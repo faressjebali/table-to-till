@@ -1,8 +1,8 @@
-import type { ReactNode } from 'react';
 import { LanguageSwitch } from './LanguageSwitch';
 
-// En-tête fixe ; `children` : la barre des catégories, collée sous le nom du café.
-export function Header({ children }: { children?: ReactNode }) {
+// En-tête : nom du café et langue. Il défile avec la page ; seule la barre Food / Drinks et
+// catégories reste fixe, pour laisser de la place à la carte sur un petit écran.
+export function Header() {
   return (
     <header className="header">
       <div className="header__inner">
@@ -15,7 +15,6 @@ export function Header({ children }: { children?: ReactNode }) {
         </p>
         <LanguageSwitch />
       </div>
-      {children}
     </header>
   );
 }

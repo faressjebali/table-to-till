@@ -2,6 +2,7 @@
 
 Une ligne par décision, la plus récente en haut. Format : `AAAA-MM-JJ — décision — pourquoi`.
 
+- 2026-10-18 — Extras suggérés ajoutés sous les salades, les plats, la Chakchouka et les sandwichs (en plus de ceux du menu papier) ; un extra peut être suggéré sous plusieurs articles ; le menu QR n'affiche pas le numéro de la table et montre « Pressé ? » dès le haut — validé par Fares
 - 2026-10-18 — Les catégories ont un affichage `list` ou `grid` ; seuls les Extras sont en tableau (nom + prix), comme sur le menu papier (contrat v2.0.3) — le menu QR doit ressembler au menu papier sans dépendre du nom d'une catégorie
 - 2026-10-18 — Le menu QR sépare la carte en deux onglets, Food et Drinks, d'après la `section` de chaque catégorie (contrat v2.0.3) — un client qui veut un café ne doit pas descendre jusqu'en bas de la carte
 - 2026-10-17 — Administration des tables : la manager voit le jeton QR (impression) mais jamais l'état ni le montant des tables ; le type réel / fictif ne change pas après création ; une table d'offre au plus par compte ; pas de modification d'une table en cours d'utilisation ; contrat v2.0.2 — la manager n'a pas accès au plan, et une table ne doit pas changer pendant qu'une addition est ouverte en caisse
