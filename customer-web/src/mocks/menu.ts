@@ -160,6 +160,18 @@ export const mockMenu: MenuResponse = {
           name: { fr: 'Espresso', en: 'Espresso' },
           description: null,
           price: 6500,
+          noteHint: { fr: 'Sans sucre ?', en: 'No sugar?' },
+          station: 'bar',
+        },
+        {
+          ...base,
+          id: 22,
+          categoryId: 5,
+          name: { fr: 'Capuccino', en: 'Cappuccino' },
+          description: { fr: 'Shot express, chocolat, lait', en: 'Espresso shot, chocolate, milk' },
+          price: 8500,
+          available: false,
+          unavailableReason: 'sold_out',
           station: 'bar',
         },
         {
@@ -176,7 +188,7 @@ export const mockMenu: MenuResponse = {
   ],
   choiceGroups: [
     // Thés à 6 DT et cafés jusqu'à 8,5 DT : pas l'Espresso premium (9 DT).
-    { key: 'hot_drink', name: { fr: 'Café ou thé', en: 'Coffee or tea' }, optionIds: [20] },
+    { key: 'hot_drink', name: { fr: 'Café ou thé', en: 'Coffee or tea' }, optionIds: [20, 22] },
     {
       key: 'eggs',
       name: { fr: 'Omelette ou œufs brouillés', en: 'Omelette or scrambled eggs' },

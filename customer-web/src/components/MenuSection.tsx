@@ -8,9 +8,11 @@ import { MenuItemRow } from './MenuItemRow';
 export function MenuSection({
   category,
   items,
+  onOpen,
 }: {
   category: MenuCategory;
   items: Map<number, MenuItem>;
+  onOpen: (item: MenuItem) => void;
 }) {
   const { lang } = useLanguage();
   const titleId = `${categoryAnchor(category.id)}-titre`;
@@ -21,11 +23,11 @@ export function MenuSection({
         {category.name[lang]}
       </h2>
       {category.display === 'grid' ? (
-        <ExtrasGrid items={category.items} />
+        <ExtrasGrid items={category.items} onOpen={onOpen} />
       ) : (
         <ul className="category__items">
           {category.items.map((item) => (
-            <MenuItemRow key={item.id} item={item} items={items} />
+            <MenuItemRow key={item.id} item={item} items={items} onOpen={onOpen} />
           ))}
         </ul>
       )}

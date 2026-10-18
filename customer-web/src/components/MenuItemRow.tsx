@@ -5,7 +5,16 @@ import { suggestedExtras } from '../menu-view';
 
 // Un article comme sur le menu papier : nom (orange), description (bleu), prix (vert), photo,
 // puis les extras suggérés (« +Bacon de bœuf 7 DT »). En rupture : grisé, avec « Épuisé ».
-export function MenuItemRow({ item, items }: { item: MenuItem; items: Map<number, MenuItem> }) {
+// Un tap sur la ligne ouvre la fiche de l'article.
+export function MenuItemRow({
+  item,
+  items,
+  onOpen,
+}: {
+  item: MenuItem;
+  items: Map<number, MenuItem>;
+  onOpen: (item: MenuItem) => void;
+}) {
   const { lang, t } = useLanguage();
   const soldOut = item.unavailableReason === 'sold_out';
   const extras = suggestedExtras(item, items);
@@ -14,7 +23,12 @@ export function MenuItemRow({ item, items }: { item: MenuItem; items: Map<number
     <li className={soldOut ? 'item item--sold-out' : 'item'}>
       <div className="item__main">
         <div className="item__text">
-          <h3 className="item__name">{item.name[lang]}</h3>
+          <h3 className="item__name">
+            {/* Le bouton couvre toute la ligne (::after) : un tap n'importe où ouvre la fiche */}
+            <button type="button" className="item__open" onClick={() => onOpen(item)}>
+              {item.name[lang]}
+            </button>
+          </h3>
           {item.description && <p className="item__description">{item.description[lang]}</p>}
           <p className="item__price">
             {formatPrice(item.price, lang)}
