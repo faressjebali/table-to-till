@@ -1,11 +1,12 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { ApiError, getMenu, getTable } from './api/client';
 import type { MenuItem, MenuResponse, MenuSectionKey } from './api/types';
-import type { CartLine } from './cart';
 import { CartBar } from './components/CartBar';
+import { CartSheet } from './components/CartSheet';
 import { CategoryNav } from './components/CategoryNav';
 import { Header } from './components/Header';
 import { ItemSheet } from './components/ItemSheet';
+import { OrderStatus } from './components/OrderStatus';
 import { MenuSection } from './components/MenuSection';
 import { SectionTabs } from './components/SectionTabs';
 import { useLanguage } from './i18n/useLanguage';
@@ -18,6 +19,7 @@ import {
   visibleCategories,
 } from './menu-view';
 import { tableTokenFromPath } from './table-link';
+import { useCartOrder } from './useCartOrder';
 
 type State =
   | { status: 'loading' }
@@ -35,10 +37,11 @@ export function App() {
   );
   const [attempt, setAttempt] = useState(0);
   const [section, setSection] = useState<MenuSectionKey>('food');
-  // Panier en mémoire (l'écran du panier et l'envoi viendront plus tard).
-  const [cart, setCart] = useState<CartLine[]>([]);
+  const cart = useCartOrder(tableToken);
   const [openItem, setOpenItem] = useState<MenuItem | null>(null);
+  const [cartOpen, setCartOpen] = useState(false);
   const closeSheet = useCallback(() => setOpenItem(null), []);
+  const closeCart = useCallback(() => setCartOpen(false), []);
 
   useEffect(() => {
     if (!tableToken) return;
@@ -70,9 +73,10 @@ export function App() {
   const activeSection = sections.includes(section) ? section : sections[0];
   const shown = activeSection ? sectionCategories(categories, activeSection) : [];
 
-  const addToCart = (lines: CartLine[]) => {
-    setCart((current) => [...current, ...lines]);
-    setOpenItem(null);
+  const orderSent = cart.order?.status === 'pending';
+  // Commande envoyée : le panier se ferme et l'état de la commande s'affiche en bas.
+  const sendOrder = async () => {
+    if (await cart.send()) setCartOpen(false);
   };
 
   const changeSection = (next: MenuSectionKey) => {
@@ -84,7 +88,7 @@ export function App() {
   return (
     <>
       {/* Pendant que la fiche est ouverte, le reste de la page est inerte (focus et lecteur d'écran) */}
-      <div className="page" inert={openItem !== null}>
+      <div className="page" inert={openItem !== null || cartOpen}>
         <Header />
         {activeSection && (
           <div className="menu-bar">
@@ -143,15 +147,40 @@ export function App() {
             </>
           )}
         </main>
-        {state.status === 'ready' && <CartBar lines={cart} items={items} />}
+        {state.status === 'ready' && (
+          <CartBar
+            lines={cart.lines}
+            items={items}
+            status={cart.order && <OrderStatus order={cart.order} onDismiss={cart.dismissOrder} />}
+            onOpen={() => setCartOpen(true)}
+          />
+        )}
       </div>
       {menu && openItem && (
         <ItemSheet
           item={openItem}
           items={items}
           choiceGroups={menu.choiceGroups}
-          onAdd={addToCart}
+          onAdd={(lines) => {
+            cart.add(lines);
+            setOpenItem(null);
+          }}
           onClose={closeSheet}
+        />
+      )}
+      {menu && cartOpen && (
+        <CartSheet
+          lines={cart.lines}
+          items={items}
+          choiceGroups={menu.choiceGroups}
+          blockedKeys={cart.blockedKeys}
+          sending={cart.sending}
+          error={cart.error}
+          orderPending={orderSent}
+          onQuantity={cart.setQuantity}
+          onRemove={cart.remove}
+          onSend={() => void sendOrder()}
+          onClose={closeCart}
         />
       )}
     </>

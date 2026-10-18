@@ -13,13 +13,17 @@ import { mockMenu } from './mocks/menu';
 import { tableTokenFromPath } from './table-link';
 
 type Reply = { status: number; body: unknown } | 'network-error';
+type Route = Reply | ((body: unknown) => Reply);
 
-// Faux serveur : une réponse par chemin d'API.
-function mockApi(routes: Record<string, Reply>) {
-  const fetchMock = vi.fn((input: RequestInfo | URL) => {
-    const path = String(input);
-    const reply = routes[path];
-    if (reply === undefined) throw new Error(`appel inattendu : ${path}`);
+// Faux serveur : une réponse par chemin d'API (« POST /api/orders » pour un POST).
+function mockApi(routes: Record<string, Route>) {
+  const fetchMock = vi.fn((input: RequestInfo | URL, init?: RequestInit) => {
+    const method = init?.method ?? 'GET';
+    const path = method === 'GET' ? String(input) : `${method} ${String(input)}`;
+    const route = routes[path];
+    if (route === undefined) throw new Error(`appel inattendu : ${path}`);
+    const body: unknown = typeof init?.body === 'string' ? JSON.parse(init.body) : undefined;
+    const reply = typeof route === 'function' ? route(body) : route;
     if (reply === 'network-error') return Promise.reject(new TypeError('Failed to fetch'));
     return Promise.resolve(
       new Response(JSON.stringify(reply.body), {
@@ -34,6 +38,15 @@ function mockApi(routes: Record<string, Reply>) {
 
 const table7: Reply = { status: 200, body: { id: 3, number: 7 } };
 const menuReply = (menu: MenuResponse = mockMenu): Reply => ({ status: 200, body: menu });
+const created: Reply = {
+  status: 201,
+  body: { orderId: 123, status: 'pending', total: 10500, expiresAt: '2026-10-19T10:05:00Z' },
+};
+const orderState = (status: string): Reply => ({ status: 200, body: { orderId: 123, status } });
+const apiError = (status: number, code: string, details?: object): Reply => ({
+  status,
+  body: { error: { code, message: code, ...(details ? { details } : {}) } },
+});
 
 function renderAt(path: string) {
   window.history.pushState({}, '', path);
@@ -104,7 +117,7 @@ describe('lien du QR', () => {
   });
 
   it('erreur réseau : message et « Réessayer » qui recharge', async () => {
-    const routes: Record<string, Reply> = {
+    const routes: Record<string, Route> = {
       '/api/tables/k3J9x': 'network-error',
       '/api/menu': menuReply(),
     };
@@ -406,6 +419,172 @@ describe('panier', () => {
       { menuItemId: 12, quantity: 1, note: null, choices: [] },
     ]);
     expect(linesTotal(lines, itemsById(mockMenu))).toBe(20500);
+  });
+});
+
+describe('panier et envoi', () => {
+  const ORDER_STATE = '/api/orders/123?tableToken=k3J9x';
+
+  /** Carte chargée, puis une Salade classique + 1 Œuf au panier (2 articles, 10,5 DT). */
+  async function withSaladInCart(routes: Record<string, Route> = {}) {
+    const fetchMock = mockApi({
+      '/api/tables/k3J9x': table7,
+      '/api/menu': menuReply(),
+      ...routes,
+    });
+    const view = renderAt('/t/k3J9x');
+    await userEvent.click(await screen.findByRole('button', { name: 'Salade classique' }));
+    const sheet = screen.getByRole('dialog');
+    await userEvent.click(within(sheet).getByRole('checkbox', { name: /Œuf/ }));
+    await userEvent.type(within(sheet).getByRole('textbox'), 'sans oignon');
+    await userEvent.click(within(sheet).getByRole('button', { name: /^Ajouter/ }));
+    return { fetchMock, view };
+  }
+
+  const openCart = async () => {
+    await userEvent.click(screen.getByRole('button', { name: /^Panier/ }));
+    return screen.getByRole('dialog', { name: fr['cart.heading'] });
+  };
+  const sendButton = (cart: HTMLElement) =>
+    within(cart).getByRole('button', { name: new RegExp(`^${fr['cart.send']}`) });
+  const postedBodies = (fetchMock: ReturnType<typeof mockApi>) =>
+    fetchMock.mock.calls
+      .filter(([, init]) => init?.method === 'POST')
+      .map(([, init]) => JSON.parse(String(init?.body)) as Record<string, unknown>);
+
+  it('liste les lignes avec note, change une quantité, retire une ligne et met à jour le total', async () => {
+    await withSaladInCart();
+    const cart = await openCart();
+    expect(within(cart).getByText('« sans oignon »')).toBeInTheDocument();
+    expect(sendButton(cart)).toHaveTextContent('10,5 DT');
+
+    const salad = within(cart).getByRole('heading', { name: 'Salade classique' }).closest('li');
+    if (!salad) throw new Error('pas de ligne salade');
+    await userEvent.click(within(salad).getByRole('button', { name: fr['sheet.increase'] }));
+    expect(sendButton(cart)).toHaveTextContent('20,5 DT');
+
+    const egg = within(cart).getByRole('heading', { name: 'Œuf' }).closest('li');
+    if (!egg) throw new Error('pas de ligne œuf');
+    await userEvent.click(within(egg).getByRole('button', { name: /Retirer/ }));
+    expect(within(cart).queryByRole('heading', { name: 'Œuf' })).toBeNull();
+    expect(sendButton(cart)).toHaveTextContent('21 DT');
+  });
+
+  it('envoie POST /orders au format du contrat, puis « Commande envoyée »', async () => {
+    const { fetchMock } = await withSaladInCart({
+      'POST /api/orders': created,
+      [ORDER_STATE]: orderState('pending'),
+    });
+    await userEvent.click(sendButton(await openCart()));
+
+    expect(await screen.findByText(fr['order.pending'])).toBeInTheDocument();
+    expect(screen.queryByRole('dialog')).toBeNull();
+    const [body] = postedBodies(fetchMock);
+    expect(body).toEqual({
+      clientRequestId: expect.stringMatching(/^[0-9a-f-]{36}$/) as unknown,
+      tableToken: 'k3J9x',
+      lines: [
+        { menuItemId: 40, quantity: 1, note: 'sans oignon' },
+        { menuItemId: 12, quantity: 1, note: null },
+      ],
+    });
+    // Les lignes envoyées ont quitté le panier.
+    expect(screen.queryByRole('button', { name: /^Panier/ })).toBeNull();
+  });
+
+  it('confirmée : message, panier vide, « OK » ferme le message', async () => {
+    await withSaladInCart({
+      'POST /api/orders': created,
+      [ORDER_STATE]: orderState('confirmed'),
+    });
+    await userEvent.click(sendButton(await openCart()));
+    expect(await screen.findByText(fr['order.confirmed'])).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /^Panier/ })).toBeNull();
+    await userEvent.click(screen.getByRole('button', { name: fr['order.ok'] }));
+    expect(screen.queryByText(fr['order.confirmed'])).toBeNull();
+  });
+
+  it.each([
+    ['expired', fr['order.expired']],
+    ['rejected', fr['order.rejected']],
+  ])('%s : message et panier rendu', async (status, message) => {
+    await withSaladInCart({
+      'POST /api/orders': created,
+      [ORDER_STATE]: orderState(status),
+    });
+    await userEvent.click(sendButton(await openCart()));
+    expect(await screen.findByText(message)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /^Panier/ })).toHaveTextContent('2 articles · 10,5 DT');
+  });
+
+  it.each([
+    ['CAFE_CLOSED', apiError(409, 'CAFE_CLOSED'), fr['cart.error.cafeClosed']],
+    ['NO_WAITER_ON_SHIFT', apiError(409, 'NO_WAITER_ON_SHIFT'), fr['cart.error.noWaiter']],
+    ['TOO_MANY_REQUESTS', apiError(429, 'TOO_MANY_REQUESTS'), fr['cart.error.tooMany']],
+  ])('%s : message clair, panier conservé', async (_code, reply, message) => {
+    await withSaladInCart({ 'POST /api/orders': reply });
+    const cart = await openCart();
+    await userEvent.click(sendButton(cart));
+    expect(await within(cart).findByRole('alert')).toHaveTextContent(message);
+    expect(within(cart).getAllByRole('listitem')).toHaveLength(2);
+  });
+
+  it('réseau coupé : le nouvel essai réutilise le même clientRequestId', async () => {
+    let calls = 0;
+    const { fetchMock } = await withSaladInCart({
+      'POST /api/orders': () => (++calls === 1 ? 'network-error' : created),
+      [ORDER_STATE]: orderState('pending'),
+    });
+    const cart = await openCart();
+    await userEvent.click(sendButton(cart));
+    expect(await within(cart).findByRole('alert')).toHaveTextContent(fr['cart.error.network']);
+    await userEvent.click(sendButton(cart));
+    expect(await screen.findByText(fr['order.pending'])).toBeInTheDocument();
+
+    const [first, second] = postedBodies(fetchMock);
+    expect(second?.['clientRequestId']).toBe(first?.['clientRequestId']);
+  });
+
+  it('article refusé (OUTSIDE_HOURS) : sa ligne est signalée, le reste part une fois retirée', async () => {
+    await withSaladInCart({
+      'POST /api/orders': (body) =>
+        (body as { lines: unknown[] }).lines.length === 2
+          ? apiError(409, 'OUTSIDE_HOURS', { menuItemId: 12 })
+          : created,
+      [ORDER_STATE]: orderState('pending'),
+    });
+    const cart = await openCart();
+    await userEvent.click(sendButton(cart));
+    expect(await within(cart).findByRole('alert')).toHaveTextContent(fr['cart.error.unavailable']);
+
+    const egg = within(cart).getByRole('heading', { name: 'Œuf' }).closest('li');
+    if (!egg) throw new Error('pas de ligne œuf');
+    expect(egg).toHaveTextContent(fr['cart.lineUnavailable']);
+    expect(sendButton(cart)).toBeDisabled();
+
+    await userEvent.click(within(egg).getByRole('button', { name: /Retirer/ }));
+    await userEvent.click(sendButton(cart));
+    expect(await screen.findByText(fr['order.pending'])).toBeInTheDocument();
+  });
+
+  it('le panier survit à un rechargement de la page', async () => {
+    const { view } = await withSaladInCart();
+    view.unmount();
+    renderAt('/t/k3J9x');
+    expect(await screen.findByRole('button', { name: /^Panier/ })).toHaveTextContent(
+      '2 articles · 10,5 DT',
+    );
+  });
+
+  it('panier en anglais', async () => {
+    mockBrowserLanguage('en-US');
+    mockApi({ '/api/tables/k3J9x': table7, '/api/menu': menuReply() });
+    renderAt('/t/k3J9x');
+    await userEvent.click(await screen.findByRole('button', { name: 'Classic salad' }));
+    await userEvent.click(screen.getByRole('button', { name: /^Add/ }));
+    await userEvent.click(screen.getByRole('button', { name: /^Cart/ }));
+    const cart = screen.getByRole('dialog', { name: en['cart.heading'] });
+    expect(within(cart).getByRole('button', { name: /^Send order/ })).toHaveTextContent('11,5 DT');
   });
 });
 
