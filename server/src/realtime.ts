@@ -6,6 +6,7 @@ import type { Config } from './config.js';
 import type { Db } from './db.js';
 import { errorBody } from './errors.js';
 import type { Order, StationName } from './orders/view.js';
+import type { AgentStatus } from './pos/queue.js';
 import { isOnShift, isShiftRole, SHIFT_ROLES, type ShiftRole } from './shifts/on-shift.js';
 import type { Table } from './tables/view.js';
 
@@ -37,9 +38,15 @@ export type Realtime = {
     principals: { id: number; name: string; currentPrincipal: boolean }[];
   }): void;
   posJob(jobId: number): void;
-  posFailed(data: { jobId: number; orderId: number | null; error: string }): void;
+  posFailed(data: {
+    jobId: number;
+    type: string;
+    tableNumber: number;
+    orderId: number | null;
+    error: string;
+  }): void;
   posWaiting(data: { jobId: number; tableNumber: number; orderLineId: number }): void;
-  posStatus(data: { state: string; lastSeenAt: Date | null }): void;
+  posStatus(data: AgentStatus): void;
   reportUpdated(): void;
   // Ce téléphone seulement (déconnexion) : session:revoked puis connexions coupées.
   sessionRevoked(sessionId: number, reason: RevokeReason): void;
@@ -103,7 +110,8 @@ function refuse(code: string, message: string): Error {
   return Object.assign(new Error(code), { data: errorBody(code, message) });
 }
 
-function sameSecret(given: string, expected: string): boolean {
+// Comparaison en temps constant (clé de l'agent).
+export function sameSecret(given: string, expected: string): boolean {
   const a = Buffer.from(given);
   const b = Buffer.from(expected);
   return a.length === b.length && timingSafeEqual(a, b);

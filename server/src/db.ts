@@ -16,18 +16,20 @@ export async function audit(
     entityType?: string;
     entityId?: number;
     tableId?: number;
+    note?: string | null;
     details?: Record<string, unknown>;
   },
 ): Promise<void> {
   await db.query(
-    `INSERT INTO audit_log (user_id, action, entity_type, entity_id, table_id, details)
-     VALUES ($1, $2, $3, $4, $5, $6)`,
+    `INSERT INTO audit_log (user_id, action, entity_type, entity_id, table_id, note, details)
+     VALUES ($1, $2, $3, $4, $5, $6, $7)`,
     [
       entry.userId,
       entry.action,
       entry.entityType ?? null,
       entry.entityId ?? null,
       entry.tableId ?? null,
+      entry.note ?? null,
       entry.details ?? null,
     ],
   );

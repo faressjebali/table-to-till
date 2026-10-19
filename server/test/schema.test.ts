@@ -206,6 +206,31 @@ describe('contraintes du schéma', () => {
     );
   });
 
+  it("n'accepte le statut withdrawn que pour une annulation", async () => {
+    await expectRejected(
+      `INSERT INTO pos_jobs (type, status, table_id) VALUES ('print_bill', 'withdrawn', $1)`,
+      [tableId],
+    );
+    await db.query(
+      `INSERT INTO pos_jobs (type, status, table_id) VALUES ('cancel_line', 'withdrawn', $1)`,
+      [tableId],
+    );
+  });
+
+  it("exige une table d'arrivée pour un transfert, et seulement pour lui", async () => {
+    await expectRejected(`INSERT INTO pos_jobs (type, table_id) VALUES ('move_table', $1)`, [
+      tableId,
+    ]);
+    await expectRejected(
+      `INSERT INTO pos_jobs (type, table_id, to_table_id) VALUES ('print_bill', $1, $1)`,
+      [tableId],
+    );
+    await db.query(
+      `INSERT INTO pos_jobs (type, table_id, to_table_id) VALUES ('transfer_line', $1, $1)`,
+      [tableId],
+    );
+  });
+
   it('refuse des horaires incohérents ou un jour invalide', async () => {
     await expectRejected(
       `UPDATE menu_items SET available_from = '15:00', available_until = '08:00' WHERE id = $1`,

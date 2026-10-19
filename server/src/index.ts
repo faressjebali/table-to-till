@@ -4,6 +4,7 @@ import { ensureFirstManager } from './auth/bootstrap.js';
 import { loadConfig } from './config.js';
 import { createPool } from './db.js';
 import { startExpirySweep } from './orders/expiry.js';
+import { startPosTimeoutSweep } from './pos/queue.js';
 import { webPushSender } from './push/send.js';
 import { createRealtime } from './realtime.js';
 import { startShiftAutoEnd } from './shifts/auto-end.js';
@@ -29,6 +30,8 @@ const app = createApp({ db, config, realtime, ...(push ? { push } : {}) });
 
 // Commandes QR non confirmées à temps → expirées.
 startExpirySweep(db, realtime);
+// Tâches caisse sans heartbeat de l'agent → en échec, staff alerté.
+startPosTimeoutSweep(db, realtime);
 // Shifts oubliés → terminés dans la nuit.
 startShiftAutoEnd(db, realtime, config.shiftAutoEndTime);
 

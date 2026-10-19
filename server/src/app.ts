@@ -6,6 +6,7 @@ import { errorBody, HttpError } from './errors.js';
 import { menuRoutes } from './menu/routes.js';
 import { orderRoutes } from './orders/routes.js';
 import { stationRoutes } from './orders/station-routes.js';
+import { posRoutes } from './pos/routes.js';
 import { pushRoutes } from './push/routes.js';
 import { noopPushSender, type PushSender } from './push/send.js';
 import { noopRealtime, type Realtime } from './realtime.js';
@@ -40,6 +41,7 @@ export function createApp({
   api.use(orderRoutes(db, config, realtime, push));
   api.use(stationRoutes(db, config, realtime, push));
   api.use(pushRoutes(db, config));
+  api.use(posRoutes(db, config, realtime));
   app.use('/api', api);
 
   app.use((_req, res) => {
