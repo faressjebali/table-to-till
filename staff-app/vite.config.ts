@@ -9,7 +9,12 @@ export default defineConfig({
   plugins: [react()],
   server: {
     port: 5174,
-    proxy: { '/api': SERVER, '/uploads': SERVER },
+    // /socket.io : temps réel (docs/api.md § 8).
+    proxy: {
+      '/api': SERVER,
+      '/uploads': SERVER,
+      '/socket.io': { target: SERVER, ws: true },
+    },
   },
   preview: { port: 5174 },
   test: {

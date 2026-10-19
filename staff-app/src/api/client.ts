@@ -1,7 +1,7 @@
 // Appels à l'API du serveur (docs/api.md § 4), avec le jeton de session du staff.
 // En développement, Vite renvoie /api vers le serveur (vite.config.ts).
 import { loadToken } from '../session';
-import type { LoginResponse, Me } from './types';
+import type { CurrentShifts, LoginResponse, Me, Order } from './types';
 
 /**
  * Erreur au format du contrat (`{ error: { code, message, details? } }`), ou `NETWORK` sans
@@ -73,3 +73,11 @@ export const changePassword = (body: { currentPassword: string; newPassword: str
 export const logout = () => request<undefined>('/auth/logout', { method: 'POST' });
 
 export const getMe = () => request<Me>('/me');
+
+/** Écran bar / cuisine (docs/api.md § 5 ter), barista et cuisinier en shift. */
+export const getStationOrders = () => request<{ items: Order[] }>('/station-orders');
+
+export const markReady = (orderId: number) =>
+  request<Order>(`/orders/${String(orderId)}/ready`, { method: 'POST' });
+
+export const getCurrentShifts = () => request<CurrentShifts>('/shifts/current');

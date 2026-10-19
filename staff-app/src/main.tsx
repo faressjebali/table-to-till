@@ -4,9 +4,12 @@ import './styles/app.css';
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { App } from './App';
+import { unlockSoundOnFirstTouch } from './sound';
 
 const root = document.getElementById('root');
 if (!root) throw new Error('#root introuvable dans index.html');
+
+unlockSoundOnFirstTouch();
 
 createRoot(root).render(
   <StrictMode>

@@ -77,6 +77,23 @@ export const fr = {
     'Pour recevoir les nouvelles commandes, l’app a besoin d’iOS 16.4 ou plus récent : Réglages › Général › Mise à jour logicielle.',
   'install.button': 'Installer l’app',
   'install.hint': 'Installez l’app pour l’ouvrir comme les autres et recevoir les commandes.',
+  'place.table': 'Table',
+  'place.direct': 'Vente directe',
+  'station.loading': 'Chargement des commandes…',
+  'station.empty': 'Rien à préparer pour le moment.',
+  'station.error': 'Impossible de charger les commandes. Vérifiez la connexion Internet.',
+  'station.ready': 'Prêt',
+  'station.readyBusy': 'Envoi…',
+  'station.readyError': 'Pas envoyé. Vérifiez la connexion, puis réessayez.',
+  'station.seen': 'Vu',
+  'station.cancelled': 'ANNULÉ',
+  'station.transferred': 'TRANSFÉRÉ',
+  'station.forClient': 'Offert à un client',
+  'station.alert': 'annulé',
+  'station.alertDismiss': 'OK',
+  'ready.bar': 'boissons prêtes',
+  'ready.kitchen': 'plats prêts',
+  'ready.dismiss': 'OK',
 };
 
 export type MessageKey = keyof typeof fr;
