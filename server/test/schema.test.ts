@@ -147,8 +147,8 @@ describe('contraintes du schéma', () => {
 
   it('refuse une remise autre que 0 ou 20 %, une quantité hors 1–20 et une note trop longue', async () => {
     const orderId = await confirmedOrder();
-    const sql = `INSERT INTO order_lines (order_id, menu_item_id, name_fr, quantity, unit_price, discount_percent, note)
-                 VALUES ($1, $2, 'Espresso', $3, 6500, $4, $5)`;
+    const sql = `INSERT INTO order_lines (order_id, menu_item_id, name_fr, quantity, unit_price, discount_percent, note, station)
+                 VALUES ($1, $2, 'Espresso', $3, 6500, $4, $5, 'bar')`;
     await db.query(sql, [orderId, menuItemId, 1, 20, 'sans sucre']);
     await expectRejected(sql, [orderId, menuItemId, 1, 10, null]);
     await expectRejected(sql, [orderId, menuItemId, 0, 0, null]);
@@ -182,8 +182,8 @@ describe('contraintes du schéma', () => {
   it("refuse le statut de ligne gifted : un offert n'est jamais une ligne de commande", async () => {
     const orderId = await confirmedOrder();
     await expectRejected(
-      `INSERT INTO order_lines (order_id, menu_item_id, name_fr, quantity, unit_price, status)
-       VALUES ($1, $2, 'Espresso', 1, 6500, 'gifted')`,
+      `INSERT INTO order_lines (order_id, menu_item_id, name_fr, quantity, unit_price, status, station)
+       VALUES ($1, $2, 'Espresso', 1, 6500, 'gifted', 'bar')`,
       [orderId, menuItemId],
     );
   });

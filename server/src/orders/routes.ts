@@ -10,7 +10,7 @@ import type { Realtime } from '../realtime.js';
 import { requireWaiterOnShift, waitersOnShift } from '../shifts/on-shift.js';
 import { expireAndNotify } from './expiry.js';
 import { linesTotal, orderLinesSchema, prepareLines, type PreparedLine } from './lines.js';
-import { notifyOrders, notifyTables } from './notify.js';
+import { notifyOrders, notifyStations, notifyTables } from './notify.js';
 import { loadOrder, loadOrders } from './view.js';
 
 const idParam = z.coerce.number().int().positive();
@@ -66,8 +66,10 @@ async function createdResponse(db: Db | pg.PoolClient, orderId: number): Promise
 async function insertLines(client: pg.PoolClient, orderId: number, lines: PreparedLine[]) {
   for (const line of lines) {
     const { rows } = await client.query<{ id: number }>(
-      `INSERT INTO order_lines (order_id, menu_item_id, name_fr, name_en, quantity, unit_price, note)
-       VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id`,
+      `INSERT INTO order_lines (order_id, menu_item_id, name_fr, name_en, quantity, unit_price, note,
+                                station)
+       SELECT $1, $2, $3, $4, $5, $6, $7, station FROM menu_items WHERE id = $2
+       RETURNING id`,
       [
         orderId,
         line.menuItemId,
@@ -353,6 +355,7 @@ export function orderRoutes(db: Db, config: Config, realtime: Realtime): Router 
     });
 
     await notifyOrders(db, realtime, [id.data]);
+    await notifyStations(db, realtime, [id.data], 'order');
     realtime.posJob(jobId);
     res.json(await loadOrder(db, id.data));
   });
@@ -468,6 +471,7 @@ export function orderRoutes(db: Db, config: Config, realtime: Realtime): Router 
     // Requête en double : déjà envoyé par la première.
     if (created.jobId !== null) {
       await notifyTables(db, realtime, [table.id]);
+      await notifyStations(db, realtime, [created.orderId], 'order');
       realtime.posJob(created.jobId);
     }
     res.status(201).json(await loadOrder(db, created.orderId));

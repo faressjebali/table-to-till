@@ -1,6 +1,12 @@
 import type pg from 'pg';
 import type { Db } from '../db.js';
-import { localized, type Localized } from '../menu/items.js';
+import { localized, type Localized, type Station } from '../menu/items.js';
+
+// Écran bar / cuisine (docs/api.md § 5 ter) : une ligne `both` s'affiche aux deux postes.
+export type StationName = 'bar' | 'kitchen';
+export const STATIONS = ['bar', 'kitchen'] as const satisfies readonly StationName[];
+
+type Ready = { at: Date; by: { id: number; name: string } } | null;
 
 type PosStatus = 'not_sent' | 'queued' | 'entered' | 'failed' | 'manual';
 
@@ -21,6 +27,7 @@ export type Order = {
     discountPercent: number;
     lineTotal: number;
     status: 'active' | 'cancelled' | 'transferred';
+    station: Station;
     choices?: { group: string; menuItemId: number; name: Localized }[];
   }[];
   total: number;
@@ -28,6 +35,7 @@ export type Order = {
   confirmedAt: Date | null;
   confirmedBy: { id: number; name: string } | null;
   offer: null;
+  ready: Record<StationName, Ready>;
   pos: { status: PosStatus; error: string | null } | null;
 };
 
@@ -57,6 +65,7 @@ type LineRow = {
   unit_price: number;
   discount_percent: number;
   status: Order['lines'][number]['status'];
+  station: Station;
   choices: { group: string; menuItemId: number; nameFr: string; nameEn: string | null }[] | null;
 };
 
@@ -83,7 +92,7 @@ const lineTotal = (line: LineRow) =>
 
 export async function loadOrders(db: Db | pg.PoolClient, ids: readonly number[]): Promise<Order[]> {
   if (ids.length === 0) return [];
-  const [{ rows: orders }, { rows: lines }] = await Promise.all([
+  const [{ rows: orders }, { rows: lines }, { rows: ready }] = await Promise.all([
     db.query<OrderRow>(
       `SELECT o.id, o.table_id, t.number AS table_number, o.table_session_id, o.source, o.status,
               o.created_at, o.confirmed_at, u.id AS confirmed_by_id, u.name AS confirmed_by_name,
@@ -99,7 +108,7 @@ export async function loadOrders(db: Db | pg.PoolClient, ids: readonly number[])
     ),
     db.query<LineRow>(
       `SELECT l.id, l.order_id, l.menu_item_id, l.name_fr, l.name_en, l.quantity, l.note,
-              l.unit_price, l.discount_percent, l.status,
+              l.unit_price, l.discount_percent, l.status, l.station,
               (SELECT json_agg(json_build_object('group', c.group_key, 'menuItemId', c.menu_item_id,
                                                  'nameFr', i.name_fr, 'nameEn', i.name_en)
                                ORDER BY g.sort_order, c.group_key)
@@ -111,6 +120,18 @@ export async function loadOrders(db: Db | pg.PoolClient, ids: readonly number[])
          FROM order_lines l
         WHERE l.order_id = ANY($1)
         ORDER BY l.id`,
+      [ids],
+    ),
+    db.query<{
+      order_id: number;
+      station: StationName;
+      ready_at: Date;
+      user_id: number;
+      user_name: string;
+    }>(
+      `SELECT r.order_id, r.station, r.ready_at, u.id AS user_id, u.name AS user_name
+         FROM order_ready r JOIN users u ON u.id = r.ready_by
+        WHERE r.order_id = ANY($1)`,
       [ids],
     ),
   ]);
@@ -133,6 +154,7 @@ export async function loadOrders(db: Db | pg.PoolClient, ids: readonly number[])
             ? null
             : { id: row.confirmed_by_id, name: row.confirmed_by_name },
         offer: null,
+        ready: { bar: null, kitchen: null },
         pos: {
           status: posStatus(row.job_status),
           error: row.job_status === 'failed' ? row.job_error : null,
@@ -155,6 +177,7 @@ export async function loadOrders(db: Db | pg.PoolClient, ids: readonly number[])
       discountPercent: line.discount_percent,
       lineTotal: total,
       status: line.status,
+      station: line.station,
       ...(line.choices && {
         choices: line.choices.map((c) => ({
           group: c.group,
@@ -164,6 +187,12 @@ export async function loadOrders(db: Db | pg.PoolClient, ids: readonly number[])
       }),
     });
     if (line.status === 'active') order.total += total;
+  }
+  for (const row of ready) {
+    const order = byId.get(row.order_id);
+    if (order) {
+      order.ready[row.station] = { at: row.ready_at, by: { id: row.user_id, name: row.user_name } };
+    }
   }
 
   // Même ordre que les ids demandés.
@@ -178,3 +207,18 @@ export async function loadOrder(db: Db | pg.PoolClient, id: number): Promise<Ord
   if (!order) throw new Error(`commande ${String(id)} introuvable`);
   return order;
 }
+
+const onStation = (line: Order['lines'][number], station: StationName) =>
+  line.station === station || line.station === 'both';
+
+// La commande vue par un poste : seulement ses lignes (annulées et transférées comprises,
+// affichées barrées) ; le total ne compte que ces lignes.
+export function forStation(order: Order, station: StationName): Order {
+  const lines = order.lines.filter((line) => onStation(line, station));
+  const total = lines.reduce((sum, l) => (l.status === 'active' ? sum + l.lineTotal : sum), 0);
+  return { ...order, lines, total };
+}
+
+// Le poste a quelque chose à préparer dans cette commande.
+export const hasActiveLines = (order: Order, station: StationName) =>
+  order.lines.some((line) => line.status === 'active' && onStation(line, station));

@@ -10,6 +10,7 @@ import { hashPassword } from '../src/auth/passwords.js';
 import type { Role } from '../src/auth/sessions.js';
 import { loadConfig, type Config } from '../src/config.js';
 import { createPool, type Db } from '../src/db.js';
+import { notifyStations } from '../src/orders/notify.js';
 import { createRealtime, type Realtime } from '../src/realtime.js';
 import { parseMenuCsv } from '../src/seed/menu-csv.js';
 import { seedMenu } from '../src/seed/seed-menu.js';
@@ -376,6 +377,134 @@ describe('commande saisie par un serveur', () => {
     expect(await agent.next('pos:job')).toMatchObject({ jobId: expect.any(Number) as number });
     await quiet();
     expect(waiters.of('order:new')).toEqual([]);
+  });
+});
+
+describe('bar et cuisine', () => {
+  type Lines = { lines: { name: { fr: string } }[] };
+  const names = (order: unknown) => (order as Lines).lines.map((line) => line.name.fr);
+
+  it('station:order : chaque poste en shift reçoit ses lignes, à la saisie et à la confirmation', async () => {
+    const waiter = await waiterOnShift();
+    const barista = await staff('nour', 'barista');
+    await startShift(barista.token);
+    const chef = await staff('hedi', 'chef');
+    await startShift(chef.token);
+    const bar = record(await connect({ token: barista.token }));
+    const kitchen = record(await connect({ token: chef.token }));
+    const offShift = record(await connect({ token: (await staff('rim', 'barista')).token }));
+    const waiters = record(await connect({ token: waiter.token }));
+    const { rows } = await db.query<{ id: number }>(`SELECT id FROM tables WHERE number = 8`);
+
+    const res = await api()
+      .post('/api/staff-orders')
+      .set(auth(waiter.token))
+      .send({
+        clientRequestId: randomUUID(),
+        tableId: rows[0]?.id,
+        lines: [
+          { menuItemId: item('Espresso'), quantity: 1 },
+          { menuItemId: item('Cheese Burger'), quantity: 1 },
+        ],
+      });
+    expect(res.status).toBe(201);
+    expect(names(await bar.next('station:order'))).toEqual(['Espresso']);
+    expect(names(await kitchen.next('station:order'))).toEqual(['Cheese Burger']);
+
+    // Commande QR : au poste seulement à sa confirmation, et seulement s'il a des lignes.
+    const orderId = await pendingOrder();
+    await quiet();
+    expect(kitchen.of('station:order')).toHaveLength(1);
+    await api()
+      .post(`/api/orders/${String(orderId)}/confirm`)
+      .set(auth(waiter.token));
+    expect(await kitchen.next('station:order')).toMatchObject({
+      id: orderId,
+      table: { number: 7 },
+    });
+    await quiet();
+    expect(bar.of('station:order')).toHaveLength(1);
+    expect(offShift.of('station:order')).toEqual([]);
+    expect(waiters.of('station:order')).toEqual([]);
+  });
+
+  it('Prêt : station:updated au poste, order:ready aux serveurs en shift', async () => {
+    const waiter = await waiterOnShift();
+    const barista = await staff('nour', 'barista');
+    await startShift(barista.token);
+    const otherBarista = await staff('rim', 'barista');
+    await startShift(otherBarista.token);
+    const chef = await staff('hedi', 'chef');
+    await startShift(chef.token);
+    const waiters = record(await connect({ token: waiter.token }));
+    const bar = record(await connect({ token: otherBarista.token }));
+    const kitchen = record(await connect({ token: chef.token }));
+    const { rows } = await db.query<{ id: number }>(`SELECT id FROM tables WHERE number = 8`);
+    const created = await api()
+      .post('/api/staff-orders')
+      .set(auth(waiter.token))
+      .send({
+        clientRequestId: randomUUID(),
+        tableId: rows[0]?.id,
+        lines: [{ menuItemId: item('Espresso'), quantity: 1 }],
+      });
+    const orderId = (created.body as { id: number }).id;
+
+    const res = await api()
+      .post(`/api/orders/${String(orderId)}/ready`)
+      .set(auth(barista.token));
+    expect(res.status).toBe(200);
+    expect(await waiters.next('order:ready')).toEqual({
+      orderId,
+      table: { id: rows[0]?.id, number: 8 },
+      station: 'bar',
+    });
+    expect(await bar.next('station:updated')).toMatchObject({
+      id: orderId,
+      ready: { bar: { by: { id: barista.id } } },
+    });
+    await quiet();
+    expect(kitchen.of('station:updated')).toEqual([]);
+    expect(kitchen.of('order:ready')).toEqual([]);
+  });
+
+  it('annulation : station:updated avec alerte, seulement aux postes pas encore prêts', async () => {
+    const waiter = await waiterOnShift();
+    const barista = await staff('nour', 'barista');
+    await startShift(barista.token);
+    const chef = await staff('hedi', 'chef');
+    await startShift(chef.token);
+    const bar = record(await connect({ token: barista.token }));
+    const kitchen = record(await connect({ token: chef.token }));
+    const { rows } = await db.query<{ id: number }>(`SELECT id FROM tables WHERE number = 8`);
+    const created = await api()
+      .post('/api/staff-orders')
+      .set(auth(waiter.token))
+      .send({
+        clientRequestId: randomUUID(),
+        tableId: rows[0]?.id,
+        lines: [
+          { menuItemId: item('Espresso'), quantity: 1 },
+          { menuItemId: item('Cheese Burger'), quantity: 1 },
+        ],
+      });
+    const orderId = (created.body as { id: number }).id;
+    await api()
+      .post(`/api/orders/${String(orderId)}/ready`)
+      .set(auth(chef.token));
+    await db.query(`UPDATE order_lines SET status = 'cancelled' WHERE order_id = $1`, [orderId]);
+
+    await notifyStations(db, realtime, [orderId], 'updated', true);
+    expect(await bar.next('station:updated')).toMatchObject({
+      id: orderId,
+      alert: true,
+      lines: [{ status: 'cancelled' }],
+    });
+    await quiet();
+    // La cuisine a déjà tout envoyé : rien à lui signaler (seulement son propre Prêt).
+    expect(kitchen.of('station:updated').filter((o) => (o as { alert?: boolean }).alert)).toEqual(
+      [],
+    );
   });
 });
 

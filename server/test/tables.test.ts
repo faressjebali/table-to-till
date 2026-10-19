@@ -120,8 +120,8 @@ async function confirmedOrder(
   );
   for (const line of lines) {
     await db.query(
-      `INSERT INTO order_lines (order_id, menu_item_id, name_fr, quantity, unit_price, discount_percent, status)
-       VALUES ($1, $2, 'Capuccino', $3, $4, $5, $6)`,
+      `INSERT INTO order_lines (order_id, menu_item_id, name_fr, quantity, unit_price, discount_percent, status, station)
+       VALUES ($1, $2, 'Capuccino', $3, $4, $5, $6, 'bar')`,
       [
         rows[0]?.id,
         itemId,

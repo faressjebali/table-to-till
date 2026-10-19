@@ -5,7 +5,7 @@ import { findSession } from './auth/sessions.js';
 import type { Config } from './config.js';
 import type { Db } from './db.js';
 import { errorBody } from './errors.js';
-import type { Order } from './orders/view.js';
+import type { Order, StationName } from './orders/view.js';
 import { isOnShift, isShiftRole, SHIFT_ROLES, type ShiftRole } from './shifts/on-shift.js';
 import type { Table } from './tables/view.js';
 
@@ -23,6 +23,14 @@ export type Realtime = {
   orderNew(order: Order): void;
   orderUpdated(order: Order): void;
   tableUpdated(table: Table): void;
+  // Écran bar / cuisine (docs/api.md § 5 ter) : l'Order ne contient que les lignes du poste.
+  stationOrder(station: StationName, order: Order): void;
+  stationUpdated(station: StationName, order: Order, alert: boolean): void;
+  orderReady(data: {
+    orderId: number;
+    table: { id: number; number: number };
+    station: StationName;
+  }): void;
   // Le staff et les clients ne calculent pas la disponibilité de la même façon (café fermé).
   menuUpdated(update: { staff: MenuUpdate; customer: MenuUpdate }): void;
   principalChanged(data: {
@@ -51,6 +59,9 @@ export const noopRealtime: Realtime = {
   orderNew: () => undefined,
   orderUpdated: () => undefined,
   tableUpdated: () => undefined,
+  stationOrder: () => undefined,
+  stationUpdated: () => undefined,
+  orderReady: () => undefined,
   menuUpdated: () => undefined,
   principalChanged: () => undefined,
   posJob: () => undefined,
@@ -73,6 +84,8 @@ const room = {
   // Staff en shift, par rôle : serveurs, baristas, cuisiniers.
   onShift: (role: ShiftRole) => `on-shift:${role}`,
   waitersOnShift: 'on-shift:waiter',
+  // Le bar est le poste du barista, la cuisine celui du cuisinier.
+  station: (station: StationName) => `on-shift:${station === 'bar' ? 'barista' : 'chef'}`,
   role: (role: string) => `role:${role}`,
   user: (id: number) => `user:${String(id)}`,
   session: (id: number) => `session:${String(id)}`,
@@ -182,6 +195,15 @@ export function createRealtime(
     },
     tableUpdated(table) {
       io.to(room.waitersOnShift).emit('table:updated', table);
+    },
+    stationOrder(station, order) {
+      io.to(room.station(station)).emit('station:order', order);
+    },
+    stationUpdated(station, order, alert) {
+      io.to(room.station(station)).emit('station:updated', alert ? { ...order, alert } : order);
+    },
+    orderReady(data) {
+      io.to(room.waitersOnShift).emit('order:ready', data);
     },
     menuUpdated({ staff, customer }) {
       io.to(room.staff).emit('menu:updated', staff);
