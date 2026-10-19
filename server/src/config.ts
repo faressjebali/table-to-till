@@ -12,6 +12,8 @@ export type Config = {
   // Anti-abus : commandes QR par table sur une fenêtre (docs/api.md § Erreurs).
   qrOrderRateLimit: number;
   qrOrderRateWindowMinutes: number;
+  // Clé partagée avec l'agent caisse (X-Agent-Key, auth Socket.IO). Vide : aucun agent accepté.
+  agentKey: string;
 };
 
 function positiveInt(name: string, fallback: number): number {
@@ -36,5 +38,6 @@ export function loadConfig(): Config {
     orderPendingTtlSeconds: positiveInt('ORDER_PENDING_TTL_SECONDS', 300),
     qrOrderRateLimit: positiveInt('QR_ORDER_RATE_LIMIT', 10),
     qrOrderRateWindowMinutes: positiveInt('QR_ORDER_RATE_WINDOW_MINUTES', 10),
+    agentKey: process.env.AGENT_KEY ?? '',
   };
 }

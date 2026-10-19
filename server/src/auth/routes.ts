@@ -3,6 +3,7 @@ import { z } from 'zod';
 import type { Config } from '../config.js';
 import { audit, type Db } from '../db.js';
 import { HttpError, validationError } from '../errors.js';
+import type { Realtime } from '../realtime.js';
 import { getAuth, requireStaff } from './middleware.js';
 import {
   hashPassword,
@@ -38,7 +39,7 @@ const lockedError = () =>
   new HttpError(423, 'ACCOUNT_LOCKED', 'Too many failed attempts, try again later');
 
 // Routes de docs/api.md § 4 (Authentification staff).
-export function authRoutes(db: Db, config: Config): Router {
+export function authRoutes(db: Db, config: Config, realtime: Realtime): Router {
   const router = Router();
 
   router.post(
@@ -153,6 +154,7 @@ export function authRoutes(db: Db, config: Config): Router {
           WHERE user_id = $1 AND id <> $2 AND revoked_at IS NULL`,
         [user.id, sessionId],
       );
+      realtime.disconnectOtherSessions(user.id, sessionId);
       await audit(db, {
         userId: user.id,
         action: 'auth.password_changed',
@@ -175,6 +177,7 @@ export function authRoutes(db: Db, config: Config): Router {
         entityType: 'user',
         entityId: user.id,
       });
+      realtime.sessionRevoked(sessionId, 'LOGGED_OUT');
       res.status(204).end();
     },
   );

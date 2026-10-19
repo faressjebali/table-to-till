@@ -5,23 +5,33 @@ import type { Db } from './db.js';
 import { errorBody, HttpError } from './errors.js';
 import { menuRoutes } from './menu/routes.js';
 import { orderRoutes } from './orders/routes.js';
+import { noopRealtime, type Realtime } from './realtime.js';
 import { shiftRoutes } from './shifts/routes.js';
 import { adminTableRoutes } from './tables/admin-routes.js';
 import { tableRoutes } from './tables/routes.js';
 import { userRoutes } from './users/routes.js';
 
-export function createApp({ db, config }: { db: Db; config: Config }): Express {
+export function createApp({
+  db,
+  config,
+  realtime = noopRealtime,
+}: {
+  db: Db;
+  config: Config;
+  // Absent : rien n'est envoyé en temps réel (tests REST).
+  realtime?: Realtime;
+}): Express {
   const app = express();
   app.use(express.json());
 
   const api = express.Router();
-  api.use(authRoutes(db, config));
-  api.use(userRoutes(db, config));
-  api.use(menuRoutes(db, config));
-  api.use(shiftRoutes(db, config));
+  api.use(authRoutes(db, config, realtime));
+  api.use(userRoutes(db, config, realtime));
+  api.use(menuRoutes(db, config, realtime));
+  api.use(shiftRoutes(db, config, realtime));
   api.use(tableRoutes(db, config));
   api.use(adminTableRoutes(db, config));
-  api.use(orderRoutes(db, config));
+  api.use(orderRoutes(db, config, realtime));
   app.use('/api', api);
 
   app.use((_req, res) => {

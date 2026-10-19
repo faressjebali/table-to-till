@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { getAuth, requireStaff } from '../auth/middleware.js';
 import type { Config } from '../config.js';
 import { audit, type Db } from '../db.js';
+import type { Realtime } from '../realtime.js';
 import { waitersOnShift } from './on-shift.js';
 
 type ShiftRow = { id: number; started_at: Date; principal: boolean };
@@ -16,7 +17,7 @@ function isPrincipalConflict(err: unknown): boolean {
 }
 
 // Routes shifts de docs/api.md § 5. La fin de shift est la clôture (POST /shifts/end).
-export function shiftRoutes(db: Db, config: Config): Router {
+export function shiftRoutes(db: Db, config: Config, realtime: Realtime): Router {
   const router = Router();
 
   // Premier serveur en shift = principal, les suivants = renforts.
@@ -52,6 +53,7 @@ export function shiftRoutes(db: Db, config: Config): Router {
           entityId: shift.id,
           details: { principal: shift.principal },
         });
+        realtime.shiftStarted(user.id);
         res.status(201).json({
           shiftId: shift.id,
           startedAt: shift.started_at,

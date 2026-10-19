@@ -5,6 +5,7 @@ import type { Role } from '../auth/sessions.js';
 import type { Config } from '../config.js';
 import { audit, type Db } from '../db.js';
 import { HttpError, validationError } from '../errors.js';
+import type { Realtime } from '../realtime.js';
 import { isOnShift } from '../shifts/on-shift.js';
 import { localized, loadMenuItems, onMenu, toMenuItem, type Station } from './items.js';
 
@@ -35,7 +36,7 @@ type ChoiceGroupRow = {
 };
 
 // Routes menu de docs/api.md § 3 (GET /menu) et § 5 (rupture).
-export function menuRoutes(db: Db, config: Config): Router {
+export function menuRoutes(db: Db, config: Config, realtime: Realtime): Router {
   const router = Router();
 
   // Avec un jeton staff : posCode et disponibilité du staff (docs/api.md § 3).
@@ -97,6 +98,8 @@ export function menuRoutes(db: Db, config: Config): Router {
       }
 
       const soldOut = !body.data.available;
+      const now = new Date();
+      const updated = { ...row, sold_out: soldOut };
       if (row.sold_out !== soldOut) {
         await db.query(`UPDATE menu_items SET sold_out = $2, updated_at = now() WHERE id = $1`, [
           row.id,
@@ -108,10 +111,18 @@ export function menuRoutes(db: Db, config: Config): Router {
           entityType: 'menu_item',
           entityId: row.id,
         });
-        // TODO : émettre `menu:updated` { menuItemId, available, unavailableReason }.
+        const update = (audience: 'staff' | 'customer') => {
+          const {
+            id: menuItemId,
+            available,
+            unavailableReason,
+          } = toMenuItem(updated, now, audience);
+          return { menuItemId, available, unavailableReason };
+        };
+        realtime.menuUpdated({ staff: update('staff'), customer: update('customer') });
       }
 
-      res.json(toMenuItem({ ...row, sold_out: soldOut }, new Date(), 'staff'));
+      res.json(toMenuItem(updated, now, 'staff'));
     },
   );
 

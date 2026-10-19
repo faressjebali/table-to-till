@@ -7,6 +7,7 @@ import { revokeAllSessions, ROLES, type Role } from '../auth/sessions.js';
 import type { Config } from '../config.js';
 import { audit, type Db } from '../db.js';
 import { HttpError, validationError } from '../errors.js';
+import type { Realtime } from '../realtime.js';
 import { generateTemporaryPassword } from './temporary-password.js';
 
 const createBody = z.object({
@@ -85,7 +86,7 @@ async function inTransaction<T>(db: Db, work: (client: PoolClient) => Promise<T>
 }
 
 // Routes de docs/api.md § 6 (comptes), réservées à la manager.
-export function userRoutes(db: Db, config: Config): Router {
+export function userRoutes(db: Db, config: Config, realtime: Realtime): Router {
   const router = Router();
   router.use('/users', requireStaff(db, config, { roles: ['manager'] }));
 
@@ -135,7 +136,7 @@ export function userRoutes(db: Db, config: Config): Router {
     const { role, active } = parsed.data;
     const { user: me } = getAuth(res);
 
-    const updated = await inTransaction(db, async (client) => {
+    const { user: updated, before } = await inTransaction(db, async (client) => {
       // Verrou sur les managers actifs : deux désactivations en même temps
       // ne peuvent pas retirer le dernier manager.
       await client.query(
@@ -211,8 +212,12 @@ export function userRoutes(db: Db, config: Config): Router {
           entityId: id,
         });
       }
-      return user;
+      return { user, before };
     });
+    // Désactivé : session:revoked puis connexions coupées. Rôle changé : connexions coupées sans
+    // événement, la reconnexion donne les événements du nouveau rôle.
+    if (before.active && !updated.active) realtime.disconnectUser(id, 'ACCOUNT_DISABLED');
+    else if (before.role !== updated.role) realtime.disconnectUser(id);
     res.json(toUser(updated));
   });
 
@@ -242,6 +247,8 @@ export function userRoutes(db: Db, config: Config): Router {
       });
       return row;
     });
+    // Sans événement : le contrat n'a pas encore de raison pour ce cas.
+    realtime.disconnectUser(id);
     res.json({ user: toUser(user), temporaryPassword });
   });
 

@@ -6,9 +6,11 @@ import type { Config } from '../config.js';
 import { audit, inTransaction, type Db } from '../db.js';
 import { HttpError, validationError } from '../errors.js';
 import { isCafeOpen } from '../menu/availability.js';
+import type { Realtime } from '../realtime.js';
 import { requireWaiterOnShift, waitersOnShift } from '../shifts/on-shift.js';
-import { expirePendingOrders } from './expiry.js';
+import { expireAndNotify } from './expiry.js';
 import { linesTotal, orderLinesSchema, prepareLines, type PreparedLine } from './lines.js';
+import { notifyOrders, notifyTables } from './notify.js';
 import { loadOrder, loadOrders } from './view.js';
 
 const idParam = z.coerce.number().int().positive();
@@ -118,8 +120,13 @@ async function openTableSession(client: pg.PoolClient, tableId: number, now: Dat
 }
 
 // Tâche enter_order d'une commande confirmée. L'agent tape seulement les articles, par leur code :
-// ni notes ni choix (docs/api.md § PosJob).
-async function queueEnterOrder(client: pg.PoolClient, orderId: number, tableId: number, now: Date) {
+// ni notes ni choix (docs/api.md § PosJob). Renvoie l'id de la tâche (pos:job après COMMIT).
+async function queueEnterOrder(
+  client: pg.PoolClient,
+  orderId: number,
+  tableId: number,
+  now: Date,
+): Promise<number> {
   const { rows: lines } = await client.query<{
     id: number;
     pos_code: string | null;
@@ -139,9 +146,9 @@ async function queueEnterOrder(client: pg.PoolClient, orderId: number, tableId: 
       menuItemId: missing.menu_item_id,
     });
   }
-  await client.query(
+  const { rows } = await client.query<{ id: number }>(
     `INSERT INTO pos_jobs (type, table_id, order_id, payload, created_at)
-     VALUES ('enter_order', $1, $2, $3, $4)`,
+     VALUES ('enter_order', $1, $2, $3, $4) RETURNING id`,
     [
       tableId,
       orderId,
@@ -155,6 +162,9 @@ async function queueEnterOrder(client: pg.PoolClient, orderId: number, tableId: 
       now,
     ],
   );
+  const jobId = rows[0]?.id;
+  if (jobId === undefined) throw new Error('tâche caisse non créée');
+  return jobId;
 }
 
 type PendingRow = { id: number; table_id: number; status: string; expires_at: Date };
@@ -175,7 +185,7 @@ async function lockPending(client: pg.PoolClient, orderId: number): Promise<Pend
 }
 
 // Routes commandes QR de docs/api.md § 3 (client) et § 5 (serveur en shift).
-export function orderRoutes(db: Db, config: Config): Router {
+export function orderRoutes(db: Db, config: Config, realtime: Realtime): Router {
   const router = Router();
 
   // Commande du client (sans connexion), en attente de confirmation par un serveur.
@@ -260,7 +270,8 @@ export function orderRoutes(db: Db, config: Config): Router {
       return;
     }
 
-    // order:new aux serveurs en shift : avec le temps réel et les notifications push.
+    // order:new aux serveurs en shift (notifications push).
+    await notifyOrders(db, realtime, [orderId], 'new');
     const response: Created = {
       orderId,
       status: 'pending',
@@ -277,7 +288,7 @@ export function orderRoutes(db: Db, config: Config): Router {
     if (!id.success || typeof tableToken !== 'string' || tableToken === '') {
       throw new HttpError(404, 'NOT_FOUND', 'Order not found');
     }
-    await expirePendingOrders(db, new Date());
+    await expireAndNotify(db, realtime, new Date());
     const { rows } = await db.query<{ status: string }>(
       `SELECT o.status FROM orders o JOIN tables t ON t.id = o.table_id
         WHERE o.id = $1 AND o.source = 'qr' AND t.qr_token = $2`,
@@ -293,7 +304,7 @@ export function orderRoutes(db: Db, config: Config): Router {
     const parsed = pendingQuery.safeParse(req.query);
     if (!parsed.success) throw validationError(parsed.error);
     const { limit, cursor } = parsed.data;
-    await expirePendingOrders(db, new Date());
+    await expireAndNotify(db, realtime, new Date());
     const { rows } = await db.query<{ id: number }>(
       `SELECT id FROM orders WHERE status = 'pending' AND id > $1 ORDER BY id LIMIT $2`,
       [cursor ?? 0, limit + 1],
@@ -316,9 +327,9 @@ export function orderRoutes(db: Db, config: Config): Router {
     if (!id.success) throw new HttpError(404, 'NOT_FOUND', 'Order not found');
     const { user } = getAuth(res);
     const now = new Date();
-    await expirePendingOrders(db, now);
+    await expireAndNotify(db, realtime, now);
 
-    await inTransaction(db, async (client) => {
+    const jobId = await inTransaction(db, async (client) => {
       const order = await lockPending(client, id.data);
       const sessionId = await openTableSession(client, order.table_id, now);
 
@@ -328,7 +339,7 @@ export function orderRoutes(db: Db, config: Config): Router {
           WHERE id = $1`,
         [order.id, sessionId, now, user.id],
       );
-      await queueEnterOrder(client, order.id, order.table_id, now);
+      const queued = await queueEnterOrder(client, order.id, order.table_id, now);
 
       await audit(client, {
         userId: user.id,
@@ -338,9 +349,11 @@ export function orderRoutes(db: Db, config: Config): Router {
         tableId: order.table_id,
         details: { tableSessionId: sessionId },
       });
+      return queued;
     });
 
-    // order:updated et table:updated aux serveurs en shift, pos:job à l'agent : plus tard.
+    await notifyOrders(db, realtime, [id.data]);
+    realtime.posJob(jobId);
     res.json(await loadOrder(db, id.data));
   });
 
@@ -353,7 +366,7 @@ export function orderRoutes(db: Db, config: Config): Router {
     const reason = parsed.data.reason === '' ? null : (parsed.data.reason ?? null);
     const { user } = getAuth(res);
     const now = new Date();
-    await expirePendingOrders(db, now);
+    await expireAndNotify(db, realtime, now);
 
     await inTransaction(db, async (client) => {
       const order = await lockPending(client, id.data);
@@ -373,6 +386,7 @@ export function orderRoutes(db: Db, config: Config): Router {
       });
     });
 
+    await notifyOrders(db, realtime, [id.data]);
     res.json(await loadOrder(db, id.data));
   });
 
@@ -420,7 +434,7 @@ export function orderRoutes(db: Db, config: Config): Router {
     // Après 22h et avant 8h, la saisie reste possible ; seuls les horaires des articles comptent.
     const lines = await prepareLines(db, body.lines, now, 'staff');
 
-    const orderId = await inTransaction(db, async (client) => {
+    const created = await inTransaction(db, async (client) => {
       const sessionId = await openTableSession(client, table.id, now);
       // Même clientRequestId reçu deux fois en même temps : la seconde attend la première,
       // puis tout est annulé (session comprise) et la première commande est renvoyée.
@@ -431,28 +445,32 @@ export function orderRoutes(db: Db, config: Config): Router {
          ON CONFLICT (client_request_id) DO NOTHING RETURNING id`,
         [body.clientRequestId, table.id, sessionId, user.id, now],
       );
-      const created = rows[0];
-      if (!created) throw new DuplicateRequest();
-      await insertLines(client, created.id, lines);
-      await queueEnterOrder(client, created.id, table.id, now);
+      const order = rows[0];
+      if (!order) throw new DuplicateRequest();
+      await insertLines(client, order.id, lines);
+      const jobId = await queueEnterOrder(client, order.id, table.id, now);
       await audit(client, {
         userId: user.id,
         action: 'order.entered',
         entityType: 'order',
-        entityId: created.id,
+        entityId: order.id,
         tableId: table.id,
         details: { tableSessionId: sessionId },
       });
-      return created.id;
+      return { orderId: order.id, jobId };
     }).catch(async (err: unknown) => {
       if (!(err instanceof DuplicateRequest)) throw err;
       const first = await replayId();
       if (first === null) throw new Error('commande en double introuvable');
-      return first;
+      return { orderId: first, jobId: null };
     });
 
-    // table:updated aux serveurs en shift, pos:job à l'agent : plus tard.
-    res.status(201).json(await loadOrder(db, orderId));
+    // Requête en double : déjà envoyé par la première.
+    if (created.jobId !== null) {
+      await notifyTables(db, realtime, [table.id]);
+      realtime.posJob(created.jobId);
+    }
+    res.status(201).json(await loadOrder(db, created.orderId));
   });
 
   return router;
