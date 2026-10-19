@@ -92,8 +92,8 @@ export function menuRoutes(db: Db, config: Config, realtime: Realtime): Router {
       if (!stationsByRole[user.role].includes(row.station)) {
         throw new HttpError(403, 'FORBIDDEN', 'Forbidden');
       }
-      // Un serveur hors shift ne voit que « Démarrer mon shift » (docs/api.md v1.8).
-      if (user.role === 'waiter' && !(await isOnShift(db, user.id))) {
+      // Hors shift, le serveur, le barista et le cuisinier ne voient que « Démarrer mon shift ».
+      if (user.role !== 'manager' && !(await isOnShift(db, user.id))) {
         throw new HttpError(403, 'NOT_ON_SHIFT', 'Not on shift');
       }
 

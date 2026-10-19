@@ -253,6 +253,26 @@ describe('commandes QR', () => {
     }
   });
 
+  it('un barista ou un cuisinier en shift ne reçoit pas les événements des serveurs', async () => {
+    const barista = await staff('nour', 'barista');
+    const chef = await staff('hedi', 'chef');
+    await startShift(barista.token);
+    const events = [
+      record(await connect({ token: barista.token })),
+      record(await connect({ token: chef.token })),
+    ];
+    // Shift démarré après la connexion : même résultat.
+    await startShift(chef.token);
+    await waiterOnShift('amira');
+
+    await pendingOrder();
+    await quiet();
+    for (const e of events) {
+      expect(e.of('order:new')).toEqual([]);
+      expect(e.of('table:updated')).toEqual([]);
+    }
+  });
+
   it('un serveur qui démarre son shift reçoit les commandes sans se reconnecter', async () => {
     await waiterOnShift('amira');
     const karim = await staff('karim');
@@ -362,6 +382,7 @@ describe('commande saisie par un serveur', () => {
 describe('ruptures', () => {
   it('menu:updated au staff et aux clients, seulement quand la rupture change', async () => {
     const barista = await staff('sami', 'barista');
+    await startShift(barista.token);
     const staffEvents = record(await connect({ token: (await staff('karim')).token }));
     const table7 = record(await connect({ tableToken: 'jeton-7' }));
     const agent = record(await connect({ agentKey: AGENT_KEY }));

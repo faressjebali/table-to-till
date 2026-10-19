@@ -14,6 +14,8 @@ export type Config = {
   qrOrderRateWindowMinutes: number;
   // Clé partagée avec l'agent caisse (X-Agent-Key, auth Socket.IO). Vide : aucun agent accepté.
   agentKey: string;
+  // Heure (Africa/Tunis, "HH:MM") où les shifts oubliés se terminent (docs/api.md § 5).
+  shiftAutoEndTime: string;
 };
 
 function positiveInt(name: string, fallback: number): number {
@@ -24,6 +26,15 @@ function positiveInt(name: string, fallback: number): number {
     throw new Error(`${name} doit être un entier positif (reçu : ${raw})`);
   }
   return value;
+}
+
+function timeOfDay(name: string, fallback: string): string {
+  const raw = process.env[name];
+  if (raw === undefined || raw === '') return fallback;
+  if (!/^([01]\d|2[0-3]):[0-5]\d$/.test(raw)) {
+    throw new Error(`${name} doit être une heure HH:MM (reçu : ${raw})`);
+  }
+  return raw;
 }
 
 export function loadConfig(): Config {
@@ -39,5 +50,6 @@ export function loadConfig(): Config {
     qrOrderRateLimit: positiveInt('QR_ORDER_RATE_LIMIT', 10),
     qrOrderRateWindowMinutes: positiveInt('QR_ORDER_RATE_WINDOW_MINUTES', 10),
     agentKey: process.env.AGENT_KEY ?? '',
+    shiftAutoEndTime: timeOfDay('SHIFT_AUTO_END_TIME', '04:00'),
   };
 }

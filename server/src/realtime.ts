@@ -6,7 +6,7 @@ import type { Config } from './config.js';
 import type { Db } from './db.js';
 import { errorBody } from './errors.js';
 import type { Order } from './orders/view.js';
-import { isOnShift } from './shifts/on-shift.js';
+import { isOnShift, isShiftRole, SHIFT_ROLES, type ShiftRole } from './shifts/on-shift.js';
 import type { Table } from './tables/view.js';
 
 // Événements temps réel de docs/api.md § 8. Après reconnexion, chaque client recharge via REST :
@@ -41,7 +41,7 @@ export type Realtime = {
   // Autres sessions coupées par un changement de mot de passe : sans événement.
   disconnectOtherSessions(userId: number, keepSessionId: number): void;
   // Shift démarré ou terminé : abonné ou désabonné sans se reconnecter.
-  shiftStarted(userId: number): void;
+  shiftStarted(userId: number, role: ShiftRole): void;
   shiftEnded(userId: number): void;
   close(): Promise<void>;
 };
@@ -70,7 +70,9 @@ const room = {
   staff: 'staff',
   clients: 'clients',
   agent: 'agent',
-  waitersOnShift: 'waiters-on-shift',
+  // Staff en shift, par rôle : serveurs, baristas, cuisiniers.
+  onShift: (role: ShiftRole) => `on-shift:${role}`,
+  waitersOnShift: 'on-shift:waiter',
   role: (role: string) => `role:${role}`,
   user: (id: number) => `user:${String(id)}`,
   session: (id: number) => `session:${String(id)}`,
@@ -110,7 +112,9 @@ async function authenticate(
       throw refuse('PASSWORD_CHANGE_REQUIRED', 'Password change required');
     }
     const rooms = [room.staff, room.role(user.role), room.user(user.id), room.session(sessionId)];
-    if (user.role === 'waiter' && (await isOnShift(db, user.id))) rooms.push(room.waitersOnShift);
+    if (isShiftRole(user.role) && (await isOnShift(db, user.id))) {
+      rooms.push(room.onShift(user.role));
+    }
     return { data: { kind: 'staff', userId: user.id, sessionId }, rooms };
   }
 
@@ -184,7 +188,7 @@ export function createRealtime(
       io.to(room.clients).emit('menu:updated', customer);
     },
     principalChanged(data) {
-      io.to([room.waitersOnShift, room.role('barista')]).emit('principal:changed', data);
+      io.to([room.waitersOnShift, room.onShift('barista')]).emit('principal:changed', data);
     },
     posJob(jobId) {
       io.to(room.agent).emit('pos:job', { jobId });
@@ -213,11 +217,11 @@ export function createRealtime(
     disconnectOtherSessions(userId, keepSessionId) {
       io.in(room.user(userId)).except(room.session(keepSessionId)).disconnectSockets(true);
     },
-    shiftStarted(userId) {
-      io.in(room.user(userId)).socketsJoin(room.waitersOnShift);
+    shiftStarted(userId, role) {
+      io.in(room.user(userId)).socketsJoin(room.onShift(role));
     },
     shiftEnded(userId) {
-      io.in(room.user(userId)).socketsLeave(room.waitersOnShift);
+      io.in(room.user(userId)).socketsLeave(SHIFT_ROLES.map(room.onShift));
     },
     close() {
       return new Promise((resolve) => {

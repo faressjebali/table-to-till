@@ -96,7 +96,7 @@ async function tokenFor(role: Role, { onShift = true } = {}): Promise<string> {
      VALUES ($1, $1, $2, $1, false) ON CONFLICT DO NOTHING`,
     [role, await hashPassword(PASSWORD)],
   );
-  if (role === 'waiter' && onShift) {
+  if (role !== 'manager' && onShift) {
     await db.query(
       `INSERT INTO shifts (user_id) SELECT id FROM users WHERE login = $1
        ON CONFLICT (user_id) WHERE ended_at IS NULL DO NOTHING`,
@@ -353,15 +353,19 @@ describe('PATCH /menu-items/:id/availability', () => {
     }
   });
 
-  it('refuse un serveur hors shift (NOT_ON_SHIFT)', async () => {
-    const token = await tokenFor('waiter', { onShift: false });
+  it.each([
+    ['waiter', 'Espresso'],
+    ['barista', 'Espresso'],
+    ['chef', 'Cheese Burger'],
+  ] as const)('refuse %s hors shift (NOT_ON_SHIFT)', async (role, nameFr) => {
+    const token = await tokenFor(role, { onShift: false });
     const res = await request(app())
-      .patch(`/api/menu-items/${String(id('Espresso'))}/availability`)
+      .patch(`/api/menu-items/${String(id(nameFr))}/availability`)
       .set('Authorization', `Bearer ${token}`)
       .send({ available: false });
     expect(res.status).toBe(403);
     expect(res.body).toMatchObject({ error: { code: 'NOT_ON_SHIFT' } });
-    expect(await findItem('Espresso')).toMatchObject({ available: true });
+    expect(await findItem(nameFr)).toMatchObject({ available: true });
   });
 
   it('refuse sans connexion', async () => {

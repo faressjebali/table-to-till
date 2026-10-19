@@ -5,6 +5,7 @@ import { loadConfig } from './config.js';
 import { createPool } from './db.js';
 import { startExpirySweep } from './orders/expiry.js';
 import { createRealtime } from './realtime.js';
+import { startShiftAutoEnd } from './shifts/auto-end.js';
 
 const port = Number(process.env.PORT ?? 3000);
 const config = loadConfig();
@@ -25,6 +26,8 @@ const app = createApp({ db, config, realtime });
 
 // Commandes QR non confirmées à temps → expirées.
 startExpirySweep(db, realtime);
+// Shifts oubliés → terminés dans la nuit.
+startShiftAutoEnd(db, realtime, config.shiftAutoEndTime);
 
 server.listen(port, () => {
   console.log(`API sur http://localhost:${String(port)}/api`);
