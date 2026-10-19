@@ -31,6 +31,7 @@
   --space-8: 2rem;
 
   --tap-min: 48px; /* un peu plus que 44 : utilisée vite, d'une main, en service */
+  --tabbar-height: 56px;
   --radius: 14px;
   --content-max: 40rem;
 }

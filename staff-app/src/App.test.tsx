@@ -1,4 +1,4 @@
-import { act, render, screen } from '@testing-library/react';
+import { act, render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { App } from './App';
@@ -270,7 +270,8 @@ describe('connexion', () => {
     });
     render(<App />);
     await fill('rania', 'secret123');
-    expect(await screen.findByText(`${fr['role.manager']} · Patronne`)).toBeInTheDocument();
+    await userEvent.click(await screen.findByRole('button', { name: fr['screen.me'] }));
+    expect(screen.getByText(`${fr['role.manager']} · Patronne`)).toBeInTheDocument();
   });
 
   it.each([
@@ -342,6 +343,119 @@ describe('connexion', () => {
     expect(
       await screen.findByRole('heading', { name: `${fr['home.hello']}, Sami` }),
     ).toBeInTheDocument();
+  });
+});
+
+describe('navigation selon le rôle', () => {
+  beforeEach(() => {
+    mockDevice(device({}));
+  });
+
+  const signedInAs = async (me: object) => {
+    localStorage.setItem('coffee-qr.staff.token', 'jeton');
+    mockApi({ '/api/me': { status: 200, body: { ...ME, ...me } } });
+    render(<App />);
+    return screen.findByRole('navigation', { name: fr['nav.label'] });
+  };
+  const tabNames = (nav: HTMLElement) =>
+    within(nav)
+      .getAllByRole('button')
+      .map((b) => b.textContent);
+
+  it('serveur hors shift : pas d’onglets, seulement le message du shift', async () => {
+    localStorage.setItem('coffee-qr.staff.token', 'jeton');
+    mockApi({ '/api/me': { status: 200, body: ME } });
+    render(<App />);
+    expect(await screen.findByText(fr['offShift.body'])).toBeInTheDocument();
+    expect(screen.queryByRole('navigation')).toBeNull();
+  });
+
+  it('renfort : pas de Caisse ; le premier onglet est ouvert', async () => {
+    const nav = await signedInAs({ onShift: true });
+    expect(tabNames(nav)).toEqual([
+      fr['screen.tables'],
+      fr['screen.orders'],
+      fr['screen.offers'],
+      fr['screen.me'],
+    ]);
+    expect(within(nav).getByRole('button', { name: fr['screen.tables'] })).toHaveAttribute(
+      'aria-current',
+      'page',
+    );
+    expect(screen.getByRole('heading', { name: fr['screen.tables'] })).toBeInTheDocument();
+  });
+
+  it('change d’onglet ; « Moi » montre le compte et la déconnexion', async () => {
+    const nav = await signedInAs({ onShift: true });
+    await userEvent.click(within(nav).getByRole('button', { name: fr['screen.orders'] }));
+    expect(screen.getByRole('heading', { name: fr['screen.orders'] })).toBeInTheDocument();
+
+    await userEvent.click(within(nav).getByRole('button', { name: fr['screen.me'] }));
+    expect(screen.getByRole('heading', { name: `${fr['home.hello']}, Sami` })).toBeInTheDocument();
+    expect(screen.getByText(fr['shift.backup'])).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: fr['session.logout'] })).toBeInTheDocument();
+  });
+
+  it('principal : Caisse dans la barre, Carte ouverte depuis « Moi » avec Retour', async () => {
+    const nav = await signedInAs({ onShift: true, principal: true });
+    expect(tabNames(nav)).toContain(fr['screen.till']);
+    expect(tabNames(nav)).not.toContain(fr['screen.menu']);
+
+    await userEvent.click(within(nav).getByRole('button', { name: fr['screen.me'] }));
+    expect(screen.getByText(fr['shift.principal'])).toBeInTheDocument();
+    await userEvent.click(screen.getByRole('button', { name: new RegExp(fr['screen.menu']) }));
+    expect(screen.getByRole('heading', { name: fr['screen.menu'] })).toBeInTheDocument();
+    await userEvent.click(screen.getByRole('button', { name: new RegExp(fr['nav.back']) }));
+    expect(screen.getByRole('button', { name: fr['session.logout'] })).toBeInTheDocument();
+  });
+
+  it('manager : jamais le plan des tables ni les commandes', async () => {
+    const nav = await signedInAs({ role: 'manager', title: 'Patronne' });
+    expect(tabNames(nav)).toEqual([
+      fr['screen.reports'],
+      fr['screen.menuEdit'],
+      fr['screen.accounts'],
+      fr['screen.offers'],
+      fr['screen.me'],
+    ]);
+  });
+
+  it('comptable : rapports, offres, moi', async () => {
+    const nav = await signedInAs({ role: 'accountant' });
+    expect(tabNames(nav)).toEqual([fr['screen.reports'], fr['screen.offers'], fr['screen.me']]);
+  });
+
+  it('retour au premier plan : /me est relu, le renfort devenu principal voit la Caisse', async () => {
+    localStorage.setItem('coffee-qr.staff.token', 'jeton');
+    let principal = false;
+    mockApi({ '/api/me': () => ({ status: 200, body: { ...ME, onShift: true, principal } }) });
+    render(<App />);
+    const nav = await screen.findByRole('navigation', { name: fr['nav.label'] });
+    expect(tabNames(nav)).not.toContain(fr['screen.till']);
+
+    principal = true;
+    act(() => {
+      document.dispatchEvent(new Event('visibilitychange'));
+    });
+    expect(await within(nav).findByRole('button', { name: fr['screen.till'] })).toBeInTheDocument();
+  });
+
+  it('retour au premier plan sans réseau : l’écran reste affiché', async () => {
+    localStorage.setItem('coffee-qr.staff.token', 'jeton');
+    let calls = 0;
+    mockApi({
+      '/api/me': () =>
+        ++calls === 1 ? { status: 200, body: { ...ME, onShift: true } } : 'network-error',
+    });
+    render(<App />);
+    const nav = await screen.findByRole('navigation', { name: fr['nav.label'] });
+    await act(async () => {
+      document.dispatchEvent(new Event('visibilitychange'));
+      await Promise.resolve();
+    });
+    expect(calls).toBe(2);
+    expect(nav).toBeInTheDocument();
+    expect(screen.queryByRole('alert')).toBeNull();
   });
 });
 

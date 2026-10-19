@@ -63,6 +63,26 @@ export function useSession() {
     if (loadToken()) void refresh();
   }, [refresh]);
 
+  // Retour au premier plan : le shift a pu changer (devenu principal à 15h00, shift terminé la
+  // nuit…). En silence : un réseau coupé à ce moment garde l'écran en cours.
+  const signedIn = state.status === 'signed-in';
+  useEffect(() => {
+    if (!signedIn) return;
+    const onVisible = () => {
+      if (document.visibilityState !== 'visible') return;
+      getMe().then(
+        (me) => setState({ status: 'signed-in', me }),
+        (err: unknown) => {
+          if (err instanceof ApiError && err.code === 'PASSWORD_CHANGE_REQUIRED') {
+            setState({ status: 'must-change-password' });
+          }
+        },
+      );
+    };
+    document.addEventListener('visibilitychange', onVisible);
+    return () => document.removeEventListener('visibilitychange', onVisible);
+  }, [signedIn]);
+
   const retry = useCallback(() => {
     setState({ status: 'checking' });
     void refresh();

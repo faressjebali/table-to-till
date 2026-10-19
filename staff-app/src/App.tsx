@@ -1,9 +1,9 @@
 import { useState } from 'react';
 import { ChangePasswordScreen } from './components/ChangePasswordScreen';
-import { Home } from './components/Home';
 import { InstallBanner } from './components/InstallBanner';
 import { InstallScreen, UpdateIosScreen } from './components/InstallScreen';
 import { LoginScreen } from './components/LoginScreen';
+import { StaffShell } from './components/StaffShell';
 import { t } from './i18n/fr';
 import { currentDevice, installGate, iosBrowser } from './install';
 import { useInstallPrompt } from './useInstallPrompt';
@@ -63,7 +63,7 @@ function StaffApp() {
             </button>
           </div>
         )}
-        {state.status === 'signed-in' && <Home me={state.me} onLogout={onLogout} />}
+        {state.status === 'signed-in' && <StaffShell me={state.me} onLogout={onLogout} />}
         {banner}
       </main>
     </>
