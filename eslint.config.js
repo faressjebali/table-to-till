@@ -39,9 +39,9 @@ export default tseslint.config(
     },
   },
 
-  // Fichiers de config en JS (ce fichier, vite.config, ...)
+  // Fichiers de config et scripts en JS (ce fichier, vite.config, scripts/*.mjs...)
   {
-    files: ['**/*.js'],
+    files: ['**/*.js', 'scripts/**/*.mjs'],
     languageOptions: { globals: globals.node },
   },
 

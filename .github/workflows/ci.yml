@@ -47,6 +47,8 @@ jobs:
         working-directory: staff-app
       - run: npm run lint
       - run: npm run format:check
+      - name: Scripts (vérification de .env)
+        run: npm run test:scripts
       - name: Serveur (types et tests)
         working-directory: server
         run: npm run typecheck && npm test
