@@ -135,12 +135,7 @@ export function App() {
                   aria-labelledby={sectionTabId(activeSection)}
                 >
                   {shown.map((category) => (
-                    <MenuSection
-                      key={category.id}
-                      category={category}
-                      items={items}
-                      onOpen={setOpenItem}
-                    />
+                    <MenuSection key={category.id} category={category} onOpen={setOpenItem} />
                   ))}
                 </div>
               )}

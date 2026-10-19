@@ -7,11 +7,9 @@ import { MenuItemRow } from './MenuItemRow';
 // Une catégorie : article par article, ou en tableau nom + prix (`display: grid`, les Extras).
 export function MenuSection({
   category,
-  items,
   onOpen,
 }: {
   category: MenuCategory;
-  items: Map<number, MenuItem>;
   onOpen: (item: MenuItem) => void;
 }) {
   const { lang } = useLanguage();
@@ -27,7 +25,7 @@ export function MenuSection({
       ) : (
         <ul className="category__items">
           {category.items.map((item) => (
-            <MenuItemRow key={item.id} item={item} items={items} onOpen={onOpen} />
+            <MenuItemRow key={item.id} item={item} onOpen={onOpen} />
           ))}
         </ul>
       )}

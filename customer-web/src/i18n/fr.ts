@@ -9,7 +9,6 @@ export const fr = {
   'menu.sections': 'Carte',
   'menu.section.food': 'Food',
   'menu.section.drinks': 'Boissons',
-  'menu.suggestions': 'Extras suggérés',
   'menu.categories': 'Catégories',
   'menu.soldOut': 'Épuisé',
   'menu.loading': 'Chargement de la carte…',

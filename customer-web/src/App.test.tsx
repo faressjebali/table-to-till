@@ -212,17 +212,12 @@ describe('carte', () => {
     expect(categoryTitles()).toEqual(['Salades', 'Extras']);
   });
 
-  it('montre les extras suggérés sous un article, une rupture grisée', async () => {
+  it('ne montre pas les extras suggérés sous un article dans la carte', async () => {
     await renderMenu();
     const salad = screen.getByRole('heading', { name: 'Salade classique' }).closest('li');
     if (!salad) throw new Error('pas de Salade classique');
-    const suggestions = within(salad).getByRole('list', { name: fr['menu.suggestions'] });
-    const lines = within(suggestions).getAllByRole('listitem');
-    expect(lines.map((l) => l.textContent)).toEqual([
-      '+Œuf 2,5\u00a0DT',
-      `+Avocat ${fr['menu.soldOut']}`,
-    ]);
-    expect(lines[1]).toHaveClass('suggestion--sold-out');
+    expect(salad).not.toHaveTextContent('Œuf');
+    expect(salad).not.toHaveTextContent('Avocat');
   });
 
   it('grise un article en rupture, masque un article hors horaire et une catégorie vide', async () => {
@@ -334,6 +329,17 @@ describe('fiche article', () => {
     await userEvent.click(add());
     expect(screen.queryByRole('dialog')).toBeNull();
     expect(cartBar()).toHaveTextContent('3 articles · 20,5 DT');
+  });
+
+  it('montre seulement les extras de l’article, pas les autres Extras', async () => {
+    const sheet = await openItem('Salade classique');
+    const extras = within(sheet).getByRole('group', { name: fr['sheet.extras'] });
+    expect(
+      within(extras)
+        .getAllByRole('checkbox')
+        .map((c) => c.closest('label')?.textContent),
+    ).toEqual(['+Œuf2,5\u00a0DT', `+Avocat${fr['menu.soldOut']}`]);
+    expect(sheet).not.toHaveTextContent('Épinards');
   });
 
   it('un second tap décoche un extra', async () => {

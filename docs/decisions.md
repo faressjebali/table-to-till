@@ -2,6 +2,7 @@
 
 Une ligne par décision, la plus récente en haut. Format : `AAAA-MM-JJ — décision — pourquoi`.
 
+- 2026-10-19 — Menu QR : les extras suggérés ne s'affichent plus sous les plats dans la carte, seulement dans la fiche de l'article, et seulement ceux de cet article ; la section Extras reste visible — la carte reste lisible, le client voit les extras au moment de choisir — demandé par Fares
 - 2026-10-19 — Shift 2 choisi au démarrage : quand un principal est déjà en shift, le serveur qui démarre dit « Je suis le Shift 2 » ou « Je suis renfort » ; le Shift 2 devient principal à 15h00 quelle que soit son heure d'arrivée (tout de suite après 15h00) ; un seul Shift 2 en shift (un deuxième est refusé et démarre en renfort) ; un renfort ne devient jamais principal à 15h00 ; contrat v2.2 — avec la règle des 14h00, un Shift 2 arrivé à 13h45 restait renfort, et un renfort arrivé à 14h30 prenait la caisse ; remplace « le serveur arrivé à partir de 14h00 » (17/10) — validé par Fares
 - 2026-10-19 — Transfert d'un article vers une table libre pendant une passation : la nouvelle session appartient au principal de la table de départ ; contrat v2.2 — l'argent suit le client, comme pour un changement de table — validé par Fares
 - 2026-10-19 — LegacyPOS ne demande aucun motif pour une remise ou une annulation : plus de `note` dans les tâches caisse `discount` et `cancel_line` ; contrat v2.2 — rien n'est tapé en caisse qui ne serve pas — validé par Fares

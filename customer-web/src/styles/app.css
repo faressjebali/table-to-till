@@ -302,28 +302,6 @@
   color: var(--color-muted);
 }
 
-/* Extras suggérés sous un article : « +Bacon de bœuf 7 DT », comme sur le menu papier */
-.suggestions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-1) var(--space-4);
-  margin: var(--space-2) 0 0;
-  padding: 0;
-  list-style: none;
-  font-size: var(--text-small);
-  color: var(--color-description);
-}
-
-.suggestion__price {
-  color: var(--color-price);
-  white-space: nowrap;
-}
-
-.suggestion--sold-out,
-.suggestion--sold-out .suggestion__price {
-  color: var(--color-muted);
-}
-
 /* Tableau des Extras : nom et prix, 2 colonnes au téléphone, 3 comme le papier sur un écran large */
 .extras-grid {
   display: grid;

@@ -30,14 +30,14 @@ Version 2 — refonte du 15 octobre 2026. Clôture de shift et rapports de la ma
 - Catégories, dans l'ordre du menu papier :
   - Food (56) : Formules petit-déjeuner (6), Œufs (3), Extras (14), Salades (3), Plats (3), Starters (5), Accompagnements (3), Sandwichs (4), Cakes & Sweets (8), Extras sucrés (4), Kids Menu (2), Plat de la semaine (1).
   - Boissons (41) : Jus (6), Fresh Blends (4), Thé & Infusion (9), Cafés (13), Matcha (4), Healthy Shots (3), Eau (2).
-  - Sur le menu papier, « Accompagnements » et « Extras sucrés » sont titrés « Extras ». Les extras Œuf, Steak et Pommes cannelle caramélisées n'apparaissent qu'en suggestion (« + ») sous un plat.
+  - Sur le menu papier, « Accompagnements » et « Extras sucrés » sont titrés « Extras ». Les extras Œuf, Steak et Pommes cannelle caramélisées n'apparaissent qu'en suggestion, dans la fiche d'un plat.
 - **Pas de tailles.** Chaque article a un prix fixe.
 - **Chaque article a un code produit** LegacyPOS, affiché sur son bouton en caisse. L'agent reconnaît l'article à ce **code**, jamais à son nom (on ne peut pas taper un code : il ouvre la catégorie et touche le bouton qui porte le code).
 - **Une photo par article.**
 - **Deux menus complets : français et anglais** (noms et descriptions). « مرطبات اليوم » reste tel quel.
 - **Extras** (avocat, champignons, bacon…) : ce sont des **articles normaux** avec leur prix et leur code. Ils apparaissent :
-  - dans une section « Extras » de la catégorie ;
-  - en **suggestions sous certains plats** (ex. Cheese Burger : +Bacon de bœuf, +Œuf, +Gouda…).
+  - dans une section « Extras » de la catégorie, toujours visible ;
+  - en **suggestions dans la fiche de certains plats** (ex. Cheese Burger : +Bacon de bœuf, +Œuf, +Gouda…) : le client ne les voit qu'en ouvrant l'article, et seulement ceux de cet article (pas de Caramel dans la fiche du Cheese Burger). Rien n'est affiché sous le plat dans la carte.
   Dans les deux cas, ils arrivent en caisse comme **une ligne séparée**.
 - **Formules et articles à choix** (formules petit-déj, Kids Menu) : le client **choisit dans des listes** (café ou thé, jus, œufs), pas dans une note libre. Le Kids Menu (cookie ou pancakes) et le Cookie (chocolat ou pomme cannelle) sont chacun **deux articles distincts** en caisse ; le choix du jus du Kids Menu reste une liste.
   - Dans une formule, le client peut prendre un **thé à 6,5 DT** ou un **café jusqu'à 8,5 DT** de la carte, et **n'importe quel jus de saison**.
@@ -67,7 +67,7 @@ Version 2 — refonte du 15 octobre 2026. Clôture de shift et rapports de la ma
 - Un QR par table, contenant un **jeton aléatoire** (pas le numéro de table). Jeton inconnu → message « demandez au serveur ».
 - Langue au choix FR / EN, mémorisée sur le téléphone.
 - Affichage par catégorie, comme le menu papier actuel : nom, description, prix (`12 DT`, `5,5 DT`), photo.
-- Fiche article : photo, description, extras suggérés (ajoutables en un tap), quantité (1–20), note.
+- Fiche article : photo, description, extras suggérés de cet article seulement (ajoutables en un tap ; jamais affichés dans la carte), quantité (1–20), note.
 - Panier : lignes, quantités, total, modifier/supprimer. Envoi → écran « Commande envoyée, un serveur va la confirmer ».
 - Erreur (réseau, article devenu indisponible) : le panier est conservé, message clair.
 - La table peut commander plusieurs fois.

@@ -10,7 +10,6 @@ export const en: Messages = {
   'menu.sections': 'Menu',
   'menu.section.food': 'Food',
   'menu.section.drinks': 'Drinks',
-  'menu.suggestions': 'Suggested extras',
   'menu.categories': 'Categories',
   'menu.soldOut': 'Sold out',
   'menu.loading': 'Loading the menu…',
