@@ -1,6 +1,6 @@
 # Contrat d'API — Coffee QR
 
-> Brouillon v2.3 (19 octobre 2026). À relire ensemble. Toute modification passe par une PR dédiée, annoncée à l'autre.
+> Brouillon v2.3.1 (19 octobre 2026). À relire ensemble. Toute modification passe par une PR dédiée, annoncée à l'autre.
 
 ## 1. Règles générales
 
@@ -450,7 +450,7 @@ Rôles barista / chef / comptable : endpoints ajoutés avec le stock (demandes d
 | GET | `/pos/jobs/next` | — | PosJob le plus ancien `queued`, ou 204 (rien, ou une tâche déjà `in_progress`) ; jamais une tâche `waiting` |
 | POST | `/pos/jobs/:id/start` | — | 200 (passe en `in_progress`) ; 409 si une autre tâche est en cours |
 | POST | `/pos/jobs/:id/done` | — | 200 (`done`, commande `entered`) |
-| POST | `/pos/jobs/:id/fail` | `{ error, step, screenshot? }` | 200 (`failed`, staff alerté) |
+| POST | `/pos/jobs/:id/fail` | `{ error, step }` | 200 (`failed`, staff alerté) |
 | POST | `/pos/heartbeat` | `{ state: "idle" \| "busy" \| "waiting_for_human", jobId? }` | 204 (toutes les 10 s) ; sans heartbeat depuis 30 s, l'agent est `offline` (`pos:status`, `GET /pos/status`) |
 
 ## 8. Temps réel (Socket.IO)
@@ -492,6 +492,7 @@ Après reconnexion, chaque client recharge via REST.
 
 | Version | Date | Changement |
 | --- | --- | --- |
+| v2.3.1 brouillon | 2026-10-19 | `POST /pos/jobs/:id/fail` sans `screenshot` : l'agent n'envoie pas de capture d'écran ; `error` et `step` suffisent |
 | v2.3 brouillon | 2026-10-19 | **Agent hors ligne** : état `offline` dans `pos:status` après 30 s sans heartbeat ; `GET /pos/status` (serveurs en shift et manager) pour relire l'état de l'agent après une reconnexion |
 | v2.2 brouillon | 2026-10-19 | **Shift 2 choisi au démarrage** : `POST /shifts/start` `{ shift2? }`, un seul Shift 2 en shift (sinon 409 `INVALID_STATUS`), `shift2` dans la réponse et dans `GET /shifts/current` ; la bascule de 15h00 ne dépend plus de l'heure d'arrivée (`SHIFT_2_ARRIVAL_FROM` supprimé) ; un renfort ne devient jamais principal à 15h00. **Transfert vers une table libre** : la session appartient au principal de la table de départ. **Tâches caisse** : plus de `note` dans `discount` ni `cancel_line` (LegacyPOS ne demande pas de motif) |
 | v2.1 brouillon | 2026-10-19 | **Écran bar / cuisine** (§ 5 ter) : `GET /station-orders`, `POST /orders/:id/ready`, `Order.ready`, `station` sur chaque ligne, événements `station:order`, `station:updated`, `order:ready` ; notes et choix affichés au bar et en cuisine (plus à l'oral). **Shift du barista et du cuisinier** : `/shifts/start` et `/shifts/end` (sans argent), `NOT_ON_SHIFT` pour leurs actions, `GET /shifts/current` `stations`, fin automatique à `SHIFT_AUTO_END_TIME`. **Passage de caisse** : `POST /principal/transfer` par le seul principal, le renfort reprend toute la caisse, l'appelant ne clôture pas et son shift se termine (`ShiftClosure.previousHolders`) ; il ne compte jamais comme la bascule du jour. **Vente directe** : reste au principal de sa session (CA et argent, même encaissée par le barista après 15h00), passée en clôturant comme une table. **Offres staff** : `/gifts` `staff` toujours sans table ni bénéficiaire, `note` facultative, `GET /gifts?reason=staff&closure=current` ; `unhappy_customer` avec `tableId` et `note` obligatoires ; plus de `beneficiary` sur Gift. `pos:failed` avec `type` et `tableNumber` |

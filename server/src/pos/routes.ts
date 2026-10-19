@@ -22,8 +22,6 @@ const idParam = z.coerce.number().int().positive();
 const failBody = z.object({
   error: z.string().min(1).max(100),
   step: z.string().max(200),
-  // Capture d'écran de l'agent : acceptée, pas encore conservée.
-  screenshot: z.string().optional(),
 });
 
 const heartbeatBody = z.object({
