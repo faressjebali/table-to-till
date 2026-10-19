@@ -1,6 +1,6 @@
 # Contrat d'API — Coffee QR
 
-> Brouillon v2.0.4 (19 octobre 2026). À relire ensemble. Toute modification passe par une PR dédiée, annoncée à l'autre.
+> Brouillon v2.1 (19 octobre 2026). À relire ensemble. Toute modification passe par une PR dédiée, annoncée à l'autre.
 
 ## 1. Règles générales
 
@@ -25,6 +25,7 @@
 | Agent caisse | `X-Agent-Key: <secret>` (dans le `.env` du PC de caisse) |
 
 Rôles : `manager` (managers et patrons), `waiter` (serveur), `barista`, `chef` (affiché « Cuisinier »), `accountant` (affiché « Comptable » : rapports, clôtures et commandes sur sa table d'offre, rien d'autre). Chaque endpoint staff indique les rôles autorisés.
+Les serveurs, les baristas et les cuisiniers démarrent et terminent un **shift** (`/shifts/start`, `/shifts/end`) ; le barista et le cuisinier n'ont ni argent ni clôture, et leurs actions exigent d'être en shift (sinon `NOT_ON_SHIFT`), sauf les demandes d'achat.
 Un serveur en shift est soit **principal** (il gère l'argent), soit **renfort**. D'habitude il y a un seul principal ; pendant la passation de 15h00, il y en a deux (voir § 5 « Principaux et passation ») : le **principal en cours** (le dernier devenu principal) et l'ancien, qui finit ses tables.
 Un compte désactivé est refusé partout (`ACCOUNT_DISABLED`) et ses connexions temps réel sont coupées.
 
@@ -40,7 +41,7 @@ Un compte désactivé est refusé partout (`ACCOUNT_DISABLED`) et ses connexions
 | 401 | `UNAUTHORIZED` | Token absent, invalide ou expiré |
 | 401 | `PASSWORD_CHANGE_REQUIRED` | Première connexion : changer le mot de passe d'abord |
 | 403 | `FORBIDDEN` | Mauvais rôle |
-| 403 | `NOT_ON_SHIFT` | Action réservée aux serveurs en shift |
+| 403 | `NOT_ON_SHIFT` | Action réservée aux serveurs, baristas ou cuisiniers en shift |
 | 403 | `NOT_PRINCIPAL` | Action réservée au serveur principal (argent, remise, annulation, offert, dépense, clôture), ou au principal **de cette table** pendant une passation |
 | 403 | `ACCOUNT_DISABLED` | Compte désactivé par la manager |
 | 404 | `NOT_FOUND`, `TABLE_NOT_FOUND` | Ressource ou jeton de table inconnu |
@@ -131,6 +132,7 @@ Limites anti-abus (valeurs de départ, réglables dans `.env`) : 10 commandes QR
   ],
   "total": 51500,
   "createdAt": "...", "confirmedAt": "...", "confirmedBy": { "id": 4, "name": "Amira" }, "offer": null,
+  "ready": { "bar": null, "kitchen": null },
   "pos": { "status": "queued", "error": null }
 }
 ```
@@ -140,7 +142,9 @@ Limites anti-abus (valeurs de départ, réglables dans `.env`) : 10 commandes QR
 - `status` : `pending` → `confirmed` | `rejected` | `expired`. Une commande `waiter` ou `direct` est créée directement `confirmed`.
 - `expired` : commande `pending` (`qr` ou `offer`) non traitée après `ORDER_PENDING_TTL_SECONDS` (300 s par défaut, même délai pour les deux). La table ou la personne qui a commandé en est informée (`order:updated`).
 - Commande sur une table d'offre (`offer` non `null`) : `unitPrice` et `lineTotal` valent 0, `total` 0 ; jamais de tâche caisse (`pos: null`) ; jamais de session de table (`tableSessionId` toujours `null`). C'est un offert : hors CA, elle sort du stock et figure dans la clôture (`offerOrders`).
-- `note` : reste dans l'app, **jamais tapée en caisse** (le serveur la transmet oralement au bar ou à la cuisine).
+- `note` : reste dans l'app, **jamais tapée en caisse** ; elle s'affiche sur l'écran bar / cuisine (§ 5 ter).
+- Chaque ligne porte aussi `station` (`bar`, `kitchen` ou `both`, copiée de l'article) : elle dit sur quel écran bar / cuisine la ligne s'affiche.
+- `ready` : préparation par poste (§ 5 ter), `{ bar, kitchen }`, chacun `null` (pas encore prêt, ou aucune ligne de ce poste) ou `{ at, by: { id, name } }` (marqué **Prêt** par le barista ou le cuisinier). Une ligne `both` est prête pour un poste quand ce poste a marqué sa partie.
 - `tableSessionId` : `null` tant que la commande est `pending` (ou si elle est rejetée ou expirée). C'est la **confirmation** qui rattache la commande à la session de la table, et l'ouvre si la table était libre.
 - `choices` : présent sur les lignes d'articles ayant des `choiceGroups`, un choix par groupe. Les choix valent pour toute la quantité de la ligne ; pour des choix différents, le client ajoute une autre ligne.
 - Ligne `status` : `active`, `cancelled` (annulée, avec note), `transferred` (déplacée vers une autre table). Un offert n'est **jamais** une ligne de commande (voir Gift).
@@ -157,7 +161,7 @@ Limites anti-abus (valeurs de départ, réglables dans `.env`) : 10 commandes QR
 ```
 - `status` : `open`, `paid` (encaissée) ou `unpaid` (fermée sans encaissement par une clôture forcée ou automatique, voir ShiftClosure `unpaidTables` ; à régulariser à la main en caisse).
 - Ouverte automatiquement par la première commande **confirmée** sur une table libre (ou par une vente directe) ; fermée par l'encaissement (`POST /tables/:id/pay`).
-- `principal` : le principal dont la table est la caisse : le **principal en cours** à l'ouverture de la session, ou celui à qui elle a été passée (`POST /shifts/end` d'un ancien principal, clôture forcée). Tout ce qui se passe sur la table (commandes, remises, annulations, encaissement) compte dans sa clôture tant qu'il l'a.
+- `principal` : le principal dont la table est la caisse : le **principal en cours** à l'ouverture de la session (vente directe comprise), ou celui à qui elle a été passée (`POST /shifts/end` d'un ancien principal, `POST /principal/transfer`, clôture forcée). Tout ce qui se passe sur la table (commandes, remises, annulations, encaissement) compte dans sa clôture tant qu'il l'a.
 - Le changement de table (`move`) déplace la session entière.
 - Une table se paie **en une seule fois** : pas de division de l'addition, pas de paiement mixte.
 
@@ -184,13 +188,12 @@ Limites anti-abus (valeurs de départ, réglables dans `.env`) : 10 commandes QR
 ### Gift (offert, jamais tapé en caisse)
 ```json
 { "id": 12, "tableId": 7, "menuItemId": 64, "name": { "fr": "Cookie chocolat", "en": "Chocolate cookie" },
-  "quantity": 1, "choices": [], "reason": "unhappy_customer", "beneficiary": null, "note": "attente trop longue",
+  "quantity": 1, "choices": [], "reason": "unhappy_customer", "note": "attente trop longue",
   "givenBy": { "id": 4, "name": "Amira" }, "createdAt": "..." }
 ```
 - Enregistré **seulement** comme Gift, jamais comme ligne de commande : il ne peut pas partir en caisse et compte 0 dans les totaux. Il sort du stock.
-- `tableId` : `null` pour une offre sans table (staff).
-- `reason` : `unhappy_customer` (client mécontent) ou `staff`. Les patrons, managers, le comptable et les invités passent par les tables d'offre (voir Table `offer`).
-- `givenBy` : principal, barista ou cuisinier. L'offert compte dans la clôture du principal de la table (`tableId`), ou du principal en cours (sans table). Les offres des managers sont des commandes sur une table d'offre (voir Order `offer`).
+- `reason` : `unhappy_customer` (client mécontent : principal seulement, sur une table, `tableId` obligatoire, `note` obligatoire) ou `staff` (liste « Offres staff » : barista, cuisinier ou principal, **toujours sans table** (`tableId: null`), sans bénéficiaire, `note` facultative). Les patrons, managers, le comptable et les invités passent par les tables d'offre (voir Table `offer`).
+- `givenBy` : principal, barista ou cuisinier. L'offert compte dans la clôture du principal de la table (`unhappy_customer`), ou du principal en cours au moment de l'offre (`staff`). La liste « Offres staff » du créneau = les Gifts `staff` pas encore clôturés (`GET /gifts?reason=staff&closure=current`). Les offres des managers sont des commandes sur une table d'offre (voir Order `offer`).
 
 ### Expense (dépense payée en espèces de la caisse)
 ```json
@@ -202,7 +205,7 @@ Limites anti-abus (valeurs de départ, réglables dans `.env`) : 10 commandes QR
 
 ### ShiftClosure (clôture de la caisse d'un principal)
 ```json
-{ "id": 31, "principal": { "id": 4, "name": "Amira" }, "handedOverTo": { "id": 6, "name": "Mehdi" }, "forcedBy": null, "automatic": false, "slot": 1,
+{ "id": 31, "principal": { "id": 4, "name": "Amira" }, "previousHolders": [], "handedOverTo": { "id": 6, "name": "Mehdi" }, "forcedBy": null, "automatic": false, "slot": 1,
   "startedAt": "2026-10-20T07:02:00Z", "endedAt": "2026-10-20T14:21:00Z",
   "sales": 412500, "cash": 251000, "card": 140500, "expenses": 18000,
   "expectedCash": 233000, "countedCash": 232000, "cashDifference": -1000,
@@ -217,18 +220,19 @@ Limites anti-abus (valeurs de départ, réglables dans `.env`) : 10 commandes QR
   "pdfUrl": "/api/closures/31/pdf" }
 ```
 - Une clôture par principal : elle couvre **sa caisse**, quel que soit le serveur (principal ou renfort) ou le poste (barista, cuisinier) qui a fait l'action :
-  - **ses tables** : les sessions dont il était le `principal` (ouvertes pendant qu'il était le principal en cours, ou reçues d'un autre principal), pendant qu'il les avait ;
-  - **hors tables de la salle** (ventes directes, dépenses, offerts sans table, commandes des tables d'offre) : ce qui a été fait pendant qu'il était le **principal en cours**. Exception : une dépense compte toujours pour le principal qui la saisit.
+  - **ses tables** : les sessions dont il était le `principal`, **ventes directes comprises** (ouvertes pendant qu'il était le principal en cours, ou reçues d'un autre principal), pendant qu'il les avait ;
+  - **hors tables** (dépenses, offres staff, commandes des tables d'offre) : ce qui a été fait pendant qu'il était le **principal en cours**. Exception : une dépense compte toujours pour le principal qui la saisit.
   Pendant une passation, ce que fait le nouveau principal n'apparaît donc pas dans la clôture de l'ancien, et inversement. `startedAt` = moment où il est devenu principal ; `endedAt` = sa clôture. Elle est faite par ce principal.
+- `previousHolders` : `[ { id, name, from, until } ]`, ceux qui ont tenu cette caisse avant lui et la lui ont passée entière avec `POST /principal/transfer` (sans clôture) ; sinon `[]`. La clôture couvre alors toute la caisse depuis le premier : `startedAt` = moment où le premier est devenu principal, et tout ce qu'ils ont fait compte comme fait par cette caisse. Le PDF indique « caisse tenue par X jusqu'à 13h05, puis par Y ».
 - `slot` : rang de la clôture dans la journée (jour de `startedAt`, Africa/Tunis) : la clôture du premier principal est `1`, la suivante `2` (une passation par jour d'habitude ; s'il y en a plusieurs : `1`, `2`, `3`…). Le PDF l'affiche « Shift 1 », « Shift 2 »…
 - `sales` (CA) : lignes des commandes confirmées de sa caisse (hors tables d'offre), moins les remises et les annulations **faites pendant qu'il avait la table**, même sur une commande confirmée avant (table reçue, ou période précédente ; une annulation retirée est rajoutée de la même façon) ; offerts exclus. Ainsi les PDF ne changent jamais et la somme des clôtures égale le CA. `items` suit la même règle.
-- `cash` / `card` : encaissements de sa caisse (ses tables et les ventes directes de sa période de principal en cours), quel que soit celui qui a appuyé (barista pour une vente directe).
+- `cash` / `card` : encaissements de sa caisse (ses tables, ventes directes comprises), quel que soit celui qui a appuyé : le barista qui encaisse au comptoir une vente directe d'un principal lui remet l'argent, même après la bascule de 15h00.
 - `expectedCash = cash − expenses` (pas de fond de caisse) ; `cashDifference = countedCash − expectedCash`.
-- `gifts` : offerts de sa caisse (sur ses tables ; sans table : pendant qu'il était principal en cours). `offerOrders` : commandes des tables d'offre confirmées pendant qu'il était principal en cours (0 DT), avec la table d'offre et qui les a demandées.
+- `gifts` : offerts de sa caisse (`unhappy_customer` sur ses tables ; `staff` : pendant qu'il était principal en cours). `offerOrders` : commandes des tables d'offre confirmées pendant qu'il était principal en cours (0 DT), avec la table d'offre et qui les a demandées.
 - `handedOverTo` : l'autre principal, devenu principal en cours (passation), qui a reçu ses tables encore ouvertes ; `null` en fin de journée.
 - `forcedBy` : manager qui a forcé la clôture (principal parti sans clôturer), sinon `null`.
 - `cancelledLines` : annulations de sa caisse, avec `prepared` (perte de stock ou non), `withdrawn` (annulation retirée et payée par le serveur) et `confirmedAt` (confirmation de la commande, pour voir sur le PDF qu'elle date d'une période précédente).
-- `openTables` : tables encore ouvertes à sa clôture, passées au principal en cours (toujours `[]` en fin de journée).
+- `openTables` : tables encore ouvertes à sa clôture (ventes directes comprises), passées au principal en cours (toujours `[]` en fin de journée).
 - `unpaidTables` : `[ { id, number, total } ]`, tables fermées **sans encaissement** (session `unpaid`) par une clôture forcée sans autre serveur ou par une clôture automatique ; leur montant compte dans `sales` mais ni dans `cash` ni dans `card` ; à régulariser à la main en caisse. Sinon `[]`.
 - `automatic` : `true` pour une clôture faite par le serveur à `SHIFT_AUTO_END_TIME` (shift oublié, voir § 5) ; alors `countedCash` et `cashDifference` valent `null` et le PDF indique « clôture manquante ».
 - Le PDF reprend ces informations ; il est archivé et n'est jamais modifié.
@@ -252,7 +256,7 @@ Limites anti-abus (valeurs de départ, réglables dans `.env`) : 10 commandes QR
 | `pay_table` | `method` (`cash` \| `card`), `expectedTotal` |
 | `print_bill` | `expectedTotal` |
 
-- `enter_order` : ni les choix (`choices`) ni les notes ne vont en caisse, l'agent tape seulement les articles (le bouton NOTE de LegacyPOS n'est pas utilisé) ; le serveur transmet choix et notes oralement.
+- `enter_order` : ni les choix (`choices`) ni les notes ne vont en caisse, l'agent tape seulement les articles (le bouton NOTE de LegacyPOS n'est pas utilisé) ; choix et notes s'affichent sur l'écran bar / cuisine (§ 5 ter).
 - `expectedTotal` : montant que l'agent doit lire à l'écran avant d'encaisser ou d'imprimer ; s'il diffère, il s'arrête (`fail`, `error: "TOTAL_MISMATCH"`).
 - `status` : `queued` → `in_progress` → `done` | `failed` ; `failed` → `queued` (réessai) ou `manual` (fait à la main) ; `waiting` → `queued` ou `withdrawn` (annulation retirée).
 - `waiting` (seulement `cancel_line`) : l'annulation porterait sur le **dernier article** de la table en caisse, ce qui fait planter LegacyPOS. La tâche attend, et passe `queued` dès que la table a d'autres articles saisis en caisse (ex. le serveur saisit la commande du client suivant sur cette table). Sinon (fin de journée), le principal **retire l'annulation** : la tâche passe `withdrawn`, rien n'est tapé, et la table s'encaisse normalement (le serveur paie l'article). Une tâche `waiting` n'est jamais renvoyée à l'agent.
@@ -297,33 +301,34 @@ Règles `POST /orders` :
 | POST | `/auth/login` | `{ login, password }` | `{ token, user: { id, name, role, title, mustChangePassword } }` |
 | POST | `/auth/change-password` | `{ currentPassword, newPassword }` | 204 |
 | POST | `/auth/logout` | — | 204 |
-| GET | `/me` | — | `{ id, name, role, title, onShift, principal, currentPrincipal }` (`title` : titre affiché, voir User ; `principal` : vrai si serveur principal en shift ; `currentPrincipal` : vrai s'il est le principal en cours, voir § 5) |
+| GET | `/me` | — | `{ id, name, role, title, onShift, principal, currentPrincipal }` (`title` : titre affiché, voir User ; `onShift` : serveur, barista ou cuisinier en shift ; `principal` : vrai si serveur principal en shift ; `currentPrincipal` : vrai s'il est le principal en cours, voir § 5) |
 
 ## 5. Serveur (rôle `waiter` en shift, sauf mention)
 
-Le plan des tables et les commandes sont gérés **seulement par les serveurs en shift**, lecture comprise : tous les endpoints de cette section exigent le rôle `waiter` (sinon `FORBIDDEN`) et d'être **en shift** (sinon `NOT_ON_SHIFT`), sauf mention : `POST /shifts/start`, `GET /shifts/current`, les ruptures, `/direct-sales` et l'encaissement d'une vente directe (barista aussi), `/gifts` (barista et chef aussi) et l'abonnement push. Les managers et le comptable n'y ont pas accès : ils ont leurs rapports (§ 6) et leurs commandes offertes (§ 5 bis).
+Le plan des tables et les commandes sont gérés **seulement par les serveurs en shift**, lecture comprise : tous les endpoints de cette section exigent le rôle `waiter` (sinon `FORBIDDEN`) et d'être **en shift** (sinon `NOT_ON_SHIFT`), sauf mention : `POST /shifts/start`, `POST /shifts/end` et `GET /shifts/current` (barista et chef aussi), les ruptures, `/direct-sales` et l'encaissement d'une vente directe (barista aussi), `/gifts` (barista et chef aussi) et l'abonnement push. Le barista et le chef doivent eux aussi être **en shift** pour tout cela (sinon `NOT_ON_SHIFT`), sauf `POST /shifts/start`, `GET /shifts/current` et l'abonnement push. Les managers et le comptable n'y ont pas accès : ils ont leurs rapports (§ 6) et leurs commandes offertes (§ 5 bis).
 
-**Principal seulement** (sinon 403 `NOT_PRINCIPAL`) : `POST /shifts/end` avec `countedCash`, `/expenses`, `/direct-sales` (pour un serveur), `/gifts` sans table (pour un serveur), et sur une table : `/tables/:id/pay`, `/tables/:id/discount`, `/order-lines/:id/cancel`, `/order-lines/:id/withdraw-cancel`, `/pos/jobs/:id/resolve-manually`, `/gifts` avec `tableId`. Pendant une passation, ces actions sur une table sont réservées au **principal de la table** (TableSession `principal`) ; sur une vente directe ouverte (table fictive), au principal en cours. Exception : le barista peut aussi encaisser une vente directe (`/tables/:id/pay` sur une table de vente directe). Le renfort peut tout le reste (plan, commandes, confirmer, saisir, transférer, changer de table, imprimer l'addition, ruptures).
+**Principal seulement** (sinon 403 `NOT_PRINCIPAL`) : `POST /shifts/end` avec `countedCash`, `/expenses`, `/direct-sales` (pour un serveur), `/gifts` sans table (pour un serveur), et sur une table : `/tables/:id/pay`, `/tables/:id/discount`, `/order-lines/:id/cancel`, `/order-lines/:id/withdraw-cancel`, `/pos/jobs/:id/resolve-manually`, `/gifts` avec `tableId`. Pendant une passation, ces actions sur une table sont réservées au **principal de la table** (TableSession `principal`), vente directe ouverte comprise. Exception : le barista peut aussi encaisser n'importe quelle vente directe ouverte (l'argent compte pour le principal de sa session) (`/tables/:id/pay` sur une table de vente directe). Le renfort peut tout le reste (plan, commandes, confirmer, saisir, transférer, changer de table, imprimer l'addition, ruptures).
 
 **Principaux et passation** (`docs/product.md` § 5) :
 - Le premier serveur qui démarre son shift dans la journée est principal. D'habitude il est le seul.
-- **Bascule automatique à `SHIFT_2_START`** (15h00, Africa/Tunis, dans `.env`) : le serveur en shift qui a démarré son shift à partir de `SHIFT_2_ARRIVAL_FROM` (14h00) — le premier arrivé s'ils sont plusieurs — devient principal sans action de personne. Après 15h00, s'il n'y a pas encore eu de bascule ce jour-là, le premier serveur qui démarre son shift devient principal tout de suite. Un renfort arrivé avant 14h00 ne bascule jamais. Un `POST /principal/transfer` fait avant 15h00 ne compte pas comme la bascule du jour : à 15h00, le serveur arrivé à partir de 14h00 devient quand même principal en cours.
-- Le dernier devenu principal est le **principal en cours** : les sessions de table qui s'ouvrent lui appartiennent, ainsi que les ventes directes, les offerts sans table et les commandes des tables d'offre. L'ancien principal reste principal de ses tables encore ouvertes (et de leurs nouvelles commandes) jusqu'à les encaisser ou clôturer : il n'ouvre plus de nouvelle table pour lui.
+- **Bascule automatique à `SHIFT_2_START`** (15h00, Africa/Tunis, dans `.env`) : le serveur en shift qui a démarré son shift à partir de `SHIFT_2_ARRIVAL_FROM` (14h00) — le premier arrivé s'ils sont plusieurs — devient principal sans action de personne. Après 15h00, s'il n'y a pas encore eu de bascule ce jour-là, le premier serveur qui démarre son shift devient principal tout de suite. Un renfort arrivé avant 14h00 ne bascule jamais (sauf passage de caisse, voir plus bas). Un `POST /principal/transfer` ne compte jamais comme la bascule du jour, avant ou après 15h00.
+- Le dernier devenu principal est le **principal en cours** : les sessions de table qui s'ouvrent lui appartiennent (ventes directes comprises), ainsi que les offres staff et les commandes des tables d'offre. L'ancien principal reste principal de ses tables et ventes directes encore ouvertes (et de leurs nouvelles commandes) jusqu'à les encaisser ou clôturer : il n'ouvre plus de nouvelle table pour lui.
 - Les deux principaux encaissent en même temps, chacun ses tables ; chaque dépense compte pour celui qui la saisit. Il n'y a rien à accepter ni à refuser.
 - L'ancien principal clôture (`POST /shifts/end` avec `countedCash`) quand il veut : ses tables encore ouvertes passent au principal en cours (`ShiftClosure.openTables`, `handedOverTo`) et son shift se termine.
-- Si le serveur du Shift 2 est en retard, le principal reste seul principal. Il peut passer la caisse à un renfort avec `POST /principal/transfer` : ce renfort devient principal en cours tout de suite.
+- Si le serveur du Shift 2 est en retard, le principal reste seul principal.
+- **Passage de caisse** (`POST /principal/transfer`, seulement par le **seul** principal, sinon 409 `INVALID_STATUS`) : un renfort en shift reprend **toute la caisse** (tables et ventes directes ouvertes, encaissements, dépenses, offres staff) et devient principal en cours tout de suite. L'appelant ne clôture pas : son shift se termine. La clôture du nouveau principal couvre toute la caisse (ShiftClosure `previousHolders`). Le passage ne compte jamais comme la bascule du jour : à 15h00 (ou à son arrivée, après 15h00), le serveur du Shift 2 devient quand même principal en cours, et celui qui a repris la caisse devient l'ancien principal.
 - Chaque changement est envoyé aux serveurs en shift (`principal:changed`) et écrit au journal d'actions.
 
 Après la fermeture du café (22h00) et avant l'ouverture (8h00), `/staff-orders`, `/direct-sales` et `/offer-orders` restent possibles : seul le menu QR (`POST /orders`) est refusé (`CAFE_CLOSED`). Les horaires propres des articles (`availability.from` / `until`, `days`) s'appliquent toujours.
 
 | Méthode | Chemin | Corps | Réponse |
 | --- | --- | --- | --- |
-| POST | `/shifts/start` | — | `{ shiftId, startedAt, principal }` (premier serveur en shift = principal ; après 15h00 sans bascule ce jour-là : principal en cours ; sinon renfort, voir « Principaux et passation ») |
-| POST | `/shifts/end` | renfort : — ; principal : `{ countedCash }` (espèces comptées, millimes) | renfort : 204 (fin de son shift). **Ancien principal** (il y a un autre principal en cours) : 201 ShiftClosure ; ses tables encore ouvertes passent au principal en cours ; son shift se termine. **Seul principal** (fin de journée) : 201 ShiftClosure, et les shifts des renforts encore en shift se terminent en même temps (journal d'actions) ; refusé (409 `OPEN_TABLES`) s'il reste une table ouverte (vente directe comprise) ou une commande en attente |
-| POST | `/principal/transfer` | `{ toWaiterId }` (un renfort en shift) | 204 : ce renfort devient principal en cours tout de suite (Shift 2 en retard, voir « Principaux et passation ») ; l'appelant devient ancien principal et garde ses tables ouvertes — principal en cours seulement ; 400 `VALIDATION_ERROR` si `toWaiterId` n'est pas un renfort en shift |
+| POST | `/shifts/start` | — | `{ shiftId, startedAt, principal }` (serveur : premier serveur en shift = principal ; après 15h00 sans bascule ce jour-là : principal en cours ; sinon renfort, voir « Principaux et passation ». Barista et chef : `principal` toujours `false`) |
+| POST | `/shifts/end` | renfort, barista, chef : — ; principal : `{ countedCash }` (espèces comptées, millimes) | renfort, barista, chef : 204 (fin de son shift). **Ancien principal** (il y a un autre principal en cours) : 201 ShiftClosure ; ses tables encore ouvertes passent au principal en cours ; son shift se termine. **Seul principal** (fin de journée) : 201 ShiftClosure, et les shifts des renforts encore en shift se terminent en même temps (journal d'actions) ; refusé (409 `OPEN_TABLES`) s'il reste une table ouverte (vente directe comprise) ou une commande en attente |
+| POST | `/principal/transfer` | `{ toWaiterId }` (un renfort en shift) | 204 : passage de caisse (voir « Principaux et passation ») : ce renfort reprend toute la caisse et devient principal en cours tout de suite ; l'appelant ne clôture pas et son shift se termine — seul principal seulement (sinon 409 `INVALID_STATUS`) ; 400 `VALIDATION_ERROR` si `toWaiterId` n'est pas un renfort en shift |
 | POST | `/expenses` | `{ clientRequestId, amount, reason, note, photoUrl? }` | 201 Expense (comptée dans la clôture de celui qui la saisit) — principal |
 | GET | `/expenses?closure=current` | — | `{ items: [Expense] }` (mes dépenses pas encore clôturées) — principal |
-| GET | `/shifts/current` | — | `{ waiters: [ { id, name, startedAt, principal, currentPrincipal } ] }` (tout le staff) |
+| GET | `/shifts/current` | — | `{ waiters: [ { id, name, startedAt, principal, currentPrincipal } ], stations: [ { id, name, role, startedAt } ] }` (tout le staff ; `stations` : baristas et cuisiniers en shift, pour avertir « personne au bar » / « personne en cuisine ») |
 | GET | `/tables` | — | `{ tables: [Table] }` (tables `real`, pour le plan de la salle) |
 | GET | `/offer-tables` | — | `{ tables: [ { id, number, label, userId } ], requesters }` : les tables d'offre **permises à l'appelant**, triées par `label` — serveur en shift : toutes ; manager : la sienne et celles sans compte ; comptable : la sienne (rôles `waiter` en shift, `manager`, `accountant`). `requesters` (serveur en shift seulement, sinon absent) : `[ { id, name, title, role } ]`, les managers et comptables actifs, pour choisir qui a demandé une saisie sur une table d'offre |
 | GET | `/tables/:id/session` | — | `{ session: TableSession, orders: [Order], gifts: [Gift] }` (session ouverte) |
@@ -331,14 +336,14 @@ Après la fermeture du café (22h00) et avant l'ouverture (8h00), `/staff-orders
 | POST | `/orders/:id/confirm` | — | Order (409 `INVALID_STATUS` si déjà traitée ou expirée). La **rupture** est revérifiée : un article (ou une option de formule) en rupture → 409 `ITEM_UNAVAILABLE` avec `details.menuItemId`, rien n'est confirmé (le serveur rejette, le client recommande sans lui). Les horaires ne sont **pas** revérifiés : c'est l'heure d'envoi de la commande qui compte (jamais `OUTSIDE_HOURS` à la confirmation). Commande `offer` : confirmée sans session ni tâche caisse |
 | POST | `/orders/:id/reject` | `{ reason? }` | Order |
 | POST | `/staff-orders` | `{ clientRequestId, tableId, requestedById?, forClient?, lines: [ { menuItemId, quantity, note, choices? } ] }` (`tableId` : une table `real` ou une table d'offre ; `requestedById` et `forClient` : **obligatoires** sur une table d'offre, interdits sinon, `VALIDATION_ERROR`) | 201 Order (`source: "waiter"`, `confirmed`) ; sur une table d'offre : offerte (0 DT, sans session ni tâche caisse, voir Order `offer`) ; `requestedById` doit être un manager ou un comptable actif à qui cette table est permise (voir § 5 bis), sinon 400 `VALIDATION_ERROR` sur `requestedById` |
-| POST | `/direct-sales` | `{ clientRequestId, lines: [ { menuItemId, quantity, note, choices? } ] }` | 201 Order (`source: "direct"`, `confirmed`) — principal ou barista ; comptée dans la caisse du principal en cours ; aucun serveur en shift → 409 `NO_WAITER_ON_SHIFT` |
+| POST | `/direct-sales` | `{ clientRequestId, lines: [ { menuItemId, quantity, note, choices? } ] }` | 201 Order (`source: "direct"`, `confirmed`) — principal ou barista ; sa session appartient au principal en cours (elle reste à lui jusqu'à l'encaissement ou sa clôture) ; aucun serveur en shift → 409 `NO_WAITER_ON_SHIFT` |
 | GET | `/direct-sales?status=open` | — | `{ items: [ { table: { id, number }, session: TableSession, orders: [Order] } ] }` (ventes directes pas encore encaissées, les plus anciennes d'abord) — principal, renfort ou barista |
-| PATCH | `/menu-items/:id/availability` | `{ available }` | MenuItem — serveur **en shift** (sinon `NOT_ON_SHIFT`), manager : tout article ; barista : `station` `bar` ou `both` ; chef : `kitchen` ou `both` ; sinon `FORBIDDEN` |
+| PATCH | `/menu-items/:id/availability` | `{ available }` | MenuItem — serveur **en shift** (sinon `NOT_ON_SHIFT`), manager : tout article ; barista **en shift** : `station` `bar` ou `both` ; chef **en shift** : `kitchen` ou `both` ; sinon `FORBIDDEN` |
 | POST | `/push/subscribe` | abonnement Web Push | 204 (tout le staff) |
 
-Vente directe (`/direct-sales`) : le serveur attribue une **table fictive libre**, jamais une table d'offre (sinon 409 `NO_FREE_VIRTUAL_TABLE`), ouvre sa session (`principal` = principal en cours), crée la commande et met en file `enter_order`. La vente directe reste **ouverte** jusqu'à l'encaissement : le barista ou le principal prend l'argent et appelle `POST /tables/:id/pay` sur la table fictive (tâche `pay_table`, session `paid`). Tant qu'elle est ouverte, le principal peut appliquer la remise staff ou annuler un article (mêmes règles qu'une table) ; pas de transfert ni de changement de table. Le numéro de la table fictive est dans `Order.table`. Une table fictive est **libre** seulement quand sa session est fermée et qu'elle n'a plus aucune tâche caisse `queued`, `in_progress` ou `failed` : elle n'est réutilisée qu'après l'encaissement réel dans LegacyPOS (`done` ou `manual`). La vente directe suivante prend une autre table fictive libre (la plus petite par numéro).
+Vente directe (`/direct-sales`) : le serveur attribue une **table fictive libre**, jamais une table d'offre (sinon 409 `NO_FREE_VIRTUAL_TABLE`), ouvre sa session (`principal` = principal en cours ; comme une table, elle reste à lui jusqu'à l'encaissement, ou passe au principal en cours s'il clôture avant), crée la commande et met en file `enter_order`. La vente directe reste **ouverte** jusqu'à l'encaissement : le barista ou le principal de la session prend l'argent et appelle `POST /tables/:id/pay` sur la table fictive (tâche `pay_table`, session `paid`). Tant qu'elle est ouverte, le principal de la session peut appliquer la remise staff ou annuler un article (mêmes règles qu'une table) ; pas de transfert ni de changement de table. Le numéro de la table fictive est dans `Order.table`. Une table fictive est **libre** seulement quand sa session est fermée et qu'elle n'a plus aucune tâche caisse `queued`, `in_progress` ou `failed` : elle n'est réutilisée qu'après l'encaissement réel dans LegacyPOS (`done` ou `manual`). La vente directe suivante prend une autre table fictive libre (la plus petite par numéro).
 
-**Fin automatique des shifts oubliés** : chaque jour à `SHIFT_AUTO_END_TIME` (Africa/Tunis, `04:00` par défaut, dans `.env`), les shifts encore ouverts se terminent. Si le principal n'avait pas clôturé, le serveur fait une clôture automatique (`automatic: true`, sans espèces comptées) : tables encore ouvertes fermées `unpaid` (ventes directes comprises). Journal d'actions et notification push aux managers (« clôture manquante »).
+**Fin automatique des shifts oubliés** : chaque jour à `SHIFT_AUTO_END_TIME` (Africa/Tunis, `04:00` par défaut, dans `.env`), les shifts encore ouverts se terminent (serveurs, baristas et cuisiniers ; la clôture d'un principal ne termine jamais le shift d'un barista ou d'un cuisinier). Si le principal n'avait pas clôturé, le serveur fait une clôture automatique (`automatic: true`, sans espèces comptées) : tables encore ouvertes fermées `unpaid` (ventes directes comprises). Journal d'actions et notification push aux managers (« clôture manquante »).
 
 ### Actions sur une table (chacune crée une tâche dans la file caisse, sauf « offrir »)
 
@@ -349,13 +354,14 @@ Vente directe (`/direct-sales`) : le serveur attribue une **table fictive libre*
 | POST | `/order-lines/:id/withdraw-cancel` | — (seulement si sa tâche `cancel_line` est `waiting`) | **aucune** : tâche `withdrawn`, ligne de nouveau `active` (`cancellation.withdrawn: true`) ; la table s'encaisse ensuite normalement ; sinon 409 `INVALID_STATUS` |
 | POST | `/order-lines/:id/transfer` | `{ toTableId, quantity? }` (sans `quantity` = toute la ligne ; une partie = découpage ; `toTableId` : une autre table `real`) | tâche `transfer_line` ; réponse `{ lines: [ligne d'origine, ligne sur la table d'arrivée] }` |
 | POST | `/tables/:id/move` | `{ toTableId }` (une autre table `real`) | tâche `move_table` |
-| POST | `/gifts` | `{ clientRequestId, tableId?, menuItemId, quantity, choices?, reason: "unhappy_customer" \| "staff", beneficiary?, note }` | **aucune** (jamais tapé en caisse) ; 201 Gift |
+| POST | `/gifts` | `{ clientRequestId, tableId?, menuItemId, quantity, choices?, reason: "unhappy_customer" \| "staff", note? }` (`unhappy_customer` : `tableId` et `note` obligatoires ; `staff` : sans `tableId`, `note` facultative ; sinon `VALIDATION_ERROR`) | **aucune** (jamais tapé en caisse) ; 201 Gift |
+| GET | `/gifts?reason=staff&closure=current` | — | `{ items: [Gift] }` : la liste « Offres staff » du créneau (Gifts `staff` du principal en cours pas encore clôturés), la plus récente d'abord — principal, barista ou chef en shift |
 | POST | `/tables/:id/pay` | `{ method: "cash" \| "card" }` (table réelle : principal de la table ; vente directe : barista ou principal) | tâche `pay_table` ; la session est fermée (`paid`) tout de suite dans l'app ; si la tâche échoue, les tâches suivantes de la table attendent (voir PosJob) ; 409 `CANCEL_WAITING` si une annulation de la table est `waiting` |
 | POST | `/tables/:id/print-bill` | — | tâche `print_bill` |
 
 - **Transfert et changement de table** : seulement entre tables `real`. Table d'arrivée `virtual` (table d'offre ou de vente directe) → 400 `VALIDATION_ERROR` sur `toTableId` ; ligne ou table de départ `virtual` → 409 `INVALID_STATUS`. Une ligne transférée vers une table d'un autre principal passe dans sa caisse.
 - **Table encaissée** : une fois la session fermée (`paid` ou `unpaid`, vente directe comprise), la table est libre et ses lignes ne changent plus : `discount`, `cancel`, `withdraw-cancel` et `transfer` sur une ligne d'une session fermée → 409 `INVALID_STATUS`.
-- **Offrir** : un article est offert **dès le départ**, jamais après avoir été tapé en caisse. L'offert crée un Gift (rattaché à la session ouverte de la table si `tableId`), jamais une ligne de commande ; il sort du stock. Rôles : principal (`unhappy_customer` ou `staff`), barista et chef (`staff` seulement, sinon 403 `FORBIDDEN`) ; les offres du barista et du cuisinier comptent dans la clôture du principal en cours (ou du principal de la table si `tableId`). Les managers et le comptable n'utilisent pas `/gifts` : leurs offres sont des commandes sur une table d'offre.
+- **Offrir** : un article est offert **dès le départ**, jamais après avoir été tapé en caisse. L'offert crée un Gift (rattaché à la session ouverte de la table si `tableId`), jamais une ligne de commande ; il sort du stock. Rôles : principal (`unhappy_customer` sur une de ses tables, ou `staff`), barista et chef en shift (`staff` seulement, sinon 403 `FORBIDDEN`). Les offres `staff` forment la liste « Offres staff » du créneau et comptent dans la clôture du principal en cours ; `unhappy_customer` dans celle du principal de la table. Les managers et le comptable n'utilisent pas `/gifts` : leurs offres sont des commandes sur une table d'offre.
 - Toutes ces actions sont écrites dans le journal d'actions.
 
 ## 5 bis. Commandes offertes depuis l'app (rôles `manager` et `accountant`)
@@ -371,6 +377,18 @@ Vente directe (`/direct-sales`) : le serveur attribue une **table fictive libre*
 - Mêmes règles de lignes que `POST /orders` (quantités, notes, choix, ruptures, horaires propres des articles).
 - Les serveurs en shift sont notifiés (`order:new`) ; l'un d'eux confirme ou rejette (`/orders/:id/confirm`, `/orders/:id/reject`). Sans réponse, la commande expire comme une commande QR.
 - Jamais tapée en caisse ; 0 DT ; dans la clôture du créneau (`offerOrders`).
+
+## 5 ter. Bar et cuisine (rôles `barista` et `chef` en shift)
+
+| Méthode | Chemin | Corps | Réponse |
+| --- | --- | --- | --- |
+| GET | `/station-orders` | — | `{ items: [Order] }` : les commandes **confirmées** du jour (QR, `waiter`, `direct`, tables d'offre) dont la partie de **mon poste** n'est pas encore prête, les plus anciennes d'abord (par `confirmedAt`). Chaque Order ne contient que les lignes de mon poste (`station` : `bar` pour le barista, `kitchen` pour le chef, `both` pour les deux), lignes `cancelled` et `transferred` comprises (pour les afficher barrées) ; `offer` donne la table d'offre et la personne |
+| POST | `/orders/:id/ready` | — | Order : marque **Prêt** la partie de mon poste (`ready.bar` ou `ready.kitchen`) ; 409 `INVALID_STATUS` si déjà prête ou si la commande n'a pas de ligne active de mon poste |
+
+- Une commande entre dans la liste à sa **confirmation** (QR, `offer`) ou à sa création (`waiter`, `direct`, `/staff-orders` sur une table d'offre). Les commandes `pending`, `rejected` et `expired` n'y sont jamais.
+- Personne en shift à un poste : rien n'est refusé ; les lignes attendent dans la liste du poste et le serveur le voit avec `GET /shifts/current` (`stations`).
+- Une annulation d'une ligne pas encore prête, un transfert ou un changement de table sont envoyés au poste (`station:updated`) ; l'annulation déclenche une alerte.
+- Notes et choix (`note`, `choices`) sont affichés : ils ne sont plus transmis à l'oral.
 
 ### Échecs caisse (serveur en shift ; « fait à la main » : principal)
 
@@ -448,9 +466,12 @@ Rôles barista / chef / comptable : endpoints ajoutés avec le stock (demandes d
 | `order:updated` | serveurs en shift (+ la table ou la personne qui a commandé : `{ orderId, status }`, y compris `expired`) | Order |
 | `table:updated` | serveurs en shift | Table |
 | `menu:updated` | staff, clients | `{ menuItemId, available, unavailableReason }` |
-| `principal:changed` | serveurs en shift, barista | `{ principals: [ { id, name, currentPrincipal } ] }` (bascule de 15h00, `/principal/transfer`, clôture d'un principal, clôture forcée ; les tables passées sont envoyées en `table:updated`) |
+| `principal:changed` | serveurs en shift, baristas en shift | `{ principals: [ { id, name, currentPrincipal } ] }` (bascule de 15h00, `/principal/transfer`, clôture d'un principal, clôture forcée ; les tables passées sont envoyées en `table:updated`) |
 | `pos:job` | agent | `{ jobId }` |
-| `pos:failed` | serveurs en shift | `{ jobId, orderId, error }` |
+| `station:order` | baristas et cuisiniers en shift concernés (ceux dont le poste a au moins une ligne) | Order (lignes de leur poste seulement, comme `GET /station-orders`) ; avec notification push |
+| `station:updated` | baristas et cuisiniers en shift concernés | Order (mêmes lignes) : annulation (`alert: true` en plus), transfert, changement de table, partie marquée prête |
+| `order:ready` | serveurs en shift | `{ orderId, table: { id, number }, station: "bar" \| "kitchen" }` ; avec notification push (« Table 7 : boissons prêtes ») |
+| `pos:failed` | serveurs en shift | `{ jobId, type, tableNumber, orderId, error }` (`orderId` : `null` pour une tâche sans commande, ex. `pay_table`, `print_bill`, `move_table`) |
 | `pos:waiting` | serveurs en shift | `{ jobId, tableNumber, orderLineId }` (annulation en attente : dernier article de la table) |
 | `pos:status` | manager, serveurs en shift | `{ state, lastSeenAt }` (agent en panne : les serveurs savent que la caisse se fait à la main) |
 | `report:updated` | manager, comptable | `{}` (une vente, un encaissement, une dépense ou une clôture a changé les chiffres du jour : recharger `/reports/sales`) |
@@ -468,6 +489,7 @@ Après reconnexion, chaque client recharge via REST.
 
 | Version | Date | Changement |
 | --- | --- | --- |
+| v2.1 brouillon | 2026-10-19 | **Écran bar / cuisine** (§ 5 ter) : `GET /station-orders`, `POST /orders/:id/ready`, `Order.ready`, `station` sur chaque ligne, événements `station:order`, `station:updated`, `order:ready` ; notes et choix affichés au bar et en cuisine (plus à l'oral). **Shift du barista et du cuisinier** : `/shifts/start` et `/shifts/end` (sans argent), `NOT_ON_SHIFT` pour leurs actions, `GET /shifts/current` `stations`, fin automatique à `SHIFT_AUTO_END_TIME`. **Passage de caisse** : `POST /principal/transfer` par le seul principal, le renfort reprend toute la caisse, l'appelant ne clôture pas et son shift se termine (`ShiftClosure.previousHolders`) ; il ne compte jamais comme la bascule du jour. **Vente directe** : reste au principal de sa session (CA et argent, même encaissée par le barista après 15h00), passée en clôturant comme une table. **Offres staff** : `/gifts` `staff` toujours sans table ni bénéficiaire, `note` facultative, `GET /gifts?reason=staff&closure=current` ; `unhappy_customer` avec `tableId` et `note` obligatoires ; plus de `beneficiary` sur Gift. `pos:failed` avec `type` et `tableNumber` |
 | v2.0.4 brouillon | 2026-10-19 | `POST /orders/:id/confirm` revérifie la rupture (`ITEM_UNAVAILABLE`), pas les horaires (heure d'envoi) ; un `/principal/transfer` avant 15h00 n'empêche pas la bascule automatique de 15h00 |
 | v2.0.3 brouillon | 2026-10-18 | `section` (`food` / `drinks`) et `display` (`list` / `grid`) sur chaque catégorie de `GET /menu`, modifiables par la manager avec la catégorie |
 | v2.0.2 brouillon | 2026-10-17 | `/admin/tables` détaillé : forme `AdminTable` (avec `tableToken`, sans état ni montant), corps de `POST` et `PATCH /admin/tables/:id`, `kind` fixe, `offer.userId` manager ou comptable actif avec une table d'offre au plus par compte, `PATCH` refusé sur une table en cours d'utilisation |
