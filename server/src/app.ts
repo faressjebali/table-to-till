@@ -6,6 +6,8 @@ import { errorBody, HttpError } from './errors.js';
 import { menuRoutes } from './menu/routes.js';
 import { orderRoutes } from './orders/routes.js';
 import { stationRoutes } from './orders/station-routes.js';
+import { pushRoutes } from './push/routes.js';
+import { noopPushSender, type PushSender } from './push/send.js';
 import { noopRealtime, type Realtime } from './realtime.js';
 import { shiftRoutes } from './shifts/routes.js';
 import { adminTableRoutes } from './tables/admin-routes.js';
@@ -16,11 +18,14 @@ export function createApp({
   db,
   config,
   realtime = noopRealtime,
+  push = noopPushSender,
 }: {
   db: Db;
   config: Config;
   // Absent : rien n'est envoyé en temps réel (tests REST).
   realtime?: Realtime;
+  // Absent : aucune notification push (tests, clés VAPID vides).
+  push?: PushSender;
 }): Express {
   const app = express();
   app.use(express.json());
@@ -32,8 +37,9 @@ export function createApp({
   api.use(shiftRoutes(db, config, realtime));
   api.use(tableRoutes(db, config));
   api.use(adminTableRoutes(db, config));
-  api.use(orderRoutes(db, config, realtime));
+  api.use(orderRoutes(db, config, realtime, push));
   api.use(stationRoutes(db, config, realtime));
+  api.use(pushRoutes(db, config));
   app.use('/api', api);
 
   app.use((_req, res) => {

@@ -16,6 +16,10 @@ export type Config = {
   agentKey: string;
   // Heure (Africa/Tunis, "HH:MM") où les shifts oubliés se terminent (docs/api.md § 5).
   shiftAutoEndTime: string;
+  // Web Push. Une clé vide : aucune notification push envoyée.
+  vapidPublicKey: string;
+  vapidPrivateKey: string;
+  vapidSubject: string;
 };
 
 function positiveInt(name: string, fallback: number): number {
@@ -51,5 +55,8 @@ export function loadConfig(): Config {
     qrOrderRateWindowMinutes: positiveInt('QR_ORDER_RATE_WINDOW_MINUTES', 10),
     agentKey: process.env.AGENT_KEY ?? '',
     shiftAutoEndTime: timeOfDay('SHIFT_AUTO_END_TIME', '04:00'),
+    vapidPublicKey: process.env.VAPID_PUBLIC_KEY ?? '',
+    vapidPrivateKey: process.env.VAPID_PRIVATE_KEY ?? '',
+    vapidSubject: process.env.VAPID_SUBJECT ?? '',
   };
 }

@@ -81,3 +81,7 @@ export const markReady = (orderId: number) =>
   request<Order>(`/orders/${String(orderId)}/ready`, { method: 'POST' });
 
 export const getCurrentShifts = () => request<CurrentShifts>('/shifts/current');
+
+/** Abonnement Web Push du téléphone (`PushSubscription.toJSON()`), lié à cette session. */
+export const subscribePush = (body: PushSubscriptionJSON) =>
+  request<undefined>('/push/subscribe', { method: 'POST', body });

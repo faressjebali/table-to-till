@@ -4,6 +4,7 @@ import { ensureFirstManager } from './auth/bootstrap.js';
 import { loadConfig } from './config.js';
 import { createPool } from './db.js';
 import { startExpirySweep } from './orders/expiry.js';
+import { webPushSender } from './push/send.js';
 import { createRealtime } from './realtime.js';
 import { startShiftAutoEnd } from './shifts/auto-end.js';
 
@@ -22,7 +23,9 @@ const server = createServer((req, res) => {
   app(req, res);
 });
 const realtime = createRealtime(server, { db, config });
-const app = createApp({ db, config, realtime });
+const push = webPushSender(config);
+if (!push) console.warn('Clés VAPID absentes : aucune notification push');
+const app = createApp({ db, config, realtime, ...(push ? { push } : {}) });
 
 // Commandes QR non confirmées à temps → expirées.
 startExpirySweep(db, realtime);

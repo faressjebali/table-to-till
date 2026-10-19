@@ -77,6 +77,12 @@ export const fr = {
     'Pour recevoir les nouvelles commandes, l’app a besoin d’iOS 16.4 ou plus récent : Réglages › Général › Mise à jour logicielle.',
   'install.button': 'Installer l’app',
   'install.hint': 'Installez l’app pour l’ouvrir comme les autres et recevoir les commandes.',
+  'push.hint': 'Activez les notifications pour être prévenu même téléphone verrouillé.',
+  'push.button': 'Activer les notifications',
+  'push.busy': 'Activation…',
+  'push.denied':
+    'Notifications bloquées. Réactivez-les dans les réglages du téléphone, pour Olivine Staff.',
+  'push.error': 'Activation impossible pour le moment. Réessayez.',
   'place.table': 'Table',
   'place.direct': 'Vente directe',
   'station.loading': 'Chargement des commandes…',

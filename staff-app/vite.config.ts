@@ -7,6 +7,9 @@ const SERVER = 'http://localhost:3000';
 
 export default defineConfig({
   plugins: [react()],
+  // Le .env de la racine, comme le serveur : VITE_VAPID_PUBLIC_KEY à côté de la paire VAPID.
+  // Vite n'expose à l'app que les variables VITE_*.
+  envDir: '..',
   server: {
     port: 5174,
     // /socket.io : temps réel (docs/api.md § 8).

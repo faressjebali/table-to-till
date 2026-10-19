@@ -6,11 +6,12 @@ import type { Config } from '../config.js';
 import { audit, inTransaction, type Db } from '../db.js';
 import { HttpError, validationError } from '../errors.js';
 import { isCafeOpen } from '../menu/availability.js';
+import type { PushSender } from '../push/send.js';
 import type { Realtime } from '../realtime.js';
 import { requireWaiterOnShift, waitersOnShift } from '../shifts/on-shift.js';
 import { expireAndNotify } from './expiry.js';
 import { linesTotal, orderLinesSchema, prepareLines, type PreparedLine } from './lines.js';
-import { notifyOrders, notifyStations, notifyTables } from './notify.js';
+import { notifyOrders, notifyStations, notifyTables, pushNewOrders } from './notify.js';
 import { loadOrder, loadOrders } from './view.js';
 
 const idParam = z.coerce.number().int().positive();
@@ -187,7 +188,7 @@ async function lockPending(client: pg.PoolClient, orderId: number): Promise<Pend
 }
 
 // Routes commandes QR de docs/api.md § 3 (client) et § 5 (serveur en shift).
-export function orderRoutes(db: Db, config: Config, realtime: Realtime): Router {
+export function orderRoutes(db: Db, config: Config, realtime: Realtime, push: PushSender): Router {
   const router = Router();
 
   // Commande du client (sans connexion), en attente de confirmation par un serveur.
@@ -272,8 +273,9 @@ export function orderRoutes(db: Db, config: Config, realtime: Realtime): Router 
       return;
     }
 
-    // order:new aux serveurs en shift (notifications push).
+    // order:new aux serveurs en shift, avec notification push.
     await notifyOrders(db, realtime, [orderId], 'new');
+    pushNewOrders(db, push, [orderId]);
     const response: Created = {
       orderId,
       status: 'pending',

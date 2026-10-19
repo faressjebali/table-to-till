@@ -48,7 +48,8 @@
 }
 
 /* Proposition d'installation (Android, Chrome, Edge) */
-.install-banner {
+.install-banner,
+.push-banner {
   display: flex;
   flex-direction: column;
   gap: var(--space-3);

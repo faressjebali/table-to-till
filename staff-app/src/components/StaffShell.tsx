@@ -5,6 +5,7 @@ import { navigationFor, type Destination } from '../navigation';
 import { MeScreen } from './MeScreen';
 import { OffShiftScreen } from './OffShiftScreen';
 import { PlaceholderScreen } from './PlaceholderScreen';
+import { PushPrompt } from './PushPrompt';
 import { ReadyBanner } from './ReadyBanner';
 import { RealtimeProvider } from './RealtimeProvider';
 import { StationScreen } from './StationScreen';
@@ -28,7 +29,15 @@ function Screens({ me, onLogout }: { me: Me; onLogout: () => void }) {
   // Écran ouvert depuis « Moi » (ex. la Carte d'un serveur), avec un bouton Retour.
   const [opened, setOpened] = useState<Destination | null>(null);
 
-  if (!navigation) return <OffShiftScreen me={me} onLogout={onLogout} />;
+  // « Activer les notifications » : tous les rôles, même hors shift (docs/api.md § 5).
+  if (!navigation) {
+    return (
+      <>
+        <PushPrompt />
+        <OffShiftScreen me={me} onLogout={onLogout} />
+      </>
+    );
+  }
 
   // Les onglets changent (renfort devenu principal à 15h00…) : un onglet disparu ramène au premier.
   const first = navigation.tabs[0] ?? 'me';
@@ -44,6 +53,7 @@ function Screens({ me, onLogout }: { me: Me; onLogout: () => void }) {
     <>
       <div className="shell">
         {me.role === 'waiter' && <ReadyBanner />}
+        <PushPrompt />
         {sub ? (
           <PlaceholderScreen destination={sub} onBack={() => setOpened(null)} />
         ) : active === 'me' ? (

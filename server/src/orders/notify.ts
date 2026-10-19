@@ -1,4 +1,6 @@
 import type { Db } from '../db.js';
+import { orderNewMessage, waitersOnShiftIds } from '../push/recipients.js';
+import { sendPush, type PushSender } from '../push/send.js';
 import type { Realtime } from '../realtime.js';
 import { loadTables } from '../tables/view.js';
 import { forStation, hasActiveLines, loadOrders, STATIONS } from './view.js';
@@ -41,6 +43,23 @@ export async function notifyTables(
   } catch (err) {
     console.error('temps réel (tables) :', err);
   }
+}
+
+// Notification push order:new aux serveurs en shift (commandes QR, puis commandes offertes).
+// Sans attendre : le service push peut être lent, et un échec ne change rien à la commande.
+export function pushNewOrders(db: Db, push: PushSender, orderIds: readonly number[]): void {
+  if (orderIds.length === 0) return;
+  void (async () => {
+    try {
+      const [orders, userIds] = await Promise.all([
+        loadOrders(db, orderIds),
+        waitersOnShiftIds(db),
+      ]);
+      for (const order of orders) await sendPush(db, push, userIds, orderNewMessage(order));
+    } catch (err) {
+      console.error('notifications push (commandes) :', err);
+    }
+  })();
 }
 
 // Écran bar / cuisine, après COMMIT : chaque poste reçoit la commande avec ses lignes seulement.
