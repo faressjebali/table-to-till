@@ -199,7 +199,7 @@ describe('seedMenu (base de test)', () => {
   };
 
   it('charge tout le menu', async () => {
-    expect(await seedMenu(client, menu)).toEqual({ categories: 19, inserted: 97, updated: 0 });
+    expect(await seedMenu(client, menu)).toEqual({ categories: 19, inserted: 97, skipped: 0 });
     expect(await count('categories')).toBe(19);
     expect(await count('menu_items')).toBe(97);
     expect(await count('choice_groups')).toBe(4);
@@ -224,33 +224,38 @@ describe('seedMenu (base de test)', () => {
     ]);
   });
 
-  it('se relance sans doublon et garde les ruptures', async () => {
-    await client.query("UPDATE menu_items SET sold_out = true WHERE name_fr = 'Avocat'");
-    const extrasBefore = await count('suggested_extras');
-    const optionsBefore = await count('choice_group_options');
-
-    expect(await seedMenu(client, menu)).toEqual({ categories: 19, inserted: 0, updated: 97 });
-    expect(await count('categories')).toBe(19);
-    expect(await count('menu_items')).toBe(97);
-    expect(await count('suggested_extras')).toBe(extrasBefore);
-    expect(await count('choice_group_options')).toBe(optionsBefore);
-
-    const { rows } = await client.query<{ sold_out: boolean }>(
-      "SELECT sold_out FROM menu_items WHERE name_fr = 'Avocat'",
+  const optionsOf = async (key: string) => {
+    const { rows } = await client.query<{ name_fr: string }>(
+      `SELECT m.name_fr FROM choice_group_options o JOIN menu_items m ON m.id = o.menu_item_id
+        WHERE o.group_key = $1 ORDER BY o.sort_order, m.name_fr`,
+      [key],
     );
-    expect(rows).toEqual([{ sold_out: true }]);
-  });
+    return rows.map((r) => r.name_fr);
+  };
+  const extrasOf = async (name: string) => {
+    const { rows } = await client.query<{ name_fr: string }>(
+      `SELECT e.name_fr FROM suggested_extras s
+         JOIN menu_items m ON m.id = s.menu_item_id JOIN menu_items e ON e.id = s.extra_item_id
+       WHERE m.name_fr = $1 ORDER BY s.sort_order`,
+      [name],
+    );
+    return rows.map((r) => r.name_fr);
+  };
 
-  it('garde la liste des jus de saison de la manager, réécrit les autres groupes', async () => {
-    const optionsOf = async (key: string) => {
-      const { rows } = await client.query<{ name_fr: string }>(
-        `SELECT m.name_fr FROM choice_group_options o JOIN menu_items m ON m.id = o.menu_item_id
-          WHERE o.group_key = $1 ORDER BY o.sort_order, m.name_fr`,
-        [key],
-      );
-      return rows.map((r) => r.name_fr);
-    };
-    // La manager remplace la Grenade par la Fraise ; quelqu'un retire l'Americano des cafés.
+  it('se relance sans doublon et ne modifie rien de ce que la manager a changé', async () => {
+    // Modifications faites dans l'app : rupture, prix, nom anglais, code, horaires, aide de note,
+    // catégorie, extras suggérés, jus de saison, liste des cafés des formules.
+    await client.query(
+      `UPDATE menu_items SET sold_out = true, price = 7000, name_en = 'Avocado (new)', pos_code = '999',
+         available_from = '10:00', note_hint_fr = 'Bien mûr ?', note_hint_en = 'Ripe?'
+       WHERE name_fr = 'Avocat'`,
+    );
+    await client.query("UPDATE categories SET name_en = 'Add-ons' WHERE name_fr = 'Extras'");
+    await client.query(
+      `DELETE FROM suggested_extras
+        WHERE menu_item_id = (SELECT id FROM menu_items WHERE name_fr = 'Cheese Burger')
+          AND extra_item_id = (SELECT id FROM menu_items WHERE name_fr = 'Gouda')`,
+    );
     await client.query(
       `UPDATE choice_group_options SET menu_item_id = (SELECT id FROM menu_items WHERE name_fr = 'Fraise')
         WHERE group_key = 'seasonal_juice'`,
@@ -260,43 +265,88 @@ describe('seedMenu (base de test)', () => {
         WHERE group_key = 'hot_drink'
           AND menu_item_id = (SELECT id FROM menu_items WHERE name_fr = 'Americano')`,
     );
+    await client.query("UPDATE choice_groups SET name_en = 'Hot drink' WHERE key = 'hot_drink'");
 
-    await seedMenu(client, menu);
+    expect(await seedMenu(client, menu)).toEqual({ categories: 19, inserted: 0, skipped: 97 });
+    expect(await count('categories')).toBe(19);
+    expect(await count('menu_items')).toBe(97);
+
+    const { rows } = await client.query(
+      `SELECT sold_out, price, name_en, pos_code, available_from, note_hint_fr, note_hint_en
+         FROM menu_items WHERE name_fr = 'Avocat'`,
+    );
+    expect(rows).toEqual([
+      {
+        sold_out: true,
+        price: 7000,
+        name_en: 'Avocado (new)',
+        pos_code: '999',
+        available_from: '10:00:00',
+        note_hint_fr: 'Bien mûr ?',
+        note_hint_en: 'Ripe?',
+      },
+    ]);
+    const category = await client.query("SELECT name_en FROM categories WHERE name_fr = 'Extras'");
+    expect(category.rows).toEqual([{ name_en: 'Add-ons' }]);
+    expect(await extrasOf('Cheese Burger')).not.toContain('Gouda');
     expect(await optionsOf('seasonal_juice')).toEqual(['Fraise']);
-    expect(await optionsOf('hot_drink')).toContain('Americano');
-
-    // Groupe vide (nouvelle base, ou liste vidée) : le seed remet la valeur de départ.
-    await client.query(`DELETE FROM choice_group_options WHERE group_key = 'seasonal_juice'`);
-    await seedMenu(client, menu);
-    expect(await optionsOf('seasonal_juice')).toEqual(['Grenade']);
+    expect(await optionsOf('hot_drink')).not.toContain('Americano');
+    const group = await client.query("SELECT name_en FROM choice_groups WHERE key = 'hot_drink'");
+    expect(group.rows).toEqual([{ name_en: 'Hot drink' }]);
   });
 
-  it('écrit l’aide de note dans les deux langues', async () => {
-    const withHint = {
-      ...menu,
-      items: menu.items.map((i) =>
-        i.nameFr === 'Espresso' ? { ...i, noteHintFr: 'Sucre ?', noteHintEn: 'Sugar?' } : i,
-      ),
-    };
-    await seedMenu(client, withHint);
-    const { rows } = await client.query<{ note_hint_fr: string; note_hint_en: string }>(
-      "SELECT note_hint_fr, note_hint_en FROM menu_items WHERE name_fr = 'Espresso'",
+  it('ne fait pas revenir un article archivé', async () => {
+    await client.query("UPDATE menu_items SET archived_at = now() WHERE name_fr = 'Épinards'");
+    expect(await seedMenu(client, menu)).toMatchObject({ inserted: 0, skipped: 97 });
+    const { rows } = await client.query<{ n: number }>(
+      "SELECT count(*)::int AS n FROM menu_items WHERE name_fr = 'Épinards'",
     );
-    expect(rows).toEqual([{ note_hint_fr: 'Sucre ?', note_hint_en: 'Sugar?' }]);
+    expect(rows).toEqual([{ n: 1 }]);
+  });
+
+  it('ajoute un nouvel article du CSV, avec ses extras (déjà en base) et ses groupes', async () => {
+    const extended = parseMenuCsv(
+      csv.trimEnd() +
+        '\nPlats,Mains,Burger du chef,Chef burger,,,28,200,,Œuf;Gouda,,,eggs,,kitchen' +
+        '\nNouveautés,New,Tarte du jour,Pie of the day,,,9,201,,,,,,,both',
+    );
+    expect(await seedMenu(client, extended)).toEqual({
+      categories: 20,
+      inserted: 2,
+      skipped: 97,
+    });
+    expect(await extrasOf('Burger du chef')).toEqual(['Œuf', 'Gouda']);
+    const groups = await client.query(
+      `SELECT g.group_key FROM menu_item_choice_groups g JOIN menu_items m ON m.id = g.menu_item_id
+        WHERE m.name_fr = 'Burger du chef'`,
+    );
+    expect(groups.rows).toEqual([{ group_key: 'eggs' }]);
+    const { rows } = await client.query(
+      `SELECT c.name_en, m.price, m.pos_code FROM menu_items m JOIN categories c ON c.id = m.category_id
+        WHERE m.name_fr = 'Tarte du jour'`,
+    );
+    expect(rows).toEqual([{ name_en: 'New', price: 7000, pos_code: '201' }]);
+    // Les articles déjà là gardent leurs extras : Cheese Burger toujours sans Gouda.
+    expect(await extrasOf('Cheese Burger')).not.toContain('Gouda');
   });
 
   it('n’écrit rien si une étape échoue', async () => {
     const broken = {
       ...menu,
-      choiceGroups: [
-        { key: 'x', nameFr: 'x', nameEn: 'x', options: ['Inconnu'], managedInApp: false },
+      categories: [
+        ...menu.categories,
+        {
+          nameFr: 'Test',
+          nameEn: 'Test',
+          section: 'food' as const,
+          display: 'list' as const,
+          sortOrder: 99,
+        },
       ],
+      choiceGroups: [{ key: 'x', nameFr: 'x', nameEn: 'x', options: ['Inconnu'] }],
     };
-    await client.query("UPDATE menu_items SET price = 1000 WHERE name_fr = 'Avocat'");
     await expect(seedMenu(client, broken)).rejects.toThrow('article inconnu Inconnu');
-    const { rows } = await client.query<{ price: number }>(
-      "SELECT price FROM menu_items WHERE name_fr = 'Avocat'",
-    );
-    expect(rows).toEqual([{ price: 1000 }]);
+    const { rows } = await client.query("SELECT 1 FROM categories WHERE name_fr = 'Test'");
+    expect(rows).toEqual([]);
   });
 });
