@@ -57,3 +57,76 @@ export const categoryAnchor = (id: number) => `categorie-${String(id)}`;
 /** Panneau de la carte et onglets Food / Drinks (attributs ARIA du motif « tabs »). */
 export const sectionPanelId = 'carte';
 export const sectionTabId = (section: MenuSectionKey) => `onglet-${section}`;
+
+/** Données de `menu:updated` (docs/api.md § 8), disponibilité calculée par le serveur pour les clients. */
+export interface MenuUpdate {
+  menuItemId: number;
+  available: boolean;
+  unavailableReason: MenuItem['unavailableReason'];
+}
+
+/** Menu avec la nouvelle disponibilité d'un article (rupture, retour en stock). */
+export function applyMenuUpdate(menu: MenuResponse, update: MenuUpdate): MenuResponse {
+  return {
+    ...menu,
+    categories: menu.categories.map((category) =>
+      category.items.some((item) => item.id === update.menuItemId)
+        ? {
+            ...category,
+            items: category.items.map((item) =>
+              item.id === update.menuItemId
+                ? {
+                    ...item,
+                    available: update.available,
+                    unavailableReason: update.unavailableReason,
+                  }
+                : item,
+            ),
+          }
+        : category,
+    ),
+  };
+}
+
+/** Ouverture et fermeture du café pour le menu QR (docs/product.md § 1). */
+const CAFE_HOURS = ['08:00', '22:00'];
+const DAY_SECONDS = 24 * 3600;
+/** Marge après l'heure limite : l'horloge du téléphone peut avancer un peu sur celle du serveur. */
+export const BOUNDARY_MARGIN_MS = 30_000;
+
+/** Heure de Tunis (`Africa/Tunis`), en secondes depuis minuit. */
+function tunisSecondsOfDay(now: Date): number {
+  const parts = new Intl.DateTimeFormat('en-GB', {
+    timeZone: 'Africa/Tunis',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+    hourCycle: 'h23',
+  }).formatToParts(now);
+  const part = (type: string) => Number(parts.find((p) => p.type === type)?.value ?? 0);
+  return part('hour') * 3600 + part('minute') * 60 + part('second');
+}
+
+const toSeconds = (time: string) => {
+  const [hours = 0, minutes = 0] = time.split(':').map(Number);
+  return hours * 3600 + minutes * 60;
+};
+
+/**
+ * Délai avant de relire le menu : la prochaine heure où un article peut apparaître ou disparaître
+ * (`availability.from` / `until`, ouverture et fermeture du café, minuit pour les jours), plus une
+ * marge. Le menu QR ne décide rien lui-même : il redemande au serveur, qui fait foi.
+ */
+export function nextRefreshDelay(menu: MenuResponse, now: Date): number {
+  const times = new Set(CAFE_HOURS);
+  for (const item of menu.categories.flatMap((c) => c.items)) {
+    if (item.availability.from) times.add(item.availability.from);
+    if (item.availability.until) times.add(item.availability.until);
+  }
+  const current = tunisSecondsOfDay(now);
+  const next = Math.min(
+    DAY_SECONDS,
+    ...[...times].map(toSeconds).filter((seconds) => seconds > current),
+  );
+  return (next - current) * 1000 + BOUNDARY_MARGIN_MS;
+}

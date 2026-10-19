@@ -30,7 +30,7 @@ export function ItemSheet({
   const [quantity, setQuantity] = useState(1);
   const [note, setNote] = useState('');
   const [choices, setChoices] = useState<Partial<Record<string, number>>>({});
-  const [extraIds, setExtraIds] = useState<number[]>([]);
+  const [checkedExtraIds, setExtraIds] = useState<number[]>([]);
 
   const groups = item.choiceGroups.flatMap((key) => {
     const group = choiceGroups.find((g) => g.key === key);
@@ -38,14 +38,21 @@ export function ItemSheet({
   });
   const extras = suggestedExtras(item, items);
   const soldOut = item.unavailableReason === 'sold_out';
-  const missingChoice = groups.some((group) => choices[group.key] === undefined);
+  // Un choix ou un extra coché qui passe en rupture pendant que la fiche est ouverte ne compte plus.
+  const orderable = (id: number) => items.get(id)?.available === true;
+  const chosen = (key: string) => {
+    const id = choices[key];
+    return id !== undefined && orderable(id) ? id : undefined;
+  };
+  const extraIds = checkedExtraIds.filter(orderable);
+  const missingChoice = groups.some((group) => chosen(group.key) === undefined);
 
   const selection = () => ({
     item,
     quantity,
     note,
     choices: groups.flatMap((group) => {
-      const menuItemId = choices[group.key];
+      const menuItemId = chosen(group.key);
       return menuItemId === undefined ? [] : [{ group: group.key, menuItemId }];
     }),
     extraIds,
@@ -93,7 +100,7 @@ export function ItemSheet({
           key={group.key}
           group={group}
           items={items}
-          selected={choices[group.key]}
+          selected={chosen(group.key)}
           onSelect={(id) => setChoices((current) => ({ ...current, [group.key]: id }))}
         />
       ))}

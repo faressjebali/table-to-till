@@ -20,6 +20,7 @@ import {
 } from './menu-view';
 import { tableTokenFromPath } from './table-link';
 import { useCartOrder } from './useCartOrder';
+import { useLiveMenu } from './useLiveMenu';
 
 type State =
   | { status: 'loading' }
@@ -37,10 +38,10 @@ export function App() {
   );
   const [attempt, setAttempt] = useState(0);
   const [section, setSection] = useState<MenuSectionKey>('food');
-  const cart = useCartOrder(tableToken);
-  const [openItem, setOpenItem] = useState<MenuItem | null>(null);
+  // La fiche suit l'article par son id : elle voit les ruptures reçues pendant qu'elle est ouverte.
+  const [openItemId, setOpenItemId] = useState<number | null>(null);
   const [cartOpen, setCartOpen] = useState(false);
-  const closeSheet = useCallback(() => setOpenItem(null), []);
+  const closeSheet = useCallback(() => setOpenItemId(null), []);
   const closeCart = useCallback(() => setCartOpen(false), []);
 
   useEffect(() => {
@@ -66,8 +67,27 @@ export function App() {
   };
 
   const menu = state.status === 'ready' ? state.menu : null;
+  const setMenu = useCallback((update: (menu: MenuResponse) => MenuResponse) => {
+    setState((current) =>
+      current.status === 'ready' ? { status: 'ready', menu: update(current.menu) } : current,
+    );
+  }, []);
+  useLiveMenu(tableToken, menu, setMenu);
+
   const categories = useMemo(() => (menu ? visibleCategories(menu) : []), [menu]);
-  const items = useMemo(() => (menu ? itemsById(menu) : new Map()), [menu]);
+  const items = useMemo(() => (menu ? itemsById(menu) : new Map<number, MenuItem>()), [menu]);
+  // Articles qu'on ne peut plus commander (rupture, hors horaire) : signalés dans le panier.
+  const unavailableIds = useMemo(
+    () => [...items.values()].filter((item) => !item.available).map((item) => item.id),
+    [items],
+  );
+  const cart = useCartOrder(tableToken, unavailableIds);
+  // Article devenu hors horaire pendant que sa fiche est ouverte : elle se ferme.
+  const openItemCandidate = openItemId === null ? undefined : items.get(openItemId);
+  const openItem =
+    openItemCandidate && openItemCandidate.unavailableReason !== 'outside_hours'
+      ? openItemCandidate
+      : null;
   const sections = availableSections(categories);
   // Onglet choisi, ou le premier qui a des articles (ex. plus rien en Food).
   const activeSection = sections.includes(section) ? section : sections[0];
@@ -135,7 +155,11 @@ export function App() {
                   aria-labelledby={sectionTabId(activeSection)}
                 >
                   {shown.map((category) => (
-                    <MenuSection key={category.id} category={category} onOpen={setOpenItem} />
+                    <MenuSection
+                      key={category.id}
+                      category={category}
+                      onOpen={(item) => setOpenItemId(item.id)}
+                    />
                   ))}
                 </div>
               )}
@@ -158,7 +182,7 @@ export function App() {
           choiceGroups={menu.choiceGroups}
           onAdd={(lines) => {
             cart.add(lines);
-            setOpenItem(null);
+            setOpenItemId(null);
           }}
           onClose={closeSheet}
         />

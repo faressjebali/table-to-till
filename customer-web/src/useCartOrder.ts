@@ -45,9 +45,11 @@ function toSendError(err: unknown): SendError {
  * - un envoi relancé réutilise le même `clientRequestId` tant que le panier n'a pas changé ;
  * - commande envoyée : ses lignes sortent du panier ; rejetée ou expirée, elles y reviennent ;
  * - un article refusé (`OUTSIDE_HOURS`, `ITEM_UNAVAILABLE`) est signalé jusqu'à ce que le client
- *   retire ses lignes.
+ *   retire ses lignes ;
+ * - un article devenu indisponible (`unavailableIds` : rupture reçue en temps réel, hors horaire)
+ *   est signalé tout de suite, sans attendre l'envoi.
  */
-export function useCartOrder(tableToken: string | null) {
+export function useCartOrder(tableToken: string | null, unavailableIds: readonly number[] = []) {
   const [saved, setSaved] = useState<SavedCart>(() =>
     tableToken ? loadCart(tableToken) : { lines: [], order: null },
   );
@@ -156,8 +158,10 @@ export function useCartOrder(tableToken: string | null) {
     );
   }, []);
 
-  // Lignes signalées : celles d'un article refusé (l'article ou un choix de formule).
-  const blockedKeys = new Set(blocked.flatMap((id) => linesWithItem(lines, id).map((l) => l.key)));
+  // Lignes signalées : celles d'un article refusé ou indisponible (l'article ou un choix de formule).
+  const blockedKeys = new Set(
+    [...blocked, ...unavailableIds].flatMap((id) => linesWithItem(lines, id).map((l) => l.key)),
+  );
 
   return {
     lines,

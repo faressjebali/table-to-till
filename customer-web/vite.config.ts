@@ -3,12 +3,17 @@ import { defineConfig } from 'vitest/config';
 
 // En développement, l'API et les photos viennent du serveur (server/, port 3000) :
 // le téléphone passe par Vite (npm run dev --host), même sur le Wi-Fi.
+// /socket.io : temps réel (docs/api.md § 8).
 const SERVER = 'http://localhost:3000';
 
 export default defineConfig({
   plugins: [react()],
   server: {
-    proxy: { '/api': SERVER, '/uploads': SERVER },
+    proxy: {
+      '/api': SERVER,
+      '/uploads': SERVER,
+      '/socket.io': { target: SERVER, ws: true },
+    },
   },
   test: {
     environment: 'jsdom',
