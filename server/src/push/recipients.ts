@@ -1,5 +1,5 @@
 import type { Db } from '../db.js';
-import type { Order } from '../orders/view.js';
+import type { Order, StationName } from '../orders/view.js';
 import { waitersOnShift } from '../shifts/on-shift.js';
 import type { PushMessage } from './send.js';
 
@@ -44,7 +44,23 @@ export function orderNewMessage(order: Order): PushMessage {
   };
 }
 
-// « Table 7 : boissons prêtes » (envoyé par).
+// station:order, au barista ou au cuisinier : « Table 7 · 2 articles », seulement les articles
+// actifs de son poste (`order` : vue du poste, comme forStation).
+export function stationOrderMessage(order: Order, station: StationName): PushMessage {
+  const count = order.lines.reduce(
+    (sum, line) => (line.status === 'active' ? sum + line.quantity : sum),
+    0,
+  );
+  return {
+    type: 'station:order',
+    tag: `station-${String(order.id)}-${station}`,
+    title: 'Nouvelle commande',
+    body: `Table ${String(order.table.number)} · ${articles(count)}`,
+    url: '/',
+  };
+}
+
+// « Table 7 : boissons prêtes ».
 export function orderReadyMessage(data: {
   orderId: number;
   table: { number: number };

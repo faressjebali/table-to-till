@@ -1,5 +1,10 @@
 import type { Db } from '../db.js';
-import { orderNewMessage, waitersOnShiftIds } from '../push/recipients.js';
+import {
+  orderNewMessage,
+  stationOnShiftIds,
+  stationOrderMessage,
+  waitersOnShiftIds,
+} from '../push/recipients.js';
 import { sendPush, type PushSender } from '../push/send.js';
 import type { Realtime } from '../realtime.js';
 import { loadTables } from '../tables/view.js';
@@ -80,7 +85,6 @@ export async function notifyStations(
       for (const station of STATIONS) {
         const view = forStation(order, station);
         if (event === 'order') {
-          // TODO : notification push aux baristas / cuisiniers en shift.
           if (hasActiveLines(order, station)) realtime.stationOrder(station, view);
         } else if (view.lines.length > 0 && order.ready[station] === null) {
           realtime.stationUpdated(station, view, alert);
@@ -90,4 +94,23 @@ export async function notifyStations(
   } catch (err) {
     console.error('temps réel (bar / cuisine) :', err);
   }
+}
+
+// Notification push station:order aux baristas / cuisiniers en shift dont le poste a quelque
+// chose à préparer (lignes de leur poste seulement). Sans attendre, comme pushNewOrders.
+export function pushStationOrders(db: Db, push: PushSender, orderIds: readonly number[]): void {
+  if (orderIds.length === 0) return;
+  void (async () => {
+    try {
+      for (const order of await loadOrders(db, orderIds)) {
+        for (const station of STATIONS) {
+          if (!hasActiveLines(order, station)) continue;
+          const message = stationOrderMessage(forStation(order, station), station);
+          await sendPush(db, push, await stationOnShiftIds(db, station), message);
+        }
+      }
+    } catch (err) {
+      console.error('notifications push (bar / cuisine) :', err);
+    }
+  })();
 }

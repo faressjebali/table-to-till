@@ -11,7 +11,13 @@ import type { Realtime } from '../realtime.js';
 import { requireWaiterOnShift, waitersOnShift } from '../shifts/on-shift.js';
 import { expireAndNotify } from './expiry.js';
 import { linesTotal, orderLinesSchema, prepareLines, type PreparedLine } from './lines.js';
-import { notifyOrders, notifyStations, notifyTables, pushNewOrders } from './notify.js';
+import {
+  notifyOrders,
+  notifyStations,
+  notifyTables,
+  pushNewOrders,
+  pushStationOrders,
+} from './notify.js';
 import { loadOrder, loadOrders } from './view.js';
 
 const idParam = z.coerce.number().int().positive();
@@ -358,6 +364,7 @@ export function orderRoutes(db: Db, config: Config, realtime: Realtime, push: Pu
 
     await notifyOrders(db, realtime, [id.data]);
     await notifyStations(db, realtime, [id.data], 'order');
+    pushStationOrders(db, push, [id.data]);
     realtime.posJob(jobId);
     res.json(await loadOrder(db, id.data));
   });
@@ -474,6 +481,7 @@ export function orderRoutes(db: Db, config: Config, realtime: Realtime, push: Pu
     if (created.jobId !== null) {
       await notifyTables(db, realtime, [table.id]);
       await notifyStations(db, realtime, [created.orderId], 'order');
+      pushStationOrders(db, push, [created.orderId]);
       realtime.posJob(created.jobId);
     }
     res.status(201).json(await loadOrder(db, created.orderId));

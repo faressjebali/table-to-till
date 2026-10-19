@@ -5,6 +5,8 @@ import type { Config } from '../config.js';
 import { audit, inTransaction, type Db } from '../db.js';
 import { HttpError } from '../errors.js';
 import { TIME_ZONE } from '../menu/availability.js';
+import { orderReadyMessage, waitersOnShiftIds } from '../push/recipients.js';
+import { sendPush, type PushSender } from '../push/send.js';
 import type { Realtime } from '../realtime.js';
 import { requireOnShift } from '../shifts/on-shift.js';
 import { forStation, hasActiveLines, loadOrder, loadOrders, type StationName } from './view.js';
@@ -15,7 +17,12 @@ const idParam = z.coerce.number().int().positive();
 const stationOf = (role: string): StationName => (role === 'barista' ? 'bar' : 'kitchen');
 
 // Écran bar / cuisine (docs/api.md § 5 ter), barista et cuisinier en shift.
-export function stationRoutes(db: Db, config: Config, realtime: Realtime): Router {
+export function stationRoutes(
+  db: Db,
+  config: Config,
+  realtime: Realtime,
+  push: PushSender,
+): Router {
   const router = Router();
   const onShift = requireOnShift(db, config, ['barista', 'chef']);
 
@@ -81,8 +88,16 @@ export function stationRoutes(db: Db, config: Config, realtime: Realtime): Route
     const view = forStation(await loadOrder(db, id.data), station);
     // Les autres baristas (ou cuisiniers) en shift la retirent aussi de leur liste.
     realtime.stationUpdated(station, view, false);
-    // TODO : notification push aux serveurs en shift (orderReadyMessage).
-    realtime.orderReady({ orderId: view.id, table: view.table, station });
+    const ready = { orderId: view.id, table: view.table, station };
+    realtime.orderReady(ready);
+    // Notification push aux serveurs en shift, sans attendre : un échec ne change rien.
+    void (async () => {
+      try {
+        await sendPush(db, push, await waitersOnShiftIds(db), orderReadyMessage(ready));
+      } catch (err) {
+        console.error('notifications push (prêt) :', err);
+      }
+    })();
     res.json(view);
   });
 

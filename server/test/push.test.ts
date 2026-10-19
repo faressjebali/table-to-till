@@ -257,6 +257,142 @@ describe('push order:new', () => {
   });
 });
 
+// Commande saisie par un serveur en shift sur la table 7 : confirmée tout de suite.
+async function postStaffOrder(
+  token: string,
+  lines: { menuItemId: number; quantity: number; note?: string | null }[],
+): Promise<number> {
+  const { rows } = await db.query<{ id: number }>('SELECT id FROM tables WHERE number = 7');
+  const res = await api()
+    .post('/api/staff-orders')
+    .set(auth(token))
+    .send({ clientRequestId: randomUUID(), tableId: rows[0]?.id, lines });
+  expect(res.status).toBe(201);
+  return (res.body as { id: number }).id;
+}
+
+// Serveur en shift, barista et cuisinier en shift, un barista hors shift : chacun abonné.
+async function stationStaff(): Promise<string> {
+  await createUser('amira');
+  const amira = await tokenFor('amira');
+  await api().post('/api/shifts/start').set(auth(amira)).expect(201);
+  await subscribe(amira, 'amira');
+  for (const [login, role] of [
+    ['sami', 'barista'],
+    ['hedi', 'chef'],
+    ['rim', 'barista'],
+  ] as const) {
+    const id = await createUser(login, role);
+    if (login !== 'rim') await openShift(id);
+    await subscribe(await tokenFor(login), login);
+  }
+  return amira;
+}
+
+const stationMessage = (orderId: number, station: 'bar' | 'kitchen', body: string) => ({
+  type: 'station:order',
+  tag: `station-${String(orderId)}-${station}`,
+  title: 'Nouvelle commande',
+  body,
+  url: '/',
+});
+
+describe('push station:order', () => {
+  it('commande saisie : chaque poste en shift reçoit ses articles seulement, sans note', async () => {
+    const amira = await stationStaff();
+    const orderId = await postStaffOrder(amira, [
+      { menuItemId: item('Espresso'), quantity: 2, note: 'bien serré' },
+      { menuItemId: item('Cheese Burger'), quantity: 1 },
+      { menuItemId: item('Fondant au chocolat'), quantity: 1 },
+    ]);
+    await vi.waitFor(() => {
+      expect(sent).toHaveLength(2);
+    });
+    expect(sent).toEqual([
+      {
+        endpoint: 'https://push.example.com/sami',
+        message: stationMessage(orderId, 'bar', 'Table 7 · 3 articles'),
+      },
+      {
+        endpoint: 'https://push.example.com/hedi',
+        message: stationMessage(orderId, 'kitchen', 'Table 7 · 2 articles'),
+      },
+    ]);
+    expect(JSON.stringify(sent)).not.toContain('serré');
+  });
+
+  it('commande du bar seulement : rien en cuisine', async () => {
+    const amira = await stationStaff();
+    const orderId = await postStaffOrder(amira, [{ menuItemId: item('Espresso'), quantity: 1 }]);
+    await vi.waitFor(() => {
+      expect(sent).toHaveLength(1);
+    });
+    expect(sent).toEqual([
+      {
+        endpoint: 'https://push.example.com/sami',
+        message: stationMessage(orderId, 'bar', 'Table 7 · 1 article'),
+      },
+    ]);
+  });
+
+  it('commande QR : seulement à la confirmation', async () => {
+    const amira = await stationStaff();
+    const orderId = await postQrOrder();
+    await vi.waitFor(() => {
+      expect(sent).toHaveLength(1);
+    });
+    expect(sent.map((s) => s.message.type)).toEqual(['order:new']);
+
+    await api()
+      .post(`/api/orders/${String(orderId)}/confirm`)
+      .set(auth(amira))
+      .expect(200);
+    await vi.waitFor(() => {
+      expect(sent).toHaveLength(2);
+    });
+    expect(sent[1]).toEqual({
+      endpoint: 'https://push.example.com/hedi',
+      message: stationMessage(orderId, 'kitchen', 'Table 7 · 3 articles'),
+    });
+  });
+});
+
+describe('push order:ready', () => {
+  it('Prêt : les serveurs en shift reçoivent « Table 7 : boissons prêtes »', async () => {
+    const amira = await stationStaff();
+    await createUser('karim');
+    await subscribe(await tokenFor('karim'), 'karim');
+    const orderId = await postStaffOrder(amira, [
+      { menuItemId: item('Espresso'), quantity: 1 },
+      { menuItemId: item('Cheese Burger'), quantity: 1 },
+    ]);
+    await vi.waitFor(() => {
+      expect(sent).toHaveLength(2);
+    });
+    sent = [];
+
+    await api()
+      .post(`/api/orders/${String(orderId)}/ready`)
+      .set(auth(await tokenFor('sami')))
+      .expect(200);
+    await vi.waitFor(() => {
+      expect(sent).toHaveLength(1);
+    });
+    expect(sent).toEqual([
+      {
+        endpoint: 'https://push.example.com/amira',
+        message: {
+          type: 'order:ready',
+          tag: `ready-${String(orderId)}-bar`,
+          title: 'Commande prête',
+          body: 'Table 7 : boissons prêtes',
+          url: '/',
+        },
+      },
+    ]);
+  });
+});
+
 describe('sendPush', () => {
   it('oublie un abonnement disparu (404, 410), garde les autres en cas d’erreur', async () => {
     const amira = await createUser('amira');

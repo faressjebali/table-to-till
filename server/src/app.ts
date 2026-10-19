@@ -38,7 +38,7 @@ export function createApp({
   api.use(tableRoutes(db, config));
   api.use(adminTableRoutes(db, config));
   api.use(orderRoutes(db, config, realtime, push));
-  api.use(stationRoutes(db, config, realtime));
+  api.use(stationRoutes(db, config, realtime, push));
   api.use(pushRoutes(db, config));
   app.use('/api', api);
 
