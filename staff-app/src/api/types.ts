@@ -87,15 +87,18 @@ export interface OrderReady {
   station: StationName;
 }
 
-/** Réponse de `GET /shifts/current`. */
+/**
+ * Réponse de `GET /shifts/current`. `currentPrincipal` et `shift2` sont au contrat mais pas encore
+ * renvoyés par le serveur : optionnels ici.
+ */
 export interface CurrentShifts {
   waiters: {
     id: number;
     name: string;
     startedAt: string;
     principal: boolean;
-    currentPrincipal: boolean;
-    shift2: boolean;
+    currentPrincipal?: boolean;
+    shift2?: boolean;
   }[];
   /** Baristas et cuisiniers en shift : pour avertir « personne au bar » / « personne en cuisine ». */
   stations: { id: number; name: string; role: 'barista' | 'chef'; startedAt: string }[];

@@ -15,15 +15,19 @@ import { TabIcon } from './TabIcon';
 // bas, utilisable d'une main ; « Moi » ouvre aussi les écrans qui n'ont pas de place dans la barre.
 // La connexion temps réel est refaite quand le shift change : le serveur range chaque connexion
 // selon le shift au moment où elle s'ouvre.
-export function StaffShell({ me, onLogout }: { me: Me; onLogout: () => void }) {
+// `onShiftChange` : relit /me après « Démarrer » ou « Terminer mon shift ».
+type ShellProps = { me: Me; onLogout: () => void; onShiftChange: () => Promise<void> };
+
+export function StaffShell(props: ShellProps) {
+  const { me } = props;
   return (
     <RealtimeProvider key={`${String(me.id)}-${String(me.onShift)}`}>
-      <Screens me={me} onLogout={onLogout} />
+      <Screens {...props} />
     </RealtimeProvider>
   );
 }
 
-function Screens({ me, onLogout }: { me: Me; onLogout: () => void }) {
+function Screens({ me, onLogout, onShiftChange }: ShellProps) {
   const navigation = navigationFor(me);
   const [selected, setSelected] = useState<Destination | null>(null);
   // Écran ouvert depuis « Moi » (ex. la Carte d'un serveur), avec un bouton Retour.
@@ -34,7 +38,7 @@ function Screens({ me, onLogout }: { me: Me; onLogout: () => void }) {
     return (
       <>
         <PushPrompt />
-        <OffShiftScreen me={me} onLogout={onLogout} />
+        <OffShiftScreen me={me} onLogout={onLogout} onStarted={onShiftChange} />
       </>
     );
   }
@@ -57,7 +61,13 @@ function Screens({ me, onLogout }: { me: Me; onLogout: () => void }) {
         {sub ? (
           <PlaceholderScreen destination={sub} onBack={() => setOpened(null)} />
         ) : active === 'me' ? (
-          <MeScreen me={me} more={navigation.more} onOpen={setOpened} onLogout={onLogout} />
+          <MeScreen
+            me={me}
+            more={navigation.more}
+            onOpen={setOpened}
+            onLogout={onLogout}
+            onEnded={onShiftChange}
+          />
         ) : active === 'bar' || active === 'kitchen' ? (
           <StationScreen key={active} station={active} />
         ) : (

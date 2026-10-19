@@ -524,3 +524,42 @@
   flex-direction: column;
   gap: var(--space-2);
 }
+
+/* Staff en shift, dans « Moi » */
+.on-shift {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.on-shift__title {
+  font-size: var(--text-body);
+}
+
+.on-shift__row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-height: var(--tap-min);
+  padding: var(--space-2) var(--space-4);
+}
+
+.on-shift__what {
+  color: var(--color-muted);
+  font-size: var(--text-small);
+}
+
+/* Confirmation avant une action qui coupe le téléphone du service */
+.confirm {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  background: var(--color-surface);
+}
+
+.confirm__text {
+  font-weight: 600;
+}

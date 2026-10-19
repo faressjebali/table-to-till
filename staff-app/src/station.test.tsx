@@ -130,7 +130,9 @@ async function openBar(items: Order[], routes: Record<string, Reply | (() => Rep
     '/api/station-orders': { status: 200, body: { items } },
     ...routes,
   });
-  render(<StaffShell me={BARISTA} onLogout={() => undefined} />);
+  render(
+    <StaffShell me={BARISTA} onLogout={() => undefined} onShiftChange={() => Promise.resolve()} />,
+  );
   await screen.findByRole('heading', { name: fr['screen.bar'] });
   return fetchMock;
 }
@@ -266,6 +268,7 @@ describe('serveur en shift', () => {
       <StaffShell
         me={{ id: 4, name: 'Amira', role: 'waiter', onShift: true, principal: true }}
         onLogout={() => undefined}
+        onShiftChange={() => Promise.resolve()}
       />,
     );
     act(() => {
@@ -283,10 +286,18 @@ describe('serveur en shift', () => {
   it('nouvelle connexion temps réel quand le shift change', () => {
     localStorage.setItem('coffee-qr.staff.token', 'jeton');
     const me: Me = { ...BARISTA, onShift: false };
-    const { rerender } = render(<StaffShell me={me} onLogout={() => undefined} />);
+    const { rerender } = render(
+      <StaffShell me={me} onLogout={() => undefined} onShiftChange={() => Promise.resolve()} />,
+    );
     mockApi({ '/api/station-orders': { status: 200, body: { items: [] } } });
     const first = sockets.at(-1);
-    rerender(<StaffShell me={{ ...me, onShift: true }} onLogout={() => undefined} />);
+    rerender(
+      <StaffShell
+        me={{ ...me, onShift: true }}
+        onLogout={() => undefined}
+        onShiftChange={() => Promise.resolve()}
+      />,
+    );
     expect(first?.connected).toBe(false);
     expect(sockets.at(-1)).not.toBe(first);
     expect(sockets.at(-1)?.connected).toBe(true);

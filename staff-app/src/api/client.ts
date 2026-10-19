@@ -82,6 +82,16 @@ export const markReady = (orderId: number) =>
 
 export const getCurrentShifts = () => request<CurrentShifts>('/shifts/current');
 
+/** Serveur, barista, cuisinier ; relançable (double toucher : le shift ouvert est renvoyé). */
+export const startShift = () =>
+  request<{ shiftId: number; startedAt: string; principal: boolean }>('/shifts/start', {
+    method: 'POST',
+    body: {},
+  });
+
+/** Renfort, barista, cuisinier (le principal clôture). */
+export const endShift = () => request<undefined>('/shifts/end', { method: 'POST' });
+
 /** Abonnement Web Push du téléphone (`PushSubscription.toJSON()`), lié à cette session. */
 export const subscribePush = (body: PushSubscriptionJSON) =>
   request<undefined>('/push/subscribe', { method: 'POST', body });

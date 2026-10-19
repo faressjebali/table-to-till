@@ -22,7 +22,7 @@ export function App({ requireInstall = import.meta.env.PROD }: { requireInstall?
 }
 
 function StaffApp() {
-  const { state, login, changePassword, logout, retry } = useSession();
+  const { state, login, changePassword, logout, retry, refresh } = useSession();
   const install = useInstallPrompt();
   const onLogout = () => void logout();
 
@@ -63,7 +63,9 @@ function StaffApp() {
             </button>
           </div>
         )}
-        {state.status === 'signed-in' && <StaffShell me={state.me} onLogout={onLogout} />}
+        {state.status === 'signed-in' && (
+          <StaffShell me={state.me} onLogout={onLogout} onShiftChange={refresh} />
+        )}
         {banner}
       </main>
     </>

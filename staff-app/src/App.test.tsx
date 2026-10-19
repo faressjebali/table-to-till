@@ -353,7 +353,10 @@ describe('navigation selon le rôle', () => {
 
   const signedInAs = async (me: object) => {
     localStorage.setItem('coffee-qr.staff.token', 'jeton');
-    mockApi({ '/api/me': { status: 200, body: { ...ME, ...me } } });
+    mockApi({
+      '/api/me': { status: 200, body: { ...ME, ...me } },
+      '/api/shifts/current': { status: 200, body: { waiters: [], stations: [] } },
+    });
     render(<App />);
     return screen.findByRole('navigation', { name: fr['nav.label'] });
   };
@@ -456,6 +459,136 @@ describe('navigation selon le rôle', () => {
     expect(calls).toBe(2);
     expect(nav).toBeInTheDocument();
     expect(screen.queryByRole('alert')).toBeNull();
+  });
+});
+
+describe('début et fin de shift', () => {
+  beforeEach(() => {
+    mockDevice(device({}));
+    localStorage.setItem('coffee-qr.staff.token', 'jeton');
+  });
+
+  const SHIFTS = {
+    waiters: [
+      { id: 4, name: 'Amira', startedAt: '2026-10-20T07:00:00Z', principal: true },
+      { id: 7, name: 'Sami', startedAt: '2026-10-20T08:00:00Z', principal: false },
+    ],
+    stations: [{ id: 3, name: 'Yassine', role: 'barista', startedAt: '2026-10-20T07:30:00Z' }],
+  };
+
+  it('hors shift : « Démarrer mon shift » ouvre les écrans', async () => {
+    let onShift = false;
+    const fetchMock = mockApi({
+      '/api/me': () => ({ status: 200, body: { ...ME, onShift } }),
+      'POST /api/shifts/start': () => {
+        onShift = true;
+        return { status: 201, body: { shiftId: 1, startedAt: '...', principal: false } };
+      },
+    });
+    render(<App />);
+    await userEvent.click(await screen.findByRole('button', { name: fr['shift.start'] }));
+    expect(await screen.findByRole('navigation', { name: fr['nav.label'] })).toBeInTheDocument();
+    expect(fetchMock).toHaveBeenCalledWith('/api/shifts/start', expect.anything());
+  });
+
+  it('démarrage sans réseau : message clair, on peut réessayer', async () => {
+    mockApi({
+      '/api/me': { status: 200, body: ME },
+      'POST /api/shifts/start': 'network-error',
+    });
+    render(<App />);
+    const button = await screen.findByRole('button', { name: fr['shift.start'] });
+    await userEvent.click(button);
+    expect(await screen.findByRole('alert')).toHaveTextContent(fr['shift.error.network']);
+    expect(button).toBeEnabled();
+    expect(screen.queryByRole('navigation')).toBeNull();
+  });
+
+  it('« Moi » : qui est en shift', async () => {
+    mockApi({
+      '/api/me': { status: 200, body: { ...ME, onShift: true } },
+      '/api/shifts/current': { status: 200, body: SHIFTS },
+    });
+    render(<App />);
+    const nav = await screen.findByRole('navigation', { name: fr['nav.label'] });
+    await userEvent.click(within(nav).getByRole('button', { name: fr['screen.me'] }));
+    const list = await screen.findByRole('region', { name: fr['onShift.title'] });
+    expect(
+      within(list)
+        .getAllByRole('listitem')
+        .map((li) => li.textContent),
+    ).toEqual([
+      `Amira${fr['shift.principal']}`,
+      `Sami${fr['shift.backup']}`,
+      `Yassine${fr['role.barista']}`,
+    ]);
+  });
+
+  it('renfort : « Terminer mon shift » demande confirmation, puis revient hors shift', async () => {
+    let onShift = true;
+    const fetchMock = mockApi({
+      '/api/me': () => ({ status: 200, body: { ...ME, onShift } }),
+      '/api/shifts/current': { status: 200, body: SHIFTS },
+      'POST /api/shifts/end': () => {
+        onShift = false;
+        return { status: 204 };
+      },
+    });
+    render(<App />);
+    const nav = await screen.findByRole('navigation', { name: fr['nav.label'] });
+    await userEvent.click(within(nav).getByRole('button', { name: fr['screen.me'] }));
+
+    await userEvent.click(screen.getByRole('button', { name: fr['shift.end'] }));
+    // Annuler : rien n'est envoyé.
+    await userEvent.click(screen.getByRole('button', { name: fr['shift.endNo'] }));
+    await userEvent.click(screen.getByRole('button', { name: fr['shift.end'] }));
+    expect(screen.getByText(fr['shift.endConfirm'])).toBeInTheDocument();
+    await userEvent.click(screen.getByRole('button', { name: fr['shift.endYes'] }));
+
+    expect(await screen.findByRole('button', { name: fr['shift.start'] })).toBeInTheDocument();
+    expect(screen.queryByRole('navigation')).toBeNull();
+    expect(fetchMock.mock.calls.filter(([path]) => path === '/api/shifts/end')).toHaveLength(1);
+  });
+
+  it('barista : peut terminer son shift ; principal : non (clôture)', async () => {
+    mockApi({
+      '/api/me': { status: 200, body: { ...ME, role: 'barista', onShift: true } },
+      '/api/shifts/current': { status: 200, body: SHIFTS },
+      '/api/station-orders': { status: 200, body: { items: [] } },
+    });
+    const { unmount } = render(<App />);
+    let nav = await screen.findByRole('navigation', { name: fr['nav.label'] });
+    await userEvent.click(within(nav).getByRole('button', { name: fr['screen.me'] }));
+    expect(screen.getByRole('button', { name: fr['shift.end'] })).toBeInTheDocument();
+    unmount();
+
+    mockApi({
+      '/api/me': { status: 200, body: { ...ME, onShift: true, principal: true } },
+      '/api/shifts/current': { status: 200, body: SHIFTS },
+    });
+    render(<App />);
+    nav = await screen.findByRole('navigation', { name: fr['nav.label'] });
+    await userEvent.click(within(nav).getByRole('button', { name: fr['screen.me'] }));
+    expect(screen.queryByRole('button', { name: fr['shift.end'] })).toBeNull();
+  });
+
+  it('devenu principal entre-temps : /me est relu, plus de bouton « Terminer »', async () => {
+    let principal = false;
+    mockApi({
+      '/api/me': () => ({ status: 200, body: { ...ME, onShift: true, principal } }),
+      '/api/shifts/current': { status: 200, body: SHIFTS },
+      'POST /api/shifts/end': () => {
+        principal = true;
+        return apiError(409, 'INVALID_STATUS');
+      },
+    });
+    render(<App />);
+    const nav = await screen.findByRole('navigation', { name: fr['nav.label'] });
+    await userEvent.click(within(nav).getByRole('button', { name: fr['screen.me'] }));
+    await userEvent.click(screen.getByRole('button', { name: fr['shift.end'] }));
+    await userEvent.click(screen.getByRole('button', { name: fr['shift.endYes'] }));
+    expect(await within(nav).findByRole('button', { name: fr['screen.till'] })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: fr['shift.end'] })).toBeNull();
   });
 });
 

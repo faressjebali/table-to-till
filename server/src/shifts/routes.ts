@@ -2,8 +2,10 @@ import { Router } from 'express';
 import { getAuth, requireStaff } from '../auth/middleware.js';
 import type { Config } from '../config.js';
 import { audit, type Db } from '../db.js';
+import { HttpError } from '../errors.js';
 import type { Realtime } from '../realtime.js';
 import {
+  isOnShift,
   isShiftRole,
   requireOnShift,
   SHIFT_ROLES,
@@ -22,7 +24,7 @@ function isPrincipalConflict(err: unknown): boolean {
   );
 }
 
-// Routes shifts de docs/api.md § 5. La fin de shift d'un serveur est la clôture.
+// Routes shifts de docs/api.md § 5. La fin de shift du principal est la clôture.
 export function shiftRoutes(db: Db, config: Config, realtime: Realtime): Router {
   const router = Router();
 
@@ -85,32 +87,31 @@ export function shiftRoutes(db: Db, config: Config, realtime: Realtime): Router 
     },
   );
 
-  // Barista et cuisinier : fin de shift sans argent ni clôture. Serveurs :.
-  router.post(
-    '/shifts/end',
-    ...requireOnShift(db, config, ['barista', 'chef']),
-    async (_req, res) => {
-      const { user } = getAuth(res);
-      const { rows } = await db.query<{ id: number }>(
-        `UPDATE shifts SET ended_at = now()
-          WHERE user_id = $1 AND ended_at IS NULL
-          RETURNING id`,
-        [user.id],
-      );
-      const shift = rows[0];
-      // Deux appels en même temps : le premier a déjà terminé le shift.
-      if (shift) {
-        await audit(db, {
-          userId: user.id,
-          action: 'shift.ended',
-          entityType: 'shift',
-          entityId: shift.id,
-        });
-        realtime.shiftEnded(user.id);
-      }
-      res.status(204).end();
-    },
-  );
+  // Fin de shift sans argent ni clôture : renfort, barista et cuisinier. Pour le principal, la fin
+  // de shift est la clôture : refusée tant qu'elle n'existe pas.
+  router.post('/shifts/end', ...requireOnShift(db, config, SHIFT_ROLES), async (_req, res) => {
+    const { user } = getAuth(res);
+    const { rows } = await db.query<{ id: number }>(
+      `UPDATE shifts SET ended_at = now()
+        WHERE user_id = $1 AND ended_at IS NULL AND NOT principal
+        RETURNING id`,
+      [user.id],
+    );
+    const shift = rows[0];
+    if (shift) {
+      await audit(db, {
+        userId: user.id,
+        action: 'shift.ended',
+        entityType: 'shift',
+        entityId: shift.id,
+      });
+      realtime.shiftEnded(user.id);
+    } else if (await isOnShift(db, user.id)) {
+      throw new HttpError(409, 'INVALID_STATUS', 'A principal ends the shift with the closure');
+    }
+    // Sinon, deux appels en même temps : le premier a déjà terminé le shift.
+    res.status(204).end();
+  });
 
   router.get('/shifts/current', requireStaff(db, config), async (_req, res) => {
     const [waiters, stations] = await Promise.all([waitersOnShift(db), stationsOnShift(db)]);

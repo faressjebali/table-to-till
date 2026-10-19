@@ -116,5 +116,5 @@ export function useSession() {
     signOut(null);
   }, [signOut]);
 
-  return { state, login, changePassword, logout, retry };
+  return { state, login, changePassword, logout, retry, refresh };
 }

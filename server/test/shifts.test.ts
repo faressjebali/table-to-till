@@ -194,16 +194,37 @@ describe('POST /shifts/end', () => {
     }
   });
 
-  it('refuse les serveurs (clôture) et la manager', async () => {
-    await createUser('sami');
+  it('termine le shift d’un renfort ; le principal, lui, clôture', async () => {
+    await createUser('amira');
+    const sami = await createUser('sami');
+    const amira = await tokenFor('amira');
+    const samiToken = await tokenFor('sami');
+    expect(((await startShift(amira)).body as ShiftBody).principal).toBe(true);
+    const { shiftId, principal } = (await startShift(samiToken)).body as ShiftBody;
+    expect(principal).toBe(false);
+
+    expect((await endShift(samiToken)).status).toBe(204);
+    const me = await api.get('/api/me').set('Authorization', `Bearer ${samiToken}`);
+    expect(me.body).toMatchObject({ onShift: false });
+    const audit = await db.query<{ user_id: number }>(
+      `SELECT user_id FROM audit_log WHERE action = 'shift.ended' AND entity_id = $1`,
+      [shiftId],
+    );
+    expect(audit.rows).toEqual([{ user_id: sami }]);
+
+    // Le principal reste en shift : sa fin de shift passe par la clôture.
+    const res = await endShift(amira);
+    expect(res.status).toBe(409);
+    expect(res.body).toMatchObject({ error: { code: 'INVALID_STATUS' } });
+    const current = await api.get('/api/shifts/current').set('Authorization', `Bearer ${amira}`);
+    expect((current.body as CurrentBody).waiters).toHaveLength(1);
+  });
+
+  it('refuse la manager', async () => {
     await createUser('gerante', 'manager');
-    const sami = await tokenFor('sami');
-    await startShift(sami);
-    for (const token of [sami, await tokenFor('gerante')]) {
-      const res = await endShift(token);
-      expect(res.status).toBe(403);
-      expect(res.body).toMatchObject({ error: { code: 'FORBIDDEN' } });
-    }
+    const res = await endShift(await tokenFor('gerante'));
+    expect(res.status).toBe(403);
+    expect(res.body).toMatchObject({ error: { code: 'FORBIDDEN' } });
   });
 });
 
