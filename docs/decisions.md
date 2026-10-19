@@ -2,6 +2,9 @@
 
 Une ligne par décision, la plus récente en haut. Format : `AAAA-MM-JJ — décision — pourquoi`.
 
+- 2026-10-19 — En production, l'app est la référence du menu : le seed de `docs/menu/menu.csv` ajoute seulement ce qui manque et n'écrase jamais rien ; en production il est lancé une seule fois, sur une base vide, au lancement ; en local, `scripts/start-day.sh` continue de le lancer — la manager modifie le menu dans l'app, ses changements ne doivent jamais être perdus — validé par Fares
+- 2026-10-19 — Confirmation d'une commande en attente : la rupture est revérifiée (`ITEM_UNAVAILABLE`, le serveur rejette, le client recommande sans l'article), pas les horaires (l'heure d'envoi compte) ; après un rejet ou une expiration, le menu QR recharge le menu pour griser l'article dans le panier ; contrat v2.0.4 — un article épuisé pendant l'attente ne doit pas partir en caisse, un client ne doit pas être pénalisé par la lenteur de la confirmation — validé par Fares
+- 2026-10-19 — Un `/principal/transfer` avant 15h00 ne compte pas comme la bascule du jour : le serveur du Shift 2 devient quand même principal à 15h00 ; contrat v2.0.4 — sinon un renfort garderait la caisse jusqu'au soir — validé par Fares
 - 2026-10-18 — Extras suggérés ajoutés sous les salades, les plats, la Chakchouka et les sandwichs (en plus de ceux du menu papier) ; un extra peut être suggéré sous plusieurs articles ; le menu QR n'affiche pas le numéro de la table et montre « Pressé ? » dès le haut — validé par Fares
 - 2026-10-18 — Les catégories ont un affichage `list` ou `grid` ; seuls les Extras sont en tableau (nom + prix), comme sur le menu papier (contrat v2.0.3) — le menu QR doit ressembler au menu papier sans dépendre du nom d'une catégorie
 - 2026-10-18 — Le menu QR sépare la carte en deux onglets, Food et Drinks, d'après la `section` de chaque catégorie (contrat v2.0.3) — un client qui veut un café ne doit pas descendre jusqu'en bas de la carte

@@ -1,6 +1,6 @@
 # Contrat d'API — Coffee QR
 
-> Brouillon v2.0.3 (18 octobre 2026). À relire ensemble. Toute modification passe par une PR dédiée, annoncée à l'autre.
+> Brouillon v2.0.4 (19 octobre 2026). À relire ensemble. Toute modification passe par une PR dédiée, annoncée à l'autre.
 
 ## 1. Règles générales
 
@@ -307,7 +307,7 @@ Le plan des tables et les commandes sont gérés **seulement par les serveurs en
 
 **Principaux et passation** (`docs/product.md` § 5) :
 - Le premier serveur qui démarre son shift dans la journée est principal. D'habitude il est le seul.
-- **Bascule automatique à `SHIFT_2_START`** (15h00, Africa/Tunis, dans `.env`) : le serveur en shift qui a démarré son shift à partir de `SHIFT_2_ARRIVAL_FROM` (14h00) — le premier arrivé s'ils sont plusieurs — devient principal sans action de personne. Après 15h00, s'il n'y a pas encore eu de bascule ce jour-là, le premier serveur qui démarre son shift devient principal tout de suite. Un renfort arrivé avant 14h00 ne bascule jamais.
+- **Bascule automatique à `SHIFT_2_START`** (15h00, Africa/Tunis, dans `.env`) : le serveur en shift qui a démarré son shift à partir de `SHIFT_2_ARRIVAL_FROM` (14h00) — le premier arrivé s'ils sont plusieurs — devient principal sans action de personne. Après 15h00, s'il n'y a pas encore eu de bascule ce jour-là, le premier serveur qui démarre son shift devient principal tout de suite. Un renfort arrivé avant 14h00 ne bascule jamais. Un `POST /principal/transfer` fait avant 15h00 ne compte pas comme la bascule du jour : à 15h00, le serveur arrivé à partir de 14h00 devient quand même principal en cours.
 - Le dernier devenu principal est le **principal en cours** : les sessions de table qui s'ouvrent lui appartiennent, ainsi que les ventes directes, les offerts sans table et les commandes des tables d'offre. L'ancien principal reste principal de ses tables encore ouvertes (et de leurs nouvelles commandes) jusqu'à les encaisser ou clôturer : il n'ouvre plus de nouvelle table pour lui.
 - Les deux principaux encaissent en même temps, chacun ses tables ; chaque dépense compte pour celui qui la saisit. Il n'y a rien à accepter ni à refuser.
 - L'ancien principal clôture (`POST /shifts/end` avec `countedCash`) quand il veut : ses tables encore ouvertes passent au principal en cours (`ShiftClosure.openTables`, `handedOverTo`) et son shift se termine.
@@ -328,7 +328,7 @@ Après la fermeture du café (22h00) et avant l'ouverture (8h00), `/staff-orders
 | GET | `/offer-tables` | — | `{ tables: [ { id, number, label, userId } ], requesters }` : les tables d'offre **permises à l'appelant**, triées par `label` — serveur en shift : toutes ; manager : la sienne et celles sans compte ; comptable : la sienne (rôles `waiter` en shift, `manager`, `accountant`). `requesters` (serveur en shift seulement, sinon absent) : `[ { id, name, title, role } ]`, les managers et comptables actifs, pour choisir qui a demandé une saisie sur une table d'offre |
 | GET | `/tables/:id/session` | — | `{ session: TableSession, orders: [Order], gifts: [Gift] }` (session ouverte) |
 | GET | `/orders?status=pending` | — | `{ items: [Order], nextCursor }` (commandes QR et commandes `offer`) |
-| POST | `/orders/:id/confirm` | — | Order (409 `INVALID_STATUS` si déjà traitée ou expirée). Commande `offer` : confirmée sans session ni tâche caisse |
+| POST | `/orders/:id/confirm` | — | Order (409 `INVALID_STATUS` si déjà traitée ou expirée). La **rupture** est revérifiée : un article (ou une option de formule) en rupture → 409 `ITEM_UNAVAILABLE` avec `details.menuItemId`, rien n'est confirmé (le serveur rejette, le client recommande sans lui). Les horaires ne sont **pas** revérifiés : c'est l'heure d'envoi de la commande qui compte (jamais `OUTSIDE_HOURS` à la confirmation). Commande `offer` : confirmée sans session ni tâche caisse |
 | POST | `/orders/:id/reject` | `{ reason? }` | Order |
 | POST | `/staff-orders` | `{ clientRequestId, tableId, requestedById?, forClient?, lines: [ { menuItemId, quantity, note, choices? } ] }` (`tableId` : une table `real` ou une table d'offre ; `requestedById` et `forClient` : **obligatoires** sur une table d'offre, interdits sinon, `VALIDATION_ERROR`) | 201 Order (`source: "waiter"`, `confirmed`) ; sur une table d'offre : offerte (0 DT, sans session ni tâche caisse, voir Order `offer`) ; `requestedById` doit être un manager ou un comptable actif à qui cette table est permise (voir § 5 bis), sinon 400 `VALIDATION_ERROR` sur `requestedById` |
 | POST | `/direct-sales` | `{ clientRequestId, lines: [ { menuItemId, quantity, note, choices? } ] }` | 201 Order (`source: "direct"`, `confirmed`) — principal ou barista ; comptée dans la caisse du principal en cours ; aucun serveur en shift → 409 `NO_WAITER_ON_SHIFT` |
@@ -468,6 +468,7 @@ Après reconnexion, chaque client recharge via REST.
 
 | Version | Date | Changement |
 | --- | --- | --- |
+| v2.0.4 brouillon | 2026-10-19 | `POST /orders/:id/confirm` revérifie la rupture (`ITEM_UNAVAILABLE`), pas les horaires (heure d'envoi) ; un `/principal/transfer` avant 15h00 n'empêche pas la bascule automatique de 15h00 |
 | v2.0.3 brouillon | 2026-10-18 | `section` (`food` / `drinks`) et `display` (`list` / `grid`) sur chaque catégorie de `GET /menu`, modifiables par la manager avec la catégorie |
 | v2.0.2 brouillon | 2026-10-17 | `/admin/tables` détaillé : forme `AdminTable` (avec `tableToken`, sans état ni montant), corps de `POST` et `PATCH /admin/tables/:id`, `kind` fixe, `offer.userId` manager ou comptable actif avec une table d'offre au plus par compte, `PATCH` refusé sur une table en cours d'utilisation |
 | v2.0.1 brouillon | 2026-10-17 | `CAFE_CLOSED` (menu QR, café fermé) distinct de `OUTSIDE_HOURS` (un article hors de ses horaires, `details.menuItemId`) |
