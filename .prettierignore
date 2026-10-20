@@ -8,4 +8,4 @@ package-lock.json
 *.md
 *.csv
 
-# Skill copié tel quel (textes d’Apple)
+# Skills copiés tels quels (textes d’Apple, code Deno de pwa-development)
