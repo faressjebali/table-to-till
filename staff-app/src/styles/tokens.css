@@ -1,8 +1,11 @@
 /*
  * App staff : couleurs du café (logo et menu papier), sur fond uni, sans quadrillage — un outil de
- * travail lisible vite. Mêmes valeurs que customer-web/src/styles/tokens.css, contrastes mesurés.
- * Clair : orange 5,4:1 · encre 15,7:1 · discret 5,4:1 · blanc sur olive 10,8:1.
- * Sombre : orange 7,4:1 · encre 14,5:1 · discret 8,1:1 · bouton 12,3:1.
+ * travail lisible vite. Référence : docs/design.md (contrastes calculés pour les deux thèmes).
+ * Mêmes valeurs de base que customer-web/src/styles/tokens.css.
+ *
+ * Thème : il suit le téléphone, sauf si « Moi » impose Clair ou Sombre (attribut data-theme sur
+ * <html>, voir src/theme.ts). Les deux blocs du thème sombre doivent rester identiques
+ * (vérifié par src/theme.test.ts).
  */
 :root {
   color-scheme: light dark;
@@ -13,15 +16,24 @@
   --color-ink: #1f1d1a;
   --color-muted: #6b6559;
   --color-accent: #b04300; /* orange du logo, foncé */
+  --color-on-accent: #ffffff;
   --color-action: #3d3f2b; /* olive du logo */
   --color-on-action: #ffffff;
   --color-focus: #b04300;
+  --color-danger: #a8174a; /* framboise : reste distinct de l'orange pour un daltonien */
+  --color-on-danger: #ffffff;
+  --color-ready: #1d5fa6; /* bleu : « prête », jamais confondu avec l'orange ni le rouge */
+  --color-on-ready: #ffffff;
 
   --font-body: system-ui, -apple-system, 'Segoe UI', Roboto, 'Noto Sans', sans-serif;
 
+  /* Deux styles de texte : Titre (700, interligne 1.2) et Texte (400 ou 600, interligne 1.45) */
+  --text-title: 1.75rem; /* 28 px : titre d'écran */
+  --text-card: 1.375rem; /* 22 px : table ou poste d'une carte de commande */
+  --text-number: 1.25rem; /* 20 px : numéro d'une table du plan */
   --text-body: 1.0625rem; /* 17 px */
   --text-small: 0.875rem; /* 14 px */
-  --text-title: 1.75rem;
+  --text-tab: 0.75rem; /* 12 px, le minimum : libellés de la barre d'onglets */
 
   --space-1: 0.25rem;
   --space-2: 0.5rem;
@@ -31,21 +43,56 @@
   --space-8: 2rem;
 
   --tap-min: 48px; /* un peu plus que 44 : utilisée vite, d'une main, en service */
+  --tap-gap: 8px; /* entre deux cibles voisines */
   --tabbar-height: 56px;
+  --table-tile: 48px; /* largeur d'une table du plan : 6 colonnes tiennent sur 360 px avec --tap-gap */
+  --table-tile-height: 60px; /* plus haute que large : numéro, montant et bande « prête » */
+  --radius-small: 8px;
   --radius: 14px;
+  --radius-full: 999px;
   --content-max: 40rem;
 }
 
+:root[data-theme='light'] {
+  color-scheme: light;
+}
+
 @media (prefers-color-scheme: dark) {
-  :root {
+  :root:not([data-theme='light']) {
+    color-scheme: dark;
+
     --color-paper: #1c1b16;
     --color-surface: #26251f;
     --color-border: rgb(242 235 221 / 0.2);
     --color-ink: #f2ebdd;
     --color-muted: #b9b1a1;
     --color-accent: #ff8a4c;
-    --color-action: #e3d9c3;
+    --color-on-accent: #1c1b16;
+    --color-action: #e3d9c3; /* bouton beige */
     --color-on-action: #1c1b16;
     --color-focus: #ff8a4c;
+    --color-danger: #d4849a; /* moins saturé : un bouton danger ne doit pas crier */
+    --color-on-danger: #1c1b16;
+    --color-ready: #8ab8ff;
+    --color-on-ready: #1c1b16;
   }
+}
+
+:root[data-theme='dark'] {
+  color-scheme: dark;
+
+  --color-paper: #1c1b16;
+  --color-surface: #26251f;
+  --color-border: rgb(242 235 221 / 0.2);
+  --color-ink: #f2ebdd;
+  --color-muted: #b9b1a1;
+  --color-accent: #ff8a4c;
+  --color-on-accent: #1c1b16;
+  --color-action: #e3d9c3; /* bouton beige */
+  --color-on-action: #1c1b16;
+  --color-focus: #ff8a4c;
+  --color-danger: #d4849a; /* moins saturé : un bouton danger ne doit pas crier */
+  --color-on-danger: #1c1b16;
+  --color-ready: #8ab8ff;
+  --color-on-ready: #1c1b16;
 }

@@ -5,9 +5,10 @@ import { AccountSummary } from './AccountSummary';
 import { EndShift } from './EndShift';
 import { OnShiftList } from './OnShiftList';
 import { TabIcon } from './TabIcon';
+import { ThemeChoice } from './ThemeChoice';
 
-// Onglet « Moi » : le compte, qui est en shift, les écrans sans place dans la barre, la fin de
-// shift et la déconnexion.
+// Onglet « Moi » : le compte, qui est en shift, les écrans sans place dans la barre, le thème, la
+// fin de shift et la déconnexion.
 export function MeScreen({
   me,
   more,
@@ -42,6 +43,7 @@ export function MeScreen({
           ))}
         </ul>
       )}
+      <ThemeChoice />
       {shiftRole && me.onShift && !me.principal && <EndShift onEnded={onEnded} />}
       <button type="button" className="button button--secondary" onClick={onLogout}>
         {t('session.logout')}

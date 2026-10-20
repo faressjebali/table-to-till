@@ -1,0 +1,340 @@
+/*
+ * Composants du système de design (docs/design.md). Les écrans les adoptent un par un, dans les
+ * PR d'apparence ; la galerie design.html les montre tous, en dev seulement.
+ * Bouton principal : .button (app.css). Carte de commande : .ticket (app.css) + .ticket--receipt.
+ */
+
+/* Un retour au toucher, jamais d'animation qui tourne en boucle. .button l'aura avec la PR 4. */
+.button--danger,
+.table-tile,
+.segmented__option {
+  transition:
+    background-color 150ms ease-out,
+    border-color 150ms ease-out,
+    transform 100ms ease-out;
+}
+
+.button--danger:active:not(:disabled),
+.table-tile:active {
+  transform: scale(0.97);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .button--danger,
+  .table-tile,
+  .segmented__option {
+    transition: none;
+  }
+
+  .button--danger:active:not(:disabled),
+  .table-tile:active {
+    transform: none;
+  }
+}
+
+/* Bouton danger : annuler, rejeter, clôturer. Toujours avec un texte qui dit l'action. */
+.button--danger {
+  background: var(--color-danger);
+  color: var(--color-on-danger);
+}
+
+/* Choix à quelques options (thème dans « Moi ») : boutons radio en ligne, 48 px */
+.segmented {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.segmented__legend {
+  margin-bottom: var(--space-2);
+  padding: 0;
+  font-weight: 600;
+}
+
+.segmented__options {
+  display: flex;
+  gap: var(--space-1);
+  padding: var(--space-1);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  background: var(--color-surface);
+}
+
+.segmented__option {
+  display: grid;
+  flex: 1;
+  place-items: center;
+  min-height: calc(var(--tap-min) - 2 * var(--space-1));
+  border-radius: calc(var(--radius) - var(--space-1));
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.segmented__option input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.segmented__option:has(input:checked) {
+  background: var(--color-action);
+  color: var(--color-on-action);
+}
+
+.segmented__option:has(input:focus-visible) {
+  outline: 3px solid var(--color-focus);
+  outline-offset: 2px;
+}
+
+/*
+ * Carte de table (plan des tables). L'état ne passe jamais par la couleur seule :
+ * libre = contour, occupée = fond plein + montant, à confirmer = bord épais + pastille chiffrée,
+ * échec caisse = hachures autour + pastille ⚠, prête = pastille bleue avec tasse ou assiette.
+ */
+.table-tile {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  --tile-border: 2px;
+  --ready-band: 18px;
+
+  min-width: var(--table-tile);
+  min-height: var(--table-tile-height);
+  padding: 0;
+  border: var(--tile-border) solid var(--color-muted);
+  border-radius: var(--radius-small);
+  background: var(--color-paper);
+  color: var(--color-ink);
+  font: inherit;
+  cursor: pointer;
+}
+
+.table-tile--round {
+  border-radius: var(--radius-full);
+}
+
+.table-tile__number {
+  font-size: var(--text-number);
+  font-weight: 700;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Montant sans « DT » : il tient dans la case ; le lecteur d'écran dit le montant complet */
+.table-tile__amount {
+  font-size: var(--text-small);
+  font-weight: 600;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+.table-tile--occupied {
+  border-color: var(--color-action);
+  background: var(--color-action);
+  color: var(--color-on-action);
+}
+
+/* Passation : table de l'autre principal, contour épais sans fond plein, ses initiales en haut à gauche */
+.table-tile--other {
+  --tile-border: 3px;
+
+  border-width: var(--tile-border);
+  border-color: var(--color-action);
+  background: var(--color-paper);
+  color: var(--color-ink);
+}
+
+.table-tile__owner {
+  position: absolute;
+  top: calc(-10px - var(--tile-border));
+  left: calc(-10px - var(--tile-border));
+  padding: 0 4px;
+  border: 2px solid var(--color-paper);
+  border-radius: var(--radius-full);
+  background: var(--color-action);
+  color: var(--color-on-action);
+  font-size: var(--text-tab);
+  font-weight: 700;
+  line-height: 14px;
+}
+
+.table-tile--pending {
+  --tile-border: 4px;
+
+  border-width: var(--tile-border);
+  border-color: var(--color-accent);
+}
+
+/* Échec caisse : numéro et montant sur fond uni, hachures seulement autour */
+.table-tile--failed {
+  --tile-border: 6px;
+
+  border: var(--tile-border) solid transparent;
+  background:
+    linear-gradient(var(--color-surface), var(--color-surface)) padding-box,
+    repeating-linear-gradient(-45deg, var(--color-danger) 0 3px, transparent 3px 6px) border-box;
+  color: var(--color-ink);
+}
+
+/* Pastille à cheval sur le coin en haut à droite : l'action attendue (échec caisse prioritaire sur
+ * « à confirmer »), jamais sur le numéro ni le montant. */
+.table-tile__badge {
+  position: absolute;
+  top: calc(-10px - var(--tile-border));
+  right: calc(-10px - var(--tile-border));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 4px;
+  border: 2px solid var(--color-paper);
+  border-radius: var(--radius-full);
+  background: var(--color-accent);
+  color: var(--color-on-accent);
+  font-size: var(--text-tab);
+  font-weight: 700;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+.table-tile__badge--failed {
+  background: var(--color-danger);
+  color: var(--color-on-danger);
+}
+
+/*
+ * Prête : bande bleue sur toute la largeur du bas de la table, icône de 16 px (tasse, cloche, ou
+ * les deux dans la même bande). Dans la case : rien ne déborde sur la table voisine.
+ */
+.table-tile--ready {
+  padding-bottom: var(--ready-band);
+}
+
+.table-tile__ready {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  height: var(--ready-band);
+  border-radius: 0 0 calc(var(--radius-small) - var(--tile-border))
+    calc(var(--radius-small) - var(--tile-border));
+  background: var(--color-ready);
+  color: var(--color-on-ready);
+}
+
+/* Table ronde : la bande devient une pilule dans le bas du cercle */
+.table-tile--round .table-tile__ready {
+  right: 6px;
+  bottom: 2px;
+  left: 6px;
+  border-radius: var(--radius-full);
+}
+
+/* Plan de la salle : une case par table, toute la salle sur 360 px sans défilement de côté */
+.room {
+  display: grid;
+  grid-template-columns: repeat(var(--room-columns), var(--table-tile));
+  grid-template-rows: repeat(var(--room-rows), var(--table-tile-height));
+  gap: var(--tap-gap);
+  justify-content: center;
+  padding: var(--space-2) 0;
+}
+
+.room > * {
+  display: grid;
+}
+
+/*
+ * Signature : la carte de commande a le haut dentelé d'un bon de caisse, comme les bons que
+ * LegacyPOS imprime au bar. Fixe, rien ne bouge. Deux couches : le trait, puis le papier.
+ */
+.ticket--receipt {
+  position: relative;
+  margin-top: 7px;
+  border-top: 0;
+  border-top-left-radius: 0;
+  border-top-right-radius: 0;
+}
+
+.ticket--receipt::before,
+.ticket--receipt::after {
+  content: '';
+  position: absolute;
+  right: -1px;
+  left: -1px;
+  background-size: 12px 6px;
+  background-repeat: repeat-x;
+  pointer-events: none;
+}
+
+.ticket--receipt::before {
+  top: -7px;
+  height: 6px;
+  background-image: conic-gradient(from 135deg at 50% 0, var(--color-border) 90deg, transparent 0);
+}
+
+.ticket--receipt::after {
+  top: -6px;
+  height: 6px;
+  background-image: conic-gradient(from 135deg at 50% 0, var(--color-surface) 90deg, transparent 0);
+}
+
+/* Bandeau d'alerte dans l'écran : échec caisse, personne au bar… Icône + texte, jamais la couleur seule */
+.alert__icon {
+  flex: none;
+}
+
+.alert--danger {
+  border-color: var(--color-danger);
+}
+
+.alert--danger .alert__icon {
+  color: var(--color-danger);
+}
+
+/* Bandeaux d'état de l'app, collés en haut : « Pas de connexion », nouvelle version */
+.banner {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-height: var(--tap-min);
+  padding: calc(env(safe-area-inset-top) + var(--space-2))
+    max(var(--space-4), env(safe-area-inset-right)) var(--space-2)
+    max(var(--space-4), env(safe-area-inset-left));
+  font-weight: 700;
+}
+
+.banner__text {
+  flex: 1;
+}
+
+/* Couleurs inversées : ne ressemble à rien d'autre dans l'app, lisible en plein soleil */
+.banner--offline {
+  background: var(--color-ink);
+  color: var(--color-paper);
+}
+
+.banner--update {
+  border-bottom: 2px solid var(--color-action);
+  background: var(--color-surface);
+  color: var(--color-ink);
+}
+
+.banner--update .button {
+  flex: none;
+}

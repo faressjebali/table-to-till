@@ -1,14 +1,17 @@
 import './styles/tokens.css';
 import './styles/global.css';
 import './styles/app.css';
+import './styles/components.css';
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { App } from './App';
 import { unlockSoundOnFirstTouch } from './sound';
+import { applyTheme, loadTheme } from './theme';
 
 const root = document.getElementById('root');
 if (!root) throw new Error('#root introuvable dans index.html');
 
+applyTheme(loadTheme());
 unlockSoundOnFirstTouch();
 
 createRoot(root).render(
