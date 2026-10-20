@@ -65,6 +65,7 @@
 }
 
 .segmented__option {
+  position: relative;
   display: grid;
   flex: 1;
   place-items: center;
@@ -83,6 +84,31 @@
 .segmented__option:has(input:checked) {
   background: var(--color-action);
   color: var(--color-on-action);
+}
+
+/* Nombre de tables de la salle, et pastille quand l'autre salle attend une action */
+.segmented__count {
+  font-weight: 400;
+  opacity: 0.8;
+  font-variant-numeric: tabular-nums;
+}
+
+.segmented__badge {
+  position: absolute;
+  top: -6px;
+  right: -2px;
+  display: grid;
+  place-items: center;
+  min-width: 22px;
+  height: 22px;
+  padding: 0 5px;
+  border: 2px solid var(--color-surface);
+  border-radius: var(--radius-full);
+  background: var(--color-accent);
+  color: var(--color-on-accent);
+  font-size: var(--text-tab);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
 }
 
 .segmented__option:has(input:focus-visible) {
@@ -117,7 +143,20 @@
 }
 
 .table-tile--round {
+  min-width: var(--table-round);
+  min-height: var(--table-round);
   border-radius: var(--radius-full);
+}
+
+/* Table longue (la 19 de la terrasse) : deux cases et l'écart entre elles */
+.table-tile--long {
+  min-width: calc(2 * var(--table-tile) + var(--tap-gap));
+}
+
+/* Ronde : les pastilles se posent sur le cercle, pas dans le coin vide de son carré */
+.table-tile--round .table-tile__badge {
+  top: calc(-4px - var(--tile-border));
+  right: calc(-4px - var(--tile-border));
 }
 
 .table-tile__number {
@@ -141,7 +180,8 @@
   color: var(--color-on-action);
 }
 
-/* Passation : table de l'autre principal, contour épais sans fond plein, ses initiales en haut à gauche */
+/* Passation : table de l'autre principal, contour épais sans fond plein, icône personne en haut à
+ * gauche ; son nom est dans le résumé du plan, la légende et les commandes de la table. */
 .table-tile--other {
   --tile-border: 3px;
 
@@ -151,18 +191,21 @@
   color: var(--color-ink);
 }
 
-.table-tile__owner {
-  position: absolute;
-  top: calc(-10px - var(--tile-border));
-  left: calc(-10px - var(--tile-border));
-  padding: 0 4px;
-  border: 2px solid var(--color-paper);
-  border-radius: var(--radius-full);
-  background: var(--color-action);
-  color: var(--color-on-action);
-  font-size: var(--text-tab);
-  font-weight: 700;
-  line-height: 14px;
+/* Dans la table, au-dessus du numéro : rien ne sort dans l'écart avec la table voisine */
+.table-tile__other {
+  display: block;
+  line-height: 0;
+}
+
+.table-tile--other {
+  gap: 1px;
+}
+
+/* Quand la place manque, le montant s'efface (il reste dans le lecteur d'écran et les commandes) */
+.table-tile--round.table-tile--ready .table-tile__amount,
+.table-tile--round.table-tile--other .table-tile__amount,
+.table-tile--other.table-tile--ready .table-tile__amount {
+  display: none;
 }
 
 .table-tile--pending {
@@ -184,11 +227,12 @@
 }
 
 /* Pastille à cheval sur le coin en haut à droite : l'action attendue (échec caisse prioritaire sur
- * « à confirmer »), jamais sur le numéro ni le montant. */
+ * « à confirmer »), jamais sur le numéro ni le montant. Elle sort de 6 px : moins que les 8 px entre
+ * deux tables. */
 .table-tile__badge {
   position: absolute;
-  top: calc(-10px - var(--tile-border));
-  right: calc(-10px - var(--tile-border));
+  top: calc(-6px - var(--tile-border));
+  right: calc(-6px - var(--tile-border));
   display: flex;
   align-items: center;
   justify-content: center;
@@ -215,6 +259,7 @@
  * les deux dans la même bande). Dans la case : rien ne déborde sur la table voisine.
  */
 .table-tile--ready {
+  gap: 0;
   padding-bottom: var(--ready-band);
 }
 
@@ -242,18 +287,14 @@
   border-radius: var(--radius-full);
 }
 
-/* Plan de la salle : une case par table, toute la salle sur 360 px sans défilement de côté */
+/*
+ * Plan d'une salle : chaque table à la place calculée par drawRoom (src/tablePlan.ts), toute la
+ * salle sur 360 px sans défilement de côté. Largeur et hauteur données par le calcul.
+ */
 .room {
-  display: grid;
-  grid-template-columns: repeat(var(--room-columns), var(--table-tile));
-  grid-template-rows: repeat(var(--room-rows), var(--table-tile-height));
-  gap: var(--tap-gap);
-  justify-content: center;
-  padding: var(--space-2) 0;
-}
-
-.room > * {
-  display: grid;
+  position: relative;
+  max-width: 100%;
+  margin: var(--space-2) auto;
 }
 
 /*
@@ -289,6 +330,11 @@
   top: -6px;
   height: 6px;
   background-image: conic-gradient(from 135deg at 50% 0, var(--color-surface) 90deg, transparent 0);
+}
+
+/* Titre de la carte de commande : pas de marge en plus du bord dentelé */
+.ticket--receipt .ticket__place {
+  margin: 0;
 }
 
 /* Bandeau d'alerte dans l'écran : échec caisse, personne au bar… Icône + texte, jamais la couleur seule */
@@ -337,4 +383,259 @@
 
 .banner--update .button {
   flex: none;
+}
+
+/* Caché à l'écran, lu par le lecteur d'écran (titre de l'écran Tables : l'onglet le dit déjà) */
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/* Bouton rond d'une seule icône ou d'un signe (« ? » de la légende), avec un aria-label */
+.icon-button {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: var(--tap-min);
+  height: var(--tap-min);
+  padding: 0;
+  border: 2px solid var(--color-muted);
+  border-radius: var(--radius-full);
+  background: var(--color-surface);
+  color: var(--color-ink);
+  font: inherit;
+  font-size: var(--text-card);
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.icon-button[aria-expanded='true'] {
+  border-color: var(--color-action);
+  background: var(--color-action);
+  color: var(--color-on-action);
+}
+
+/*
+ * Résumé du plan : une puce par état, son icône, son nombre ; un tap met ces tables en évidence.
+ * Texte 14 px pour tenir en deux lignes sur 360 px, la légende « ? » au bout.
+ */
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.chip {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-height: var(--tap-min);
+  padding: 0 10px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-full);
+  background: var(--color-surface);
+  color: var(--color-ink);
+  font: inherit;
+  font-size: var(--text-small);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.chip[aria-pressed='true'] {
+  border-color: var(--color-ink);
+  box-shadow: inset 0 0 0 1px var(--color-ink);
+}
+
+/* Les mêmes formes que les tables : contour = libre, plein = occupée, bord épais = à confirmer */
+.chip__swatch {
+  flex: none;
+  width: 16px;
+  height: 18px;
+  border: 2px solid var(--color-muted);
+  border-radius: 4px;
+}
+
+.chip__swatch--occupied {
+  border-color: var(--color-action);
+  background: var(--color-action);
+}
+
+.chip__swatch--pending {
+  border: 4px solid var(--color-accent);
+}
+
+.chip__icon {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  border-radius: var(--radius-full);
+}
+
+.chip__icon--ready {
+  background: var(--color-ready);
+  color: var(--color-on-ready);
+}
+
+.chip__icon--other {
+  background: var(--color-action);
+  color: var(--color-on-action);
+}
+
+/* Tables qui ne correspondent pas à la puce choisie : en retrait, toujours touchables */
+.room__cell {
+  position: absolute;
+  display: grid;
+  transition: opacity 150ms ease-out;
+}
+
+.room__cell > .table-tile {
+  width: 100%;
+  height: 100%;
+}
+
+.room__cell--dim {
+  opacity: 0.35;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .room__cell {
+    transition: none;
+  }
+}
+
+/* Légende du plan : les 7 états, la carte de table et son nom */
+.legend {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  background: var(--color-surface);
+}
+
+.legend__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.legend__title {
+  margin: 0;
+  font-size: var(--text-body);
+}
+
+.legend__items {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(9rem, 1fr));
+  gap: var(--space-4) var(--space-3);
+  margin: 0;
+  padding: var(--space-2) 0 0 var(--space-2);
+  list-style: none;
+}
+
+.legend__item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+/* Commandes d'une table : en-tête (numéro, total, caisse) */
+.table-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.table-head__total {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  font-size: var(--text-card);
+  font-weight: 700;
+  line-height: 1.2;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.table-head__total-label,
+.ticket__total-label {
+  color: var(--color-muted);
+  font-size: var(--text-small);
+  font-weight: 600;
+}
+
+.table-head__meta {
+  color: var(--color-muted);
+  font-size: var(--text-small);
+}
+
+/* Pastille chiffrée dans un bandeau (même forme que sur la table) */
+.table-tile__badge--inline {
+  position: static;
+  flex: none;
+  min-width: 24px;
+  height: 24px;
+  border: 0;
+}
+
+/* État d'une commande : icône + texte, jamais la couleur seule */
+.status-chip {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: var(--space-1);
+  padding: 2px var(--space-2);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-full);
+  color: var(--color-muted);
+  font-size: var(--text-small);
+  font-weight: 600;
+}
+
+.status-chip--danger {
+  border: 2px solid var(--color-danger);
+  color: var(--color-danger);
+}
+
+.status-chip--ready {
+  border-color: var(--color-ready);
+  background: var(--color-ready);
+  color: var(--color-on-ready);
+}
+
+.ticket__ready {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.ticket__price {
+  flex: none;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.ticket__total {
+  display: flex;
+  align-items: baseline;
+  justify-content: flex-end;
+  gap: var(--space-2);
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--color-border);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
 }

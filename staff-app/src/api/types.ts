@@ -80,6 +80,53 @@ export interface Order {
   } | null;
 }
 
+/** Table de docs/api.md § 2 (plan de la salle : tables `real` seulement). */
+/** Salle du plan des tables : intérieur ou terrasse. */
+export type Room = 'inside' | 'terrace';
+
+export interface Table {
+  id: number;
+  number: number;
+  kind: 'real' | 'virtual';
+  state: 'free' | 'occupied';
+  openSessionId: number | null;
+  /** Commandes confirmées seulement, en millimes. */
+  openTotal: number;
+  /** Commandes QR en attente : la table n'est pas occupée pour autant. */
+  pendingOrders: number;
+  /** Place sur le plan de sa salle (contrat v2.4) ; une table longue est carrée avec `w` > 1. */
+  layout: {
+    room: Room;
+    x: number;
+    y: number;
+    w: number;
+    h: number;
+    shape: 'square' | 'round';
+  } | null;
+  offer: { label: string; userId: number | null } | null;
+  /** Principal de la session ouverte ; `null` si la table est libre. */
+  principalId: number | null;
+}
+
+/** TableSession de docs/api.md § 2 : une « ouverture » de table, jusqu'à l'encaissement. */
+export interface TableSession {
+  id: number;
+  tableId: number;
+  openedAt: string;
+  closedAt: string | null;
+  status: 'open' | 'paid' | 'unpaid';
+  total: number;
+  orderIds: number[];
+  principal: { id: number; name: string } | null;
+}
+
+/** Réponse de `GET /tables/:id/session`. Les offerts (`gifts`) arrive plus tard. */
+export interface TableSessionDetail {
+  session: TableSession;
+  orders: Order[];
+  gifts: unknown[];
+}
+
 /** Données de `order:ready` (serveurs en shift). */
 export interface OrderReady {
   orderId: number;

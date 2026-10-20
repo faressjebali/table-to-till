@@ -10,6 +10,7 @@ import { ReadyBanner } from './ReadyBanner';
 import { RealtimeProvider } from './RealtimeProvider';
 import { StationScreen } from './StationScreen';
 import { TabIcon } from './TabIcon';
+import { TablesScreen } from './TablesScreen';
 
 // Écrans du compte connecté, selon son rôle et son shift (src/navigation.ts) : barre d'onglets en
 // bas, utilisable d'une main ; « Moi » ouvre aussi les écrans qui n'ont pas de place dans la barre.
@@ -70,6 +71,8 @@ function Screens({ me, onLogout, onShiftChange }: ShellProps) {
           />
         ) : active === 'bar' || active === 'kitchen' ? (
           <StationScreen key={active} station={active} />
+        ) : active === 'tables' ? (
+          <TablesScreen me={me} />
         ) : (
           <PlaceholderScreen destination={active} />
         )}

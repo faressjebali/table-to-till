@@ -1,20 +1,21 @@
-import { useState } from 'react';
 import { t } from '../i18n/fr';
+import { addReady, clearReadyTables, dismissReady, useReadyItems } from '../readyTables';
 import { useRealtimeEvent } from '../realtime';
 import { playChime } from '../sound';
+import { StateIcon } from './StateIcon';
 
 // Serveurs en shift : « Table 7 : boissons prêtes » quand le bar ou la cuisine appuie sur Prêt
 // (`order:ready`), jusqu'à ce que le serveur touche OK. App fermée : notification push.
+// La même liste donne la bande bleue du plan des tables (src/readyTables.ts).
 export function ReadyBanner() {
-  const [items, setItems] = useState<{ key: string; text: string }[]>([]);
+  const items = useReadyItems();
 
-  useRealtimeEvent('order:ready', ({ orderId, table, station }) => {
-    const key = `${String(orderId)}-${station}`;
-    const text = `${t('place.table')} ${String(table.number)} : ${t(
-      station === 'bar' ? 'ready.bar' : 'ready.kitchen',
-    )}`;
-    setItems((list) => [...list.filter((item) => item.key !== key), { key, text }]);
+  useRealtimeEvent('order:ready', (ready) => {
+    addReady(ready);
     playChime('new');
+  });
+  useRealtimeEvent('table:updated', (table) => {
+    if (table.state === 'free') clearReadyTables([table.id]);
   });
 
   if (items.length === 0) return null;
@@ -22,11 +23,18 @@ export function ReadyBanner() {
     <div className="ready-list" role="status">
       {items.map((item) => (
         <div key={item.key} className="ready">
-          <p className="ready__text">{item.text}</p>
+          <span className="alert__icon">
+            <StateIcon state={item.station} />
+          </span>
+          <p className="ready__text">
+            {`${t('place.table')} ${String(item.tableNumber)} : ${t(
+              item.station === 'bar' ? 'ready.bar' : 'ready.kitchen',
+            )}`}
+          </p>
           <button
             type="button"
             className="button button--secondary"
-            onClick={() => setItems((list) => list.filter((i) => i.key !== item.key))}
+            onClick={() => dismissReady(item.key)}
           >
             {t('ready.dismiss')}
           </button>

@@ -93,7 +93,8 @@ Montants, heures, quantités, numéros : chiffres alignés (`font-variant-numeri
 | `--tap-min` | 48 px | Hauteur minimale de tout ce qui se touche |
 | `--tap-gap` | 8 px | Écart minimal entre deux cibles voisines |
 | `--tabbar-height` | 56 px | Barre d'onglets |
-| `--table-tile` × `--table-tile-height` | 48 × 60 px | Table du plan (dont 18 px de bande « prête » quand elle est là) |
+| `--table-tile` × `--table-tile-height` | 48 × 60 px | Table carrée du plan (dont 18 px de bande « prête » quand elle est là) ; une table longue fait 2 cases et l'écart entre elles : 104 × 60 px |
+| `--table-round` | 56 px | Diamètre d'une table ronde, centrée sur sa case |
 | `--radius-small` | 8 px | Table carrée du plan, pastilles carrées, nuancier |
 | `--radius` | 14 px | Boutons, cartes, champs, bandeaux |
 | `--radius-full` | 999 px | Table ronde, pastilles |
@@ -110,7 +111,9 @@ Montants, heures, quantités, numéros : chiffres alignés (`font-variant-numeri
 | **Prête au bar** | **Bande bleue** sur toute la largeur du bas de la table, dans la case | ready / on-ready | **tasse** de 16 px (icône de l'onglet Bar) |
 | **Prête en cuisine** | Même bande | ready / on-ready | **cloche** de 16 px (icône de l'onglet Cuisine) |
 | **Bar et cuisine prêts** | **Une seule bande** | ready / on-ready | tasse + cloche côte à côte |
-| Table de l'**autre principal** (passation) | Contour épais 3 px, sans fond plein | action | initiales en haut à gauche (**à revoir en PR 3**, voir § 7) |
+| Table de l'**autre principal** (passation) | Contour épais 3 px, sans fond plein | action | **icône personne** dans la table, au-dessus du numéro ; son **nom** dans le résumé du plan (« Sami : 3 tables », touchable) et dans les commandes de la table (« Caisse de Sami ») |
+
+Formes : **carrée** (48 × 60), **ronde** (56 px de diamètre : 5, 17, 25) et **longue** (2 cases, 104 × 60 : la 19 de la terrasse). Tous les états marchent sur les trois : sur une ronde, la pastille se pose sur le cercle et la bande « prête » devient une pilule dans le bas ; sur une longue, la bande prend toute la largeur. Seule la pastille du coin (à confirmer, échec) sort de la table, de 6 px : moins que les 8 px entre deux tables. Quand la place manque (ronde prête ou de l'autre principal, carrée prête et de l'autre principal), le **montant s'efface** : il reste dans la phrase du lecteur d'écran et dans les commandes de la table.
 
 Échec caisse et commande à confirmer sur la même table : la pastille ⚠ passe avant (elle bloque la table) ; la commande reste dans la liste « Commandes ».
 
@@ -123,21 +126,29 @@ Montants, heures, quantités, numéros : chiffres alignés (`font-variant-numeri
 | Bouton principal | `.button` | `app.css` | 48 px, fond action. Un seul par écran ou par carte. `.button--block` pour toute la largeur |
 | Bouton secondaire | `.button.button--secondary` | `app.css` | Contour, fond surface |
 | **Bouton danger** | `.button.button--danger` | `components.css` | Rejeter, annuler, clôturer ; toujours un texte qui dit l'action, et une confirmation si c'est irréversible |
-| Choix segmenté | `.segmented` | `components.css` | Boutons radio en ligne (thème dans « Moi ») |
+| Choix segmenté | `.segmented` (+ `.segmented__count`, `.segmented__badge`) | `components.css` | Boutons radio en ligne, 48 px : thème dans « Moi », salle du plan (`<RoomSwitch>` : « Intérieur 18 \| Terrasse 6 », dernier choix gardé sur le téléphone). Pastille orange chiffrée sur l'onglet **non affiché** quand des tables y attendent une action |
 | **Carte de table** | `<TableTile>` / `.table-tile` | `components/TableTile.tsx` | Voir § 6. Le montant s'affiche **sans « DT »** (il tient dans 48 px) ; `label` donne au lecteur d'écran la phrase complète |
-| **Plan de la salle** | `.room` | `components.css` | Grille de `--room-columns` × `--room-rows` cases. La salle (`docs/tables.csv`) tient sur **6 colonnes** (x 7-8 et x 10-12 ne se chevauchent jamais) : 6 × 48 + 5 × 8 = 328 px, **toute la salle sur 360 px, sans défilement de côté** ; 9 rangées × 60 px |
+| **Plan d'une salle** | `.room`, `.room__cell` ; calcul `drawRoom` | `components.css`, `src/tablePlan.ts` | Deux salles, **Intérieur** (18 tables) et **Terrasse** (6), chacune avec sa grille (`docs/tables.csv` : `salle`, `forme`, case). Chaque table est placée en px : rangées de 60 px à 8 px d'écart ; entre deux colonnes, **8 px** si elles ont des tables sur la même rangée (**12 px** si une ronde y fait face), **4 px** si elles ne se font jamais face (l'écart vertical les sépare déjà). Intérieur : 328 px, Terrasse : 272 px, **sans défilement de côté** sur 360 px ; un test vérifie 8 px minimum entre deux tables |
 | **Carte de commande** | `.ticket` + `.ticket--receipt` | `app.css` + `components.css` | Voir § 8 |
 | Bandeau d'alerte | `.alert` (+ `.alert--danger`), `.alert__icon` | `app.css` + `components.css` | Dans l'écran : icône + texte + action éventuelle. `.alert--danger` pour l'échec caisse |
-| Bandeau « prêt » | `.ready` | `app.css` | « Table 7 : boissons prêtes » + OK |
+| Bandeau « prêt » | `.ready` | `app.css` | Bord et icône bleus `ready` : « Table 7 : boissons prêtes » + OK |
+| **Résumé du plan** | `.chips`, `.chip` (+ `.chip__swatch`, `.chip__icon`) | `components.css` | Une puce de 48 px par état présent : sa forme ou son icône, son nombre, son nom. `aria-pressed` : un tap met ces tables en évidence (les autres à 35 %), un deuxième annule. Les puces comptent **les deux salles** ; si les tables d'une puce ne sont que dans l'autre salle, le plan y va |
+| Bouton icône | `.icon-button` | `components.css` | Rond de 48 px, un signe ou une icône, toujours un `aria-label` (« ? » = Légende) |
+| **Légende du plan** | `<TablesLegend>` / `.legend` | `components/TablesLegend.tsx` | Les 7 états avec la même carte de table (`decorative`) et leur nom, ouverte en un tap |
+| État d'une commande | `.status-chip` (+ `--danger`, `--ready`) | `components.css` | Icône + texte : en caisse ✓, en attente, échec ⚠, à la main, boissons / plats prêts |
+| Titre caché | `.visually-hidden` | `components.css` | Titre lu par le lecteur d'écran quand l'onglet le dit déjà (écran Tables) |
 | **Bandeau « Pas de connexion »** | `.banner.banner--offline` | `components.css` | Collé en haut, **couleurs inversées** (ink / paper) : ne ressemble à rien d'autre ; icône réseau barré |
 | **Bandeau « Nouvelle version disponible »** | `.banner.banner--update` | `components.css` | Collé en haut, discret, bouton « Recharger » de 48 px |
 | Icônes d'état | `<StateIcon>` | `components/StateIcon.tsx` | Même trait que `TabIcon` ; toujours à côté d'un texte ou dans un élément qui a un `aria-label` |
 
-Les écrans adoptent ces composants un par un, dans les PR d'apparence : plan des tables, connexion, navigation, shift, avec captures avant / après dans les deux thèmes. D'ici là, deux écarts connus :
+Les écrans adoptent ces composants un par un, dans les PR d'apparence : plan des tables et commandes d'une table (fait), connexion, navigation, shift, avec captures avant / après dans les deux thèmes. D'ici là, un écart connu :
 
-- `.button` n'a pas encore le léger retour au toucher (`scale(0.97)`) : il l'aura plus tard ;
-- `.ready` a un bord olive (action) : il passera au bleu `ready`, pour qu'une couleur = un sens.
-- **Badge « AB » de l'autre principal (passation) : à revoir en PR 3.** Les initiales en 12 px dans une pastille de coin sont petites, et deux principaux peuvent avoir les mêmes initiales. Pistes : nom court sous le plan en légende, ou plan filtré « mes tables / ses tables ».
+- `.button` n'a pas encore le léger retour au toucher (`scale(0.97)`) : il l'aura plus tard.
+
+Limites du plan des tables, en attendant les données :
+
+- **Échec caisse** : montré par la légende et par les commandes de la table, pas encore sur le plan ni dans le résumé ; branché plus tard (Réessayer, fait à la main).
+- **Prête** : vient de l'événement `order:ready`, gardé sur le téléphone jusqu'au OK du bandeau ou jusqu'à ce que la table se libère. Une « prête » envoyée pendant une coupure réseau est perdue ; l'API ne permet pas encore de la relire.
 
 ## 8. Élément signature
 

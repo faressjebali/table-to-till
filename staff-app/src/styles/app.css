@@ -516,7 +516,11 @@
 }
 
 .ready {
-  border-color: var(--color-action);
+  border-color: var(--color-ready);
+}
+
+.ready .alert__icon {
+  color: var(--color-ready);
 }
 
 .ready-list {

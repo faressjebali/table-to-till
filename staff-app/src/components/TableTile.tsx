@@ -10,12 +10,16 @@ export interface TableTileProps {
   pending?: number;
   failed?: boolean;
   ready?: ('bar' | 'kitchen')[];
-  /** Passation : initiales de l'autre principal, quand la table est à lui. */
-  owner?: string;
+  /** Passation : la table est dans la caisse de l'autre principal (son nom est dans `label`). */
+  other?: boolean;
   round?: boolean;
+  /** Table longue (plusieurs cases, ex. la 19 de la terrasse). */
+  long?: boolean;
   /** Ce que dit le lecteur d'écran : numéro, état, montant complet (« 12,5 DT »), ce qui attend. */
   label: string;
   onClick?: () => void;
+  /** Exemple (légende) : rien à toucher ni à annoncer, le nom est écrit à côté. */
+  decorative?: boolean;
 }
 
 export function TableTile({
@@ -24,26 +28,30 @@ export function TableTile({
   pending = 0,
   failed = false,
   ready = [],
-  owner,
+  other = false,
   round = false,
+  long = false,
   label,
   onClick,
+  decorative = false,
 }: TableTileProps) {
   const classes = [
     'table-tile',
     round && 'table-tile--round',
-    amount !== undefined && (owner ? 'table-tile--other' : 'table-tile--occupied'),
+    long && 'table-tile--long',
+    amount !== undefined && (other ? 'table-tile--other' : 'table-tile--occupied'),
     pending > 0 && !failed && 'table-tile--pending',
     failed && 'table-tile--failed',
     ready.length > 0 && 'table-tile--ready',
   ];
-  return (
-    <button
-      type="button"
-      className={classes.filter(Boolean).join(' ')}
-      aria-label={label}
-      onClick={onClick}
-    >
+  const className = classes.filter(Boolean).join(' ');
+  const content = (
+    <>
+      {other && (
+        <span className="table-tile__other" aria-hidden="true">
+          <StateIcon state="person" size={14} />
+        </span>
+      )}
       <span className="table-tile__number" aria-hidden="true">
         {number}
       </span>
@@ -70,11 +78,18 @@ export function TableTile({
           ))}
         </span>
       )}
-      {owner && (
-        <span className="table-tile__owner" aria-hidden="true">
-          {owner}
-        </span>
-      )}
+    </>
+  );
+  if (decorative) {
+    return (
+      <span className={className} aria-hidden="true">
+        {content}
+      </span>
+    );
+  }
+  return (
+    <button type="button" className={className} aria-label={label} onClick={onClick}>
+      {content}
     </button>
   );
 }

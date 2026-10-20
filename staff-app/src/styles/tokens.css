@@ -47,6 +47,7 @@
   --tabbar-height: 56px;
   --table-tile: 48px; /* largeur d'une table du plan : 6 colonnes tiennent sur 360 px avec --tap-gap */
   --table-tile-height: 60px; /* plus haute que large : numéro, montant et bande « prête » */
+  --table-round: 56px; /* table ronde : diamètre, un peu plus que la case */
   --radius-small: 8px;
   --radius: 14px;
   --radius-full: 999px;

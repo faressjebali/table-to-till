@@ -1,7 +1,11 @@
-import type { CSSProperties, ReactNode } from 'react';
+import type { ReactNode } from 'react';
+import type { Room, Table } from '../api/types';
 import { StateIcon } from '../components/StateIcon';
 import { TableTile, type TableTileProps } from '../components/TableTile';
+import { RoomSwitch } from '../components/RoomSwitch';
+import { TablesLegend } from '../components/TablesLegend';
 import { ThemeChoice } from '../components/ThemeChoice';
+import { drawRoom } from '../tablePlan';
 
 // Galerie du système de design (docs/design.md) : chaque composant dans chacun de ses états, pour
 // les captures et pour vérifier sur téléphone, dans les deux thèmes. Données d'exemple seulement.
@@ -18,35 +22,81 @@ const COLORS = [
   ['--color-ready', 'Prête au bar, prête en cuisine'],
 ] as const;
 
-type Sample = Omit<TableTileProps, 'label'> & { column: number; row: number };
+type Tile = Omit<TableTileProps, 'label'>;
+type Sample = Tile & { room: Room; x: number; y: number; w?: number };
 
-// La salle (docs/tables.csv) sur 6 colonnes : x 7-8 et x 10-12 ne se chevauchent jamais.
-const ROOM: Sample[] = [
-  { number: 21, column: 1, row: 1 },
-  { number: 20, column: 2, row: 1, amount: '38' },
-  { number: 19, column: 3, row: 1 },
-  { number: 17, column: 4, row: 1 },
-  { number: 18, column: 5, row: 1, amount: '12,5' },
-  { number: 23, column: 1, row: 2, amount: '24,5', ready: ['bar'] },
-  { number: 22, column: 2, row: 2 },
-  { number: 7, column: 4, row: 2, pending: 1 },
-  { number: 27, column: 5, row: 2, amount: '9' },
-  { number: 14, column: 6, row: 2, amount: '41,5', failed: true },
-  { number: 8, column: 3, row: 3 },
-  { number: 6, column: 4, row: 3, amount: '31', pending: 2 },
-  { number: 26, column: 5, row: 3, amount: '18', ready: ['kitchen'] },
-  { number: 25, column: 1, row: 4 },
-  { number: 5, column: 5, row: 4, amount: '27', owner: 'AB' },
-  { number: 12, column: 6, row: 4 },
-  { number: 1, column: 2, row: 5 },
-  { number: 4, column: 5, row: 5 },
-  { number: 3, column: 5, row: 6, amount: '16', ready: ['bar', 'kitchen'] },
-  { number: 11, column: 6, row: 6 },
-  { number: 100, column: 2, row: 7, amount: '125,5' },
-  { number: 2, column: 5, row: 7 },
-  { number: 10, column: 6, row: 8 },
-  { number: 9, column: 6, row: 9 },
+// Les deux salles de docs/tables.csv, avec des tables dans chaque état (données d'exemple).
+const SAMPLES: Sample[] = [
+  { number: 17, room: 'inside', x: 2, y: 0, round: true, amount: '22', pending: 1 },
+  { number: 18, room: 'inside', x: 3, y: 0, amount: '12,5' },
+  { number: 7, room: 'inside', x: 2, y: 1, pending: 1 },
+  { number: 27, room: 'inside', x: 4, y: 1, amount: '9' },
+  { number: 14, room: 'inside', x: 5, y: 1, amount: '41,5', failed: true },
+  { number: 25, room: 'inside', x: 0, y: 2, round: true, amount: '30', ready: ['bar'] },
+  { number: 6, room: 'inside', x: 2, y: 2, amount: '31', pending: 2 },
+  { number: 26, room: 'inside', x: 4, y: 2, amount: '18', ready: ['kitchen'] },
+  { number: 8, room: 'inside', x: 1, y: 3 },
+  { number: 5, room: 'inside', x: 4, y: 3, round: true, amount: '27', other: true },
+  { number: 12, room: 'inside', x: 5, y: 3 },
+  { number: 4, room: 'inside', x: 4, y: 4 },
+  { number: 1, room: 'inside', x: 0, y: 5 },
+  { number: 3, room: 'inside', x: 4, y: 5, amount: '16', ready: ['bar', 'kitchen'] },
+  { number: 11, room: 'inside', x: 5, y: 5 },
+  { number: 2, room: 'inside', x: 4, y: 6 },
+  { number: 10, room: 'inside', x: 5, y: 7 },
+  { number: 9, room: 'inside', x: 5, y: 8 },
+  { number: 20, room: 'terrace', x: 1, y: 0, amount: '38' },
+  { number: 21, room: 'terrace', x: 2, y: 0 },
+  { number: 19, room: 'terrace', x: 3, y: 0, w: 2, amount: '64', pending: 1, ready: ['bar'] },
+  { number: 100, room: 'terrace', x: 0, y: 1, amount: '125,5' },
+  { number: 22, room: 'terrace', x: 1, y: 1, pending: 2 },
+  { number: 23, room: 'terrace', x: 2, y: 1, amount: '24,5', other: true },
 ];
+
+// Une Table du contrat pour chaque exemple, pour dessiner la salle comme l'écran Tables.
+const asTable = (sample: Sample): Table => ({
+  id: sample.number,
+  number: sample.number,
+  kind: 'real',
+  state: sample.amount === undefined ? 'free' : 'occupied',
+  openSessionId: null,
+  openTotal: 0,
+  pendingOrders: sample.pending ?? 0,
+  layout: {
+    room: sample.room,
+    x: sample.x,
+    y: sample.y,
+    w: sample.w ?? 1,
+    h: 1,
+    shape: sample.round ? 'round' : 'square',
+  },
+  offer: null,
+  principalId: null,
+});
+
+function GalleryRoom({ room }: { room: Room }) {
+  const samples = SAMPLES.filter((sample) => sample.room === room);
+  const plan = drawRoom(samples.map(asTable));
+  return (
+    <div
+      className="room"
+      role="group"
+      aria-label={`Plan : ${room}`}
+      style={{ width: plan.width, height: plan.height }}
+    >
+      {plan.tables.map(({ table, left, top, width, height, round, long }) => {
+        const sample = samples.find((s) => s.number === table.number);
+        if (!sample) return null;
+        // Les champs de place (salle, case) ne gênent pas : TableTile ne lit que les siens.
+        return (
+          <div key={table.number} className="room__cell" style={{ left, top, width, height }}>
+            <TableTile {...sample} round={round} long={long} label={describe(sample)} />
+          </div>
+        );
+      })}
+    </div>
+  );
+}
 
 const STATES: { title: string; tile: Omit<TableTileProps, 'label'> }[] = [
   { title: 'Libre', tile: { number: 21 } },
@@ -55,10 +105,28 @@ const STATES: { title: string; tile: Omit<TableTileProps, 'label'> }[] = [
   { title: 'Échec caisse', tile: { number: 14, amount: '41,5', failed: true } },
   { title: 'Prête au bar', tile: { number: 23, amount: '24,5', ready: ['bar'] } },
   { title: 'Prête en cuisine', tile: { number: 26, amount: '18', ready: ['kitchen'] } },
-  { title: 'Autre principal', tile: { number: 5, amount: '27', owner: 'AB' } },
+  { title: 'Autre principal', tile: { number: 5, amount: '27', other: true } },
   { title: 'Bar et cuisine prêts', tile: { number: 3, amount: '16', ready: ['bar', 'kitchen'] } },
   { title: 'Prête et à confirmer', tile: { number: 6, amount: '31', pending: 2, ready: ['bar'] } },
   { title: 'Ronde, 3 chiffres', tile: { number: 100, amount: '125,5', round: true } },
+  { title: 'Ronde à confirmer', tile: { number: 17, pending: 1, round: true } },
+  { title: 'Ronde, échec caisse', tile: { number: 25, amount: '30', failed: true, round: true } },
+  {
+    title: 'Ronde prête',
+    tile: { number: 5, amount: '27', ready: ['bar', 'kitchen'], round: true },
+  },
+  { title: 'Ronde, autre principal', tile: { number: 17, amount: '22', other: true, round: true } },
+];
+
+// La table longue (la 19 de la terrasse) prend toute une ligne de la galerie.
+const LONG: { title: string; tile: Tile }[] = [
+  { title: 'Longue, libre', tile: { number: 19, long: true } },
+  {
+    title: 'Longue, à confirmer et prête',
+    tile: { number: 19, amount: '64', pending: 1, ready: ['bar'], long: true },
+  },
+  { title: 'Longue, échec caisse', tile: { number: 19, amount: '64', failed: true, long: true } },
+  { title: 'Longue, autre principal', tile: { number: 19, amount: '64', other: true, long: true } },
 ];
 
 function describe(tile: Omit<TableTileProps, 'label'>): string {
@@ -68,7 +136,7 @@ function describe(tile: Omit<TableTileProps, 'label'>): string {
   if (tile.pending) parts.push(`${String(tile.pending)} à confirmer`);
   if (tile.ready?.includes('bar')) parts.push('boissons prêtes');
   if (tile.ready?.includes('kitchen')) parts.push('plats prêts');
-  if (tile.owner) parts.push(`caisse de ${tile.owner}`);
+  if (tile.other) parts.push('caisse de Sami');
   return parts.join(', ');
 }
 
@@ -103,24 +171,81 @@ export function Gallery() {
         </p>
         <ThemeChoice />
 
-        <Section title="Plan des tables (360 px)">
-          <div
-            className="room"
-            style={{ '--room-columns': 6, '--room-rows': 9 } as CSSProperties}
-            role="group"
-            aria-label="Plan de la salle"
-          >
-            {ROOM.map(({ column, row, ...tile }) => (
-              <div key={tile.number} style={{ gridColumn: column, gridRow: row }}>
-                <TableTile {...tile} label={describe(tile)} />
-              </div>
-            ))}
-          </div>
+        <Section title="Plan : intérieur (360 px)">
+          <RoomSwitch
+            room="inside"
+            counts={{ inside: 18, terrace: 6 }}
+            waiting={{ inside: 5, terrace: 3 }}
+            onChange={() => undefined}
+          />
+          <GalleryRoom room="inside" />
+        </Section>
+
+        <Section title="Plan : terrasse (360 px)">
+          <RoomSwitch
+            room="terrace"
+            counts={{ inside: 18, terrace: 6 }}
+            waiting={{ inside: 5, terrace: 3 }}
+            onChange={() => undefined}
+          />
+          <GalleryRoom room="terrace" />
+        </Section>
+
+        <Section title="Résumé du plan et légende">
+          <ul className="chips" aria-label="Résumé du plan">
+            <li>
+              <button type="button" className="chip" aria-pressed="false">
+                <span className="chip__swatch chip__swatch--occupied" aria-hidden="true" />8
+                occupées
+              </button>
+            </li>
+            <li>
+              <button type="button" className="chip" aria-pressed="true">
+                <span className="chip__swatch chip__swatch--pending" aria-hidden="true" />1 à
+                confirmer
+              </button>
+            </li>
+            <li>
+              <button type="button" className="chip" aria-pressed="false">
+                <span className="chip__icon chip__icon--ready" aria-hidden="true">
+                  <StateIcon state="bar" size={14} />
+                </span>
+                2 prêtes
+              </button>
+            </li>
+            <li>
+              <button type="button" className="chip" aria-pressed="false">
+                <span className="chip__icon chip__icon--other" aria-hidden="true">
+                  <StateIcon state="person" size={14} />
+                </span>
+                Sami : 2 tables
+              </button>
+            </li>
+            <li>
+              <button
+                type="button"
+                className="icon-button"
+                aria-label="Légende"
+                aria-expanded="true"
+              >
+                ?
+              </button>
+            </li>
+          </ul>
+          <TablesLegend onClose={() => undefined} />
         </Section>
 
         <Section title="Carte de table">
           <ul className="gallery__states">
             {STATES.map(({ title, tile }) => (
+              <li key={title} className="gallery__state">
+                <TableTile {...tile} label={describe(tile)} />
+                <span className="gallery__caption">{title}</span>
+              </li>
+            ))}
+          </ul>
+          <ul className="gallery__states gallery__states--long">
+            {LONG.map(({ title, tile }) => (
               <li key={title} className="gallery__state">
                 <TableTile {...tile} label={describe(tile)} />
                 <span className="gallery__caption">{title}</span>
@@ -148,7 +273,10 @@ export function Gallery() {
           <article className="ticket ticket--receipt">
             <header className="ticket__head">
               <h2 className="ticket__place">Table 7</h2>
-              <span className="ticket__time">10:42</span>
+              <span className="status-chip status-chip--danger">
+                <StateIcon state="failed" size={16} />
+                Échec caisse
+              </span>
             </header>
             <ul className="ticket__lines">
               <li className="ticket__line">

@@ -449,6 +449,9 @@ describe('navigation selon le rôle', () => {
     mockApi({
       '/api/me': () =>
         ++calls === 1 ? { status: 200, body: { ...ME, onShift: true } } : 'network-error',
+      // Premier écran d'un serveur en shift : le plan des tables.
+      '/api/tables': { status: 200, body: { tables: [] } },
+      '/api/shifts/current': { status: 200, body: { waiters: [], stations: [] } },
     });
     render(<App />);
     const nav = await screen.findByRole('navigation', { name: fr['nav.label'] });

@@ -4,6 +4,18 @@ import { parse } from 'csv-parse/sync';
 // Fonctions pures : aucune écriture en base ici.
 
 export type TableKind = 'real' | 'virtual';
+export type Room = 'inside' | 'terrace';
+export type Shape = 'square' | 'round';
+
+export interface SeedLayout {
+  room: Room;
+  /** Case du plan (colonne, rangée), dans la grille de sa salle. */
+  x: number;
+  y: number;
+  /** Largeur en cases : 2 pour une table longue. */
+  w: number;
+  shape: Shape;
+}
 
 export interface SeedTable {
   /** Numéro de ligne dans le CSV (en-tête = 1), pour les messages d'erreur. */
@@ -11,13 +23,21 @@ export interface SeedTable {
   /** Numéro de la table dans LegacyPOS. */
   number: number;
   kind: TableKind;
-  /** Case du plan (colonne, rangée) : seulement pour une table réelle. */
-  layout: { x: number; y: number } | null;
+  /** Place sur le plan : seulement pour une table réelle. */
+  layout: SeedLayout | null;
   /** Nom de la table d'offre ; null pour une table de vente directe ou une table réelle. */
   offerFor: string | null;
 }
 
-const COLUMNS = ['number', 'kind', 'layout_x', 'layout_y', 'offer_for'] as const;
+const COLUMNS = ['number', 'kind', 'salle', 'forme', 'layout_x', 'layout_y', 'offer_for'] as const;
+
+const ROOMS: Record<string, Room> = { interieur: 'inside', terrasse: 'terrace' };
+// Une table longue (la 19 de la terrasse) est carrée sur 2 cases : docs/api.md, Table `layout`.
+const SHAPES: Record<string, { shape: Shape; w: number }> = {
+  carree: { shape: 'square', w: 1 },
+  ronde: { shape: 'round', w: 1 },
+  longue: { shape: 'square', w: 2 },
+};
 type Row = Record<(typeof COLUMNS)[number], string>;
 
 export class TablesCsvError extends Error {
@@ -55,20 +75,34 @@ export function parseTablesCsv(text: string): SeedTable[] {
     const offerFor = row.offer_for === '' ? null : row.offer_for;
 
     if (row.kind === 'virtual') {
-      if (row.layout_x !== '' || row.layout_y !== '') {
+      if (row.salle !== '' || row.forme !== '' || row.layout_x !== '' || row.layout_y !== '') {
         throw new TablesCsvError(line, 'une table fictive n’a pas de place sur le plan');
       }
       return { line, number, kind: 'virtual', layout: null, offerFor };
     }
 
     if (offerFor !== null) throw new TablesCsvError(line, 'une table réelle n’est jamais d’offre');
-    const layout = {
+    const room = ROOMS[row.salle];
+    if (!room)
+      throw new TablesCsvError(line, `salle inconnue « ${row.salle} » (interieur ou terrasse)`);
+    const form = SHAPES[row.forme];
+    if (!form) {
+      throw new TablesCsvError(line, `forme inconnue « ${row.forme} » (carree, ronde ou longue)`);
+    }
+    const layout: SeedLayout = {
+      room,
       x: parseIndex(row.layout_x, line, 'layout_x'),
       y: parseIndex(row.layout_y, line, 'layout_y'),
+      ...form,
     };
-    const cell = `${String(layout.x)},${String(layout.y)}`;
-    if (cells.has(cell)) throw new TablesCsvError(line, `case ${cell} déjà prise sur le plan`);
-    cells.add(cell);
+    // Une table longue prend plusieurs cases : aucune ne doit être déjà prise dans sa salle.
+    for (let dx = 0; dx < layout.w; dx++) {
+      const cell = `${String(layout.x + dx)},${String(layout.y)}`;
+      if (cells.has(`${room} ${cell}`)) {
+        throw new TablesCsvError(line, `case ${cell} déjà prise sur le plan (${row.salle})`);
+      }
+      cells.add(`${room} ${cell}`);
+    }
     return { line, number, kind: 'real', layout, offerFor: null };
   });
 }

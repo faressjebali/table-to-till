@@ -13,8 +13,8 @@ export interface SeedTablesResult {
 /**
  * Aligne la table `tables` sur docs/tables.csv, dans une seule transaction. Relançable :
  * une table est reconnue par son numéro et garde son jeton QR (un QR imprimé ne casse jamais).
- * Le type, la case du plan et le nom de la table d'offre sont réécrits ; la taille, la forme et le
- * compte lié à une table d'offre (choisis par la manager dans l'app) restent.
+ * Le type, la place sur le plan (salle, case, largeur, forme) et le nom de la table d'offre sont
+ * réécrits ; la hauteur et le compte lié à une table d'offre (choisis par la manager) restent.
  * Une table absente du CSV est supprimée seulement si elle n'a jamais servi.
  */
 export async function seedTables(
@@ -33,19 +33,21 @@ export async function seedTables(
         const layout = table.layout;
         if (!layout) throw new Error(`table ${String(table.number)} sans case sur le plan`);
         await client.query(
-          `INSERT INTO tables (number, kind, qr_token, layout_x, layout_y, layout_w, layout_h, layout_shape)
-           VALUES ($1, 'real', $2, $3, $4, 1, 1, 'square')
+          `INSERT INTO tables (number, kind, qr_token, layout_room, layout_x, layout_y, layout_w,
+                              layout_h, layout_shape)
+           VALUES ($1, 'real', $2, $3, $4, $5, $6, 1, $7)
            ON CONFLICT (number) DO UPDATE SET
              kind = 'real',
              qr_token = coalesce(tables.qr_token, EXCLUDED.qr_token),
+             layout_room = EXCLUDED.layout_room,
              layout_x = EXCLUDED.layout_x,
              layout_y = EXCLUDED.layout_y,
-             layout_w = coalesce(tables.layout_w, 1),
+             layout_w = EXCLUDED.layout_w,
              layout_h = coalesce(tables.layout_h, 1),
-             layout_shape = coalesce(tables.layout_shape, 'square'),
+             layout_shape = EXCLUDED.layout_shape,
              offer_label = NULL,
              offer_user_id = NULL`,
-          [table.number, newTableToken(), layout.x, layout.y],
+          [table.number, newTableToken(), layout.room, layout.x, layout.y, layout.w, layout.shape],
         );
       } else {
         await client.query(

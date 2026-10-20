@@ -1,7 +1,7 @@
 // Appels à l'API du serveur (docs/api.md § 4), avec le jeton de session du staff.
 // En développement, Vite renvoie /api vers le serveur (vite.config.ts).
 import { loadToken } from '../session';
-import type { CurrentShifts, LoginResponse, Me, Order } from './types';
+import type { CurrentShifts, LoginResponse, Me, Order, Table, TableSessionDetail } from './types';
 
 /**
  * Erreur au format du contrat (`{ error: { code, message, details? } }`), ou `NETWORK` sans
@@ -79,6 +79,13 @@ export const getStationOrders = () => request<{ items: Order[] }>('/station-orde
 
 export const markReady = (orderId: number) =>
   request<Order>(`/orders/${String(orderId)}/ready`, { method: 'POST' });
+
+/** Plan de la salle (serveur en shift). */
+export const getTables = () => request<{ tables: Table[] }>('/tables');
+
+/** Commandes d'une table occupée ; 404 `NOT_FOUND` si elle est libre. */
+export const getTableSession = (tableId: number) =>
+  request<TableSessionDetail>(`/tables/${String(tableId)}/session`);
 
 export const getCurrentShifts = () => request<CurrentShifts>('/shifts/current');
 

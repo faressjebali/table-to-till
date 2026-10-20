@@ -194,7 +194,7 @@ describe('GET /tables', () => {
       openSessionId: null,
       openTotal: 0,
       pendingOrders: 0,
-      layout: { x: 12, y: 7, w: 1, h: 1, shape: 'square' },
+      layout: { room: 'inside', x: 12, y: 7, w: 1, h: 1, shape: 'square' },
       offer: null,
       principalId: null,
     });
@@ -275,5 +275,65 @@ describe('GET /tables', () => {
     }
 
     expect((await api.get('/api/tables')).status).toBe(401);
+  });
+});
+
+describe('GET /tables/:id/session', () => {
+  const session = (token: string, tableId: number | string) =>
+    api.get(`/api/tables/${String(tableId)}/session`).set('Authorization', `Bearer ${token}`);
+
+  it('renvoie la session ouverte, ses commandes confirmées et son principal', async () => {
+    const waiter = await waiterOnShift();
+    const table = await createTable(5);
+    const sessionId = await openSession(table.id, waiter.id);
+    await confirmedOrder(table.id, sessionId, waiter.id, [
+      { quantity: 2, unitPrice: 8500 },
+      { quantity: 1, unitPrice: 7000, status: 'cancelled' },
+    ]);
+    await confirmedOrder(table.id, sessionId, waiter.id, [
+      { quantity: 1, unitPrice: 6000, discountPercent: 20 },
+    ]);
+    // Une commande en attente n'est pas dans la session.
+    await pendingQrOrder(table.id, 300);
+
+    const res = await session(waiter.token, table.id);
+    expect(res.status).toBe(200);
+    const body = res.body as {
+      session: Record<string, unknown>;
+      orders: { id: number; total: number; lines: unknown[] }[];
+      gifts: unknown[];
+    };
+    expect(body.session).toMatchObject({
+      id: sessionId,
+      tableId: table.id,
+      closedAt: null,
+      status: 'open',
+      total: 18400,
+      orderIds: body.orders.map((order) => order.id),
+      principal: { id: waiter.id, name: 'Nom amira' },
+    });
+    expect(body.orders.map((order) => order.total)).toEqual([11000, 4400]);
+    expect(body.orders[0]?.lines).toHaveLength(2);
+    expect(body.gifts).toEqual([]);
+  });
+
+  it('404 pour une table libre ou inconnue', async () => {
+    const { token } = await waiterOnShift();
+    const table = await createTable(5);
+    for (const id of [table.id, 999, 'abc']) {
+      const res = await session(token, id);
+      expect(res.status).toBe(404);
+      expect(res.body).toMatchObject({ error: { code: 'NOT_FOUND' } });
+    }
+  });
+
+  it('réservé aux serveurs en shift', async () => {
+    const table = await createTable(5);
+    await createUser('hors-shift');
+    await createUser('rania', 'manager');
+    const offShift = await session(await tokenFor('hors-shift'), table.id);
+    expect(offShift.body).toMatchObject({ error: { code: 'NOT_ON_SHIFT' } });
+    const manager = await session(await tokenFor('rania'), table.id);
+    expect(manager.body).toMatchObject({ error: { code: 'FORBIDDEN' } });
   });
 });

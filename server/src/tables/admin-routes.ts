@@ -9,6 +9,7 @@ import { newTableToken } from './token.js';
 
 const layoutBody = z
   .object({
+    room: z.enum(['inside', 'terrace']).default('inside'),
     x: z.number().int().min(0),
     y: z.number().int().min(0),
     w: z.number().int().positive().default(1),
@@ -52,6 +53,7 @@ type AdminTableRow = {
   number: number;
   kind: 'real' | 'virtual';
   qr_token: string | null;
+  layout_room: 'inside' | 'terrace';
   layout_x: number | null;
   layout_y: number | null;
   layout_w: number | null;
@@ -61,7 +63,7 @@ type AdminTableRow = {
   offer_user_id: number | null;
 };
 
-const COLUMNS = `id, number, kind, qr_token, layout_x, layout_y, layout_w, layout_h, layout_shape,
+const COLUMNS = `id, number, kind, qr_token, layout_room, layout_x, layout_y, layout_w, layout_h, layout_shape,
   offer_label, offer_user_id`;
 
 // Forme AdminTable de docs/api.md § 2 : jamais d'état ni de montant (la manager n'a pas le plan).
@@ -74,6 +76,7 @@ function toAdminTable(row: AdminTableRow) {
       row.layout_x === null
         ? null
         : {
+            room: row.layout_room,
             x: row.layout_x,
             y: row.layout_y,
             w: row.layout_w,
@@ -165,8 +168,8 @@ export function adminTableRoutes(db: Db, config: Config): Router {
       const l: Partial<Layout> = layout ?? {};
       const { rows } = await client.query<AdminTableRow>(
         `INSERT INTO tables (number, kind, qr_token, layout_x, layout_y, layout_w, layout_h,
-                             layout_shape, offer_label, offer_user_id)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+                             layout_shape, offer_label, offer_user_id, layout_room)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, coalesce($11, 'inside'))
          RETURNING ${COLUMNS}`,
         [
           number,
@@ -179,6 +182,7 @@ export function adminTableRoutes(db: Db, config: Config): Router {
           l.shape ?? null,
           offer?.label ?? null,
           offer?.userId ?? null,
+          l.room ?? null,
         ],
       );
       const row = rows[0];
@@ -237,6 +241,7 @@ export function adminTableRoutes(db: Db, config: Config): Router {
             layout_w = coalesce($5, layout_w),
             layout_h = coalesce($6, layout_h),
             layout_shape = coalesce($7, layout_shape),
+            layout_room = coalesce($11, layout_room),
             offer_label = CASE WHEN $8 THEN $9 ELSE offer_label END,
             offer_user_id = CASE WHEN $8 THEN $10 ELSE offer_user_id END
           WHERE id = $1
@@ -252,6 +257,7 @@ export function adminTableRoutes(db: Db, config: Config): Router {
           offer !== undefined,
           offer?.label ?? null,
           offer?.userId ?? null,
+          layout?.room ?? null,
         ],
       );
       const row = after[0];

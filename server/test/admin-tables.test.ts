@@ -82,7 +82,7 @@ describe('POST /admin/tables', () => {
       id: table.id,
       number: 7,
       kind: 'real',
-      layout: { x: 7, y: 2, w: 1, h: 1, shape: 'square' },
+      layout: { room: 'inside', x: 7, y: 2, w: 1, h: 1, shape: 'square' },
       offer: null,
       tableToken: expect.any(String) as string,
     });
@@ -121,6 +121,7 @@ describe('POST /admin/tables', () => {
       [{ number: 0, kind: 'virtual' }, 'number'],
       [{ number: 105, kind: 'virtual', offer: { label: ' ', userId: null } }, 'offer.label'],
       [{ number: 7, kind: 'salle' }, 'kind'],
+      [{ number: 7, kind: 'real', layout: { room: 'jardin', x: 0, y: 0 } }, 'layout.room'],
     ];
     for (const [body, field] of cases) {
       const res = await create(body);
@@ -202,11 +203,14 @@ describe('PATCH /admin/tables/:id', () => {
 
   it('change le numéro et la case, garde le jeton', async () => {
     const table = await createOk(real(7, 7, 2));
-    const res = await patch(table.id, { number: 8, layout: { x: 4, y: 3, shape: 'round' } });
+    const res = await patch(table.id, {
+      number: 8,
+      layout: { room: 'terrace', x: 4, y: 3, shape: 'round' },
+    });
     expect(res.status).toBe(200);
     expect(res.body).toMatchObject({
       number: 8,
-      layout: { x: 4, y: 3, w: 1, h: 1, shape: 'round' },
+      layout: { room: 'terrace', x: 4, y: 3, w: 1, h: 1, shape: 'round' },
       tableToken: table.tableToken,
     });
   });

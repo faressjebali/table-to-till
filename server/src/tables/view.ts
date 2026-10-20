@@ -1,9 +1,11 @@
 import type pg from 'pg';
 import type { Db } from '../db.js';
+import { loadOrders, type Order } from '../orders/view.js';
 
 type TableRow = {
   id: number;
   number: number;
+  layout_room: 'inside' | 'terrace';
   layout_x: number;
   layout_y: number;
   layout_w: number;
@@ -28,6 +30,7 @@ function toTable(row: TableRow) {
     openTotal: row.open_total,
     pendingOrders: row.pending_orders,
     layout: {
+      room: row.layout_room,
       x: row.layout_x,
       y: row.layout_y,
       w: row.layout_w,
@@ -47,7 +50,7 @@ export async function loadTables(
   ids: readonly number[] | null = null,
 ): Promise<Table[]> {
   const { rows } = await db.query<TableRow>(
-    `SELECT t.id, t.number, t.layout_x, t.layout_y, t.layout_w, t.layout_h, t.layout_shape,
+    `SELECT t.id, t.number, t.layout_room, t.layout_x, t.layout_y, t.layout_w, t.layout_h, t.layout_shape,
             s.id AS open_session_id, s.principal_id,
             coalesce((SELECT sum(round(l.quantity * l.unit_price * (100 - l.discount_percent) / 100.0))
                         FROM orders o JOIN order_lines l ON l.order_id = o.id
@@ -63,4 +66,62 @@ export async function loadTables(
     [ids],
   );
   return rows.map(toTable);
+}
+
+// Forme TableSession de docs/api.md § 2, pour une session ouverte.
+export type TableSession = {
+  id: number;
+  tableId: number;
+  openedAt: Date;
+  closedAt: null;
+  status: 'open';
+  total: number;
+  orderIds: number[];
+  principal: { id: number; name: string } | null;
+};
+
+// Session ouverte d'une table et ses commandes confirmées (les plus anciennes d'abord) ;
+// null si la table est libre. Le total est celui des commandes, comme openTotal du plan.
+export async function loadOpenSession(
+  db: Db | pg.PoolClient,
+  tableId: number,
+): Promise<{ session: TableSession; orders: Order[] } | null> {
+  const { rows } = await db.query<{
+    id: number;
+    opened_at: Date;
+    principal_id: number | null;
+    principal_name: string | null;
+  }>(
+    `SELECT s.id, s.opened_at, s.principal_id, u.name AS principal_name
+       FROM table_sessions s LEFT JOIN users u ON u.id = s.principal_id
+      WHERE s.table_id = $1 AND s.closed_at IS NULL`,
+    [tableId],
+  );
+  const row = rows[0];
+  if (!row) return null;
+  const { rows: orderRows } = await db.query<{ id: number }>(
+    `SELECT id FROM orders WHERE table_session_id = $1 AND status = 'confirmed'
+      ORDER BY confirmed_at, id`,
+    [row.id],
+  );
+  const orders = await loadOrders(
+    db,
+    orderRows.map((order) => order.id),
+  );
+  return {
+    session: {
+      id: row.id,
+      tableId,
+      openedAt: row.opened_at,
+      closedAt: null,
+      status: 'open',
+      total: orders.reduce((sum, order) => sum + order.total, 0),
+      orderIds: orders.map((order) => order.id),
+      principal:
+        row.principal_id !== null && row.principal_name !== null
+          ? { id: row.principal_id, name: row.principal_name }
+          : null,
+    },
+    orders,
+  };
 }

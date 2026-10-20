@@ -7,7 +7,7 @@ import { parseTablesCsv, TablesCsvError } from '../src/seed/tables-csv.js';
 import { resetTestDatabase, testUrl } from './helpers/db.js';
 
 const csv = readFileSync(new URL('../../docs/tables.csv', import.meta.url), 'utf8');
-const header = 'number,kind,layout_x,layout_y,offer_for';
+const header = 'number,kind,salle,forme,layout_x,layout_y,offer_for';
 const csvWith = (...rows: string[]) => [header, ...rows].join('\n');
 
 describe('parseTablesCsv sur docs/tables.csv', () => {
@@ -27,12 +27,24 @@ describe('parseTablesCsv sur docs/tables.csv', () => {
     expect(real.map((t) => t.number)).toContain(100);
   });
 
-  it('place chaque table réelle sur le plan', () => {
+  it('place chaque table réelle dans sa salle, avec sa forme', () => {
     expect(tables.find((t) => t.number === 1)).toMatchObject({
       kind: 'real',
-      layout: { x: 2, y: 5 },
+      layout: { room: 'inside', x: 0, y: 5, w: 1, shape: 'square' },
       offerFor: null,
     });
+    // Rondes : 5, 17 et 25 ; la 19 de la terrasse est longue (carrée sur 2 cases).
+    const rounds = tables.filter((t) => t.layout?.shape === 'round').map((t) => t.number);
+    expect(rounds).toEqual([5, 17, 25]);
+    expect(tables.find((t) => t.number === 19)?.layout).toEqual({
+      room: 'terrace',
+      x: 3,
+      y: 0,
+      w: 2,
+      shape: 'square',
+    });
+    const terrace = tables.filter((t) => t.layout?.room === 'terrace').map((t) => t.number);
+    expect(terrace).toEqual([19, 20, 21, 22, 23, 100]);
     expect(tables.find((t) => t.number === 109)).toMatchObject({
       kind: 'virtual',
       layout: null,
@@ -43,16 +55,36 @@ describe('parseTablesCsv sur docs/tables.csv', () => {
 
 describe('parseTablesCsv refuse un CSV incohérent', () => {
   it.each([
-    ['numéro en double', csvWith('1,real,0,0,', '1,real,1,0,'), 'en double'],
-    ['type inconnu', csvWith('1,salle,0,0,'), 'kind inconnu'],
-    ['table réelle sans case', csvWith('1,real,,0,'), 'layout_x illisible'],
-    ['table fictive sur le plan', csvWith('333,virtual,1,1,'), 'pas de place'],
-    ['table réelle d’offre', csvWith('1,real,0,0,Rania'), 'jamais d’offre'],
-    ['deux tables sur la même case', csvWith('1,real,0,0,', '2,real,0,0,'), 'déjà prise'],
-    ['numéro nul', csvWith('0,virtual,,,'), 'positif'],
+    [
+      'numéro en double',
+      csvWith('1,real,interieur,carree,0,0,', '1,real,interieur,carree,1,0,'),
+      'en double',
+    ],
+    ['type inconnu', csvWith('1,salle,interieur,carree,0,0,'), 'kind inconnu'],
+    ['table réelle sans case', csvWith('1,real,interieur,carree,,0,'), 'layout_x illisible'],
+    ['table réelle sans salle', csvWith('1,real,,carree,0,0,'), 'salle inconnue'],
+    ['forme inconnue', csvWith('1,real,interieur,ovale,0,0,'), 'forme inconnue'],
+    ['table fictive sur le plan', csvWith('333,virtual,interieur,carree,1,1,'), 'pas de place'],
+    ['table réelle d’offre', csvWith('1,real,interieur,carree,0,0,Rania'), 'jamais d’offre'],
+    [
+      'deux tables sur la même case',
+      csvWith('1,real,interieur,carree,0,0,', '2,real,interieur,carree,0,0,'),
+      'déjà prise',
+    ],
+    [
+      'une table longue sur la case d’une autre',
+      csvWith('1,real,terrasse,longue,0,0,', '2,real,terrasse,carree,1,0,'),
+      'déjà prise',
+    ],
+    ['numéro nul', csvWith('0,virtual,,,,,'), 'positif'],
   ])('%s', (_name, text, message) => {
     expect(() => parseTablesCsv(text)).toThrow(TablesCsvError);
     expect(() => parseTablesCsv(text)).toThrow(message);
+  });
+
+  it('même case dans deux salles différentes : accepté', () => {
+    const text = csvWith('1,real,interieur,carree,0,0,', '2,real,terrasse,carree,0,0,');
+    expect(parseTablesCsv(text)).toHaveLength(2);
   });
 
   it('colonne manquante', () => {
@@ -79,17 +111,20 @@ describe('seedTables (base de test)', () => {
     number: number;
     kind: string;
     qr_token: string | null;
+    layout_room: string;
     layout_x: number | null;
+    layout_w: number | null;
     layout_shape: string | null;
   };
   const rows = async () =>
     (
       await client.query<Row>(
-        'SELECT number, kind, qr_token, layout_x, layout_shape FROM tables ORDER BY number',
+        `SELECT number, kind, qr_token, layout_room, layout_x, layout_w, layout_shape
+           FROM tables ORDER BY number`,
       )
     ).rows;
 
-  it('charge les 40 tables : jeton et case carrée pour les réelles, rien pour les fictives', async () => {
+  it('charge les 40 tables : jeton, salle et forme pour les réelles, rien pour les fictives', async () => {
     expect(await seedTables(client, tables)).toEqual({
       inserted: 40,
       updated: 0,
@@ -99,15 +134,24 @@ describe('seedTables (base de test)', () => {
     const all = await rows();
     expect(all).toHaveLength(40);
     const real = all.filter((r) => r.kind === 'real');
-    expect(real.every((r) => r.qr_token !== null && r.layout_shape === 'square')).toBe(true);
+    expect(real.every((r) => r.qr_token !== null)).toBe(true);
+    expect(real.filter((r) => r.layout_shape === 'round').map((r) => r.number)).toEqual([
+      5, 17, 25,
+    ]);
+    expect(all.find((r) => r.number === 19)).toMatchObject({
+      layout_room: 'terrace',
+      layout_w: 2,
+      layout_shape: 'square',
+    });
     expect(new Set(real.map((r) => r.qr_token)).size).toBe(24);
     expect(all.filter((r) => r.kind === 'virtual').every((r) => r.qr_token === null)).toBe(true);
   });
 
-  it('se relance sans changer les jetons ni la forme corrigée par la manager', async () => {
+  it('se relance sans changer les jetons ; la place sur le plan revient à celle du CSV', async () => {
     await seedTables(client, tables);
-    await client.query(`UPDATE tables SET layout_shape = 'round' WHERE number = 1`);
     const before = await rows();
+    await client.query(`UPDATE tables SET layout_shape = 'round', layout_room = 'terrace'
+                         WHERE number = 1`);
 
     expect(await seedTables(client, tables)).toEqual({
       inserted: 0,
@@ -147,7 +191,7 @@ describe('seedTables (base de test)', () => {
     expect(all.find((r) => r.number === 7)).toMatchObject({
       kind: 'real',
       qr_token: 'ancien-7',
-      layout_x: 7,
+      layout_x: 2,
     });
   });
 
