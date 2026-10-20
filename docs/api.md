@@ -1,6 +1,6 @@
 # Contrat d'API — Coffee QR
 
-> Brouillon v2.3.1 (19 octobre 2026). À relire ensemble. Toute modification passe par une PR dédiée, annoncée à l'autre.
+> Brouillon v2.4 (20 octobre 2026). À relire ensemble. Toute modification passe par une PR dédiée, annoncée à l'autre.
 
 ## 1. Règles générales
 
@@ -168,18 +168,18 @@ Limites anti-abus (valeurs de départ, réglables dans `.env`) : 10 commandes QR
 ### Table
 ```json
 { "id": 7, "number": 7, "kind": "real", "state": "occupied", "openSessionId": 61, "openTotal": 51500, "pendingOrders": 1,
-  "layout": { "x": 2, "y": 0, "w": 1, "h": 1, "shape": "square" }, "offer": null, "principalId": 4 }
+  "layout": { "room": "inside", "x": 2, "y": 0, "w": 1, "h": 1, "shape": "square" }, "offer": null, "principalId": 4 }
 ```
 - `kind` : `real` (table de la salle, avec QR) ou `virtual` (table fictive de LegacyPOS, ex. 333, pour les ventes directes ; sans QR).
 - `state` : `free` ou `occupied`. Une commande `pending` ne rend pas la table `occupied` : elle compte seulement dans `pendingOrders`.
 - `openTotal` : seulement les commandes confirmées.
 - `principalId` : principal de la session ouverte (voir TableSession `principal`), `null` si la table est libre. Pendant une passation, chaque principal voit quelles tables sont les siennes.
-- `layout` : position sur le plan de la salle, en cases d'une grille (`shape` : `square` ou `round`) ; `null` pour une table `virtual`.
+- `layout` : position sur le plan, en cases d'une grille propre à chaque salle ; `null` pour une table `virtual`. `room` : `inside` (intérieur) ou `terrace` (terrasse). `shape` : `square` ou `round` ; une table longue est une table `square` de plusieurs cases (`w` > 1, ex. la 19 : `w` 2).
 - `offer` : pour une **table d'offre** (table `virtual` dont tout est offert : managers, patrons, comptable, invités, table de test ; liste dans `docs/tables.csv`), `{ label, userId }` : `label` = pour qui (ex. « Hedi Mansour », « Table des artistes ») ; `userId` = le compte à qui elle est réservée (manager ou comptable), ou `null` pour une table sans compte. Sinon `null`. Une table d'offre n'est jamais utilisée pour une vente directe, jamais tapée en caisse et jamais affichée sur le plan des tables.
 
 ### AdminTable (administration des tables, manager)
 ```json
-{ "id": 7, "number": 7, "kind": "real", "layout": { "x": 7, "y": 2, "w": 1, "h": 1, "shape": "square" },
+{ "id": 7, "number": 7, "kind": "real", "layout": { "room": "inside", "x": 3, "y": 2, "w": 1, "h": 1, "shape": "square" },
   "offer": null, "tableToken": "k3J9x…" }
 ```
 - Même `kind`, `layout` et `offer` que Table. `tableToken` : jeton du QR d'une table `real` (pour imprimer son QR, lien `<CUSTOMER_WEB_URL>/t/<tableToken>`), `null` pour une table `virtual`.
@@ -433,7 +433,7 @@ Comptes (`/users`) :
 - Toutes ces actions sont écrites dans le journal d'actions.
 
 Tables (`/admin/tables`) :
-- `kind` est choisi à la création et ne change plus. Une table `real` reçoit un jeton QR aléatoire et a une `layout` obligatoire (`{ x, y, w?, h?, shape? }` ; `w` et `h` valent 1 et `shape` `square` par défaut) ; une table `virtual` n'a ni `layout` ni jeton. Sinon 400 `VALIDATION_ERROR`.
+- `kind` est choisi à la création et ne change plus. Une table `real` reçoit un jeton QR aléatoire et a une `layout` obligatoire (`{ room?, x, y, w?, h?, shape? }` ; `room` vaut `inside`, `w` et `h` 1 et `shape` `square` par défaut) ; une table `virtual` n'a ni `layout` ni jeton. Sinon 400 `VALIDATION_ERROR`.
 - `offer` (`{ label, userId }`) seulement sur une table `virtual` ; `label` : 1–100 caractères ; `userId` : `null` (table sans compte) ou un compte **manager ou comptable actif**, qui n'a pas déjà une autre table d'offre. Sinon 400 `VALIDATION_ERROR` sur `offer` ou `offer.userId`.
 - `number` : entier positif, numéro de la table dans LegacyPOS, unique. Déjà pris → 400 `VALIDATION_ERROR` sur `number`.
 - `PATCH` refusé (409 `INVALID_STATUS`) tant que la table est en cours d'utilisation : session ouverte, commande en attente, ou tâche caisse `queued`, `in_progress` ou `failed`.
@@ -492,6 +492,7 @@ Après reconnexion, chaque client recharge via REST.
 
 | Version | Date | Changement |
 | --- | --- | --- |
+| v2.4 brouillon | 2026-10-20 | **Plan des tables en deux salles** : `layout.room` (`inside` / `terrace`) dans Table, AdminTable et `/admin/tables` (`inside` par défaut) ; chaque salle a sa propre grille ; une table longue est une table `square` de plusieurs cases (`w` > 1) |
 | v2.3.1 brouillon | 2026-10-19 | `POST /pos/jobs/:id/fail` sans `screenshot` : l'agent n'envoie pas de capture d'écran ; `error` et `step` suffisent |
 | v2.3 brouillon | 2026-10-19 | **Agent hors ligne** : état `offline` dans `pos:status` après 30 s sans heartbeat ; `GET /pos/status` (serveurs en shift et manager) pour relire l'état de l'agent après une reconnexion |
 | v2.2 brouillon | 2026-10-19 | **Shift 2 choisi au démarrage** : `POST /shifts/start` `{ shift2? }`, un seul Shift 2 en shift (sinon 409 `INVALID_STATUS`), `shift2` dans la réponse et dans `GET /shifts/current` ; la bascule de 15h00 ne dépend plus de l'heure d'arrivée (`SHIFT_2_ARRIVAL_FROM` supprimé) ; un renfort ne devient jamais principal à 15h00. **Transfert vers une table libre** : la session appartient au principal de la table de départ. **Tâches caisse** : plus de `note` dans `discount` ni `cancel_line` (LegacyPOS ne demande pas de motif) |
