@@ -233,7 +233,7 @@ describe('push order:new', () => {
           tag: `order-${String(orderId)}`,
           title: 'Nouvelle commande',
           body: 'Table 7 · 3 articles',
-          url: '/',
+          url: `/?order=${String(orderId)}`,
         },
       },
     ]);

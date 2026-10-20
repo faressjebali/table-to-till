@@ -40,7 +40,8 @@ export function orderNewMessage(order: Order): PushMessage {
     tag: `order-${String(order.id)}`,
     title: 'Nouvelle commande',
     body: `Table ${String(order.table.number)} · ${articles(count)}`,
-    url: '/',
+    // Toucher la notification ouvre cette commande dans l'onglet Commandes (public/sw.js).
+    url: `/?order=${String(order.id)}`,
   };
 }
 

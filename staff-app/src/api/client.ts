@@ -89,6 +89,20 @@ export const getTableSession = (tableId: number) =>
 
 export const getCurrentShifts = () => request<CurrentShifts>('/shifts/current');
 
+/**
+ * Commandes QR et commandes offertes à confirmer, les plus anciennes d'abord (serveur en shift).
+ * Une seule page de 100 : il n'y en a jamais autant en attente en même temps.
+ */
+export const getPendingOrders = () =>
+  request<{ items: Order[]; nextCursor: string | null }>('/orders?status=pending&limit=100');
+
+/** 409 `INVALID_STATUS` : déjà traitée ou expirée ; 409 `ITEM_UNAVAILABLE` : article en rupture. */
+export const confirmOrder = (orderId: number) =>
+  request<Order>(`/orders/${String(orderId)}/confirm`, { method: 'POST' });
+
+export const rejectOrder = (orderId: number) =>
+  request<Order>(`/orders/${String(orderId)}/reject`, { method: 'POST', body: {} });
+
 /** Serveur, barista, cuisinier ; relançable (double toucher : le shift ouvert est renvoyé). */
 export const startShift = () =>
   request<{ shiftId: number; startedAt: string; principal: boolean }>('/shifts/start', {

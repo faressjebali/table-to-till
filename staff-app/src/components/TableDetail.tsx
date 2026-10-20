@@ -176,7 +176,8 @@ function OrderCard({ order }: { order: Order }) {
   );
 }
 
-function OrderLineRow({ line }: { line: OrderLine }) {
+/** Une ligne de commande : quantité, nom, choix, note, prix (ou ANNULÉ / TRANSFÉRÉ). */
+export function OrderLineRow({ line }: { line: OrderLine }) {
   const off = line.status !== 'active';
   const name = line.name.fr;
   return (

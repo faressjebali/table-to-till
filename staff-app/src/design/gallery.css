@@ -59,3 +59,10 @@
   border: 1px solid var(--color-border);
   border-radius: var(--radius-small);
 }
+
+/* Barre d'onglets montrée dans la page, pas fixée en bas */
+.gallery__tabbar {
+  position: static;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+}

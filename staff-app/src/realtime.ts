@@ -14,6 +14,10 @@ export interface ServerEvents {
   'order:ready': (data: OrderReady) => void;
   /** Serveurs en shift : état, montant ou commandes à confirmer d'une table ont changé. */
   'table:updated': (table: Table) => void;
+  /** Serveurs en shift : commande QR ou commande offerte à confirmer. */
+  'order:new': (order: Order) => void;
+  /** Serveurs en shift : commande confirmée, rejetée ou expirée (ou modifiée). */
+  'order:updated': (order: Order) => void;
 }
 
 // Socket sans types d'événements : useRealtimeEvent les type à l'écoute, depuis ServerEvents.

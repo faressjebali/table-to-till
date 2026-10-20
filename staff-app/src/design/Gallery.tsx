@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
 import type { Room, Table } from '../api/types';
 import { StateIcon } from '../components/StateIcon';
+import { TabIcon } from '../components/TabIcon';
 import { TableTile, type TableTileProps } from '../components/TableTile';
 import { RoomSwitch } from '../components/RoomSwitch';
 import { TablesLegend } from '../components/TablesLegend';
@@ -307,6 +308,79 @@ export function Gallery() {
               Prêt
             </button>
           </article>
+        </Section>
+
+        <Section title="Commande à confirmer">
+          <article className="ticket ticket--receipt">
+            <header className="ticket__head">
+              <h2 className="ticket__place">Table 7</h2>
+              <time className="ticket__time">09:04</time>
+            </header>
+            <ul className="ticket__lines">
+              <li className="ticket__line">
+                <span className="ticket__qty">1 ×</span>
+                <div className="ticket__what">
+                  <p className="ticket__name">Cheese Burger</p>
+                  <p className="ticket__note">« sans oignon »</p>
+                </div>
+                <span className="ticket__price">26 DT</span>
+              </li>
+            </ul>
+            <p className="ticket__total">
+              <span className="ticket__total-label">Total</span>26 DT
+            </p>
+            <div className="alert">
+              <span className="alert__icon">
+                <StateIcon state="kitchen" />
+              </span>
+              <p className="alert__text">Personne en cuisine : prévenez à l’oral.</p>
+            </div>
+            <button type="button" className="button button--block">
+              Confirmer
+            </button>
+            <button type="button" className="button button--secondary button--block">
+              Rejeter
+            </button>
+          </article>
+          <div className="confirm" role="group" aria-label="Rejeter">
+            <p className="confirm__text">
+              Rejeter cette commande ? Le client verra qu’elle est refusée.
+            </p>
+            <button type="button" className="button button--danger">
+              Oui, rejeter la commande
+            </button>
+            <button type="button" className="button button--secondary">
+              Annuler
+            </button>
+          </div>
+        </Section>
+
+        <Section title="Onglet Commandes avec commandes à confirmer">
+          <nav className="tabbar gallery__tabbar" aria-label="Écrans">
+            <button type="button" className="tabbar__tab">
+              <TabIcon destination="tables" />
+              <span className="tabbar__label">Tables</span>
+            </button>
+            <button type="button" className="tabbar__tab" aria-current="page">
+              <span className="tabbar__icon">
+                <TabIcon destination="orders" />
+                <span className="tabbar__badge" aria-hidden="true">
+                  2
+                </span>
+              </span>
+              <span className="tabbar__label">Commandes</span>
+              <span className="visually-hidden">, 2 à confirmer</span>
+            </button>
+            <button type="button" className="tabbar__tab">
+              <span className="tabbar__icon">
+                <TabIcon destination="orders" />
+                <span className="tabbar__badge" aria-hidden="true">
+                  99+
+                </span>
+              </span>
+              <span className="tabbar__label">Commandes</span>
+            </button>
+          </nav>
         </Section>
 
         <Section title="Bandeaux d’alerte">

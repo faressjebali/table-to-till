@@ -639,3 +639,38 @@
   font-weight: 700;
   font-variant-numeric: tabular-nums;
 }
+
+/*
+ * Onglet Commandes : pastille orange chiffrée sur l'icône tant que des commandes attendent une
+ * confirmation, visible depuis n'importe quel écran. Même pastille que `.segmented__badge`.
+ */
+.tabbar__icon {
+  position: relative;
+  display: inline-flex;
+}
+
+.tabbar__badge {
+  position: absolute;
+  top: -6px;
+  left: 14px;
+  display: grid;
+  place-items: center;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 5px;
+  border: 2px solid var(--color-surface);
+  border-radius: var(--radius-full);
+  background: var(--color-accent);
+  color: var(--color-on-accent);
+  font-size: var(--text-tab);
+  font-weight: 700;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Commande ouverte depuis une notification : repérée par le contour du focus */
+.ticket:focus-visible,
+.ticket:focus {
+  outline: 3px solid var(--color-focus);
+  outline-offset: 2px;
+}

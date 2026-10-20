@@ -622,6 +622,66 @@ describe('POST /orders/:id/confirm', () => {
     expect(unknown.status).toBe(404);
   });
 
+  it('article ou option passé en rupture : ITEM_UNAVAILABLE, rien n’est confirmé', async () => {
+    const waiter = await waiterOnShift();
+    const burgerOrder = await pendingOrder();
+    const morningOrder = await pendingOrder([
+      {
+        menuItemId: item('Classic Start'),
+        quantity: 1,
+        choices: [{ group: 'hot_drink', menuItemId: item('Capuccino') }],
+      },
+    ]);
+    await db.query(`UPDATE menu_items SET sold_out = true WHERE name_fr IN ($1, $2)`, [
+      'Cheese Burger',
+      'Capuccino',
+    ]);
+
+    for (const [orderId, menuItemId] of [
+      [burgerOrder, item('Cheese Burger')],
+      [morningOrder, item('Capuccino')],
+    ] as const) {
+      const res = await api()
+        .post(`/api/orders/${String(orderId)}/confirm`)
+        .set(auth(waiter.token));
+      expect(res.status).toBe(409);
+      expect(res.body).toMatchObject({
+        error: { code: 'ITEM_UNAVAILABLE', details: { menuItemId } },
+      });
+    }
+
+    const { rows } = await db.query('SELECT status FROM orders ORDER BY id');
+    expect(rows).toEqual([{ status: 'pending' }, { status: 'pending' }]);
+    const { rows: counts } = await db.query<{ sessions: number; jobs: number }>(
+      `SELECT (SELECT count(*) FROM table_sessions)::int AS sessions,
+              (SELECT count(*) FROM pos_jobs)::int AS jobs`,
+    );
+    expect(counts[0]).toEqual({ sessions: 0, jobs: 0 });
+
+    // Le serveur peut ensuite la rejeter.
+    const rejected = await api()
+      .post(`/api/orders/${String(burgerOrder)}/reject`)
+      .set(auth(waiter.token));
+    expect(rejected.status).toBe(200);
+  });
+
+  it('horaires pas revérifiés : envoyée avant midi, confirmée après', async () => {
+    const waiter = await waiterOnShift();
+    vi.setSystemTime(new Date('2026-10-19T11:58:00+01:00'));
+    const orderId = await pendingOrder([
+      {
+        menuItemId: item('Classic Start'),
+        quantity: 1,
+        choices: [{ group: 'hot_drink', menuItemId: item('Capuccino') }],
+      },
+    ]);
+    vi.setSystemTime(new Date('2026-10-19T12:01:00+01:00'));
+    const res = await api()
+      .post(`/api/orders/${String(orderId)}/confirm`)
+      .set(auth(waiter.token));
+    expect(res.status).toBe(200);
+  });
+
   it('réservée aux serveurs en shift', async () => {
     await waiterOnShift();
     const orderId = await pendingOrder();

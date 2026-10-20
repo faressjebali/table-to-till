@@ -176,6 +176,29 @@ async function queueEnterOrder(
   return jobId;
 }
 
+// Rupture marquée pendant que la commande attendait : un article ou une option de formule en
+// rupture → ITEM_UNAVAILABLE, rien n'est confirmé. Les horaires ne sont pas revérifiés : l'heure
+// d'envoi compte (docs/api.md § 5).
+async function checkNotSoldOut(client: pg.PoolClient, orderId: number) {
+  const { rows } = await client.query<{ id: number; name_fr: string }>(
+    `SELECT i.id, i.name_fr FROM order_lines l JOIN menu_items i ON i.id = l.menu_item_id
+      WHERE l.order_id = $1 AND i.sold_out
+     UNION ALL
+     SELECT i.id, i.name_fr FROM order_line_choices c
+       JOIN order_lines l ON l.id = c.order_line_id
+       JOIN menu_items i ON i.id = c.menu_item_id
+      WHERE l.order_id = $1 AND i.sold_out
+     LIMIT 1`,
+    [orderId],
+  );
+  const soldOut = rows[0];
+  if (soldOut) {
+    throw new HttpError(409, 'ITEM_UNAVAILABLE', `${soldOut.name_fr} is unavailable`, {
+      menuItemId: soldOut.id,
+    });
+  }
+}
+
 type PendingRow = { id: number; table_id: number; status: string; expires_at: Date };
 
 // Commande verrouillée pour la confirmer ou la rejeter : 404 si inconnue,
@@ -341,6 +364,7 @@ export function orderRoutes(db: Db, config: Config, realtime: Realtime, push: Pu
 
     const jobId = await inTransaction(db, async (client) => {
       const order = await lockPending(client, id.data);
+      await checkNotSoldOut(client, order.id);
       const sessionId = await openTableSession(client, order.table_id, now);
 
       await client.query(
