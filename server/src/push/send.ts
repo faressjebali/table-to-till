@@ -1,3 +1,4 @@
+import { createHash } from 'node:crypto';
 import webpush from 'web-push';
 import type { Config } from '../config.js';
 import type { Db } from '../db.js';
@@ -32,6 +33,14 @@ export const noopPushSender: PushSender = () => Promise.resolve();
 // Une notification de plus de 5 minutes ne sert plus (commande expirée, déjà vue dans l'app).
 const TTL_SECONDS = 300;
 
+// En-tête Topic (RFC 8030) : 32 caractères base64url au plus. Le service push d'Apple le lit
+// comme du base64 et refuse (400 BadWebPushTopic) une longueur de la forme 4n + 1, ex.
+// `order-123` ou `station-8-bar` : on envoie donc une empreinte du tag, toujours de 32
+// caractères. Le tag lui-même reste dans le message (notification remplacée sur le téléphone).
+export function pushTopic(tag: string): string {
+  return createHash('sha256').update(tag).digest('base64url').slice(0, 32);
+}
+
 // Sans clés VAPID : null (aucun push, l'app marche avec Socket.IO seulement).
 export function webPushSender(config: Config): PushSender | null {
   if (config.vapidPublicKey === '' || config.vapidPrivateKey === '' || config.vapidSubject === '') {
@@ -49,7 +58,7 @@ export function webPushSender(config: Config): PushSender | null {
         TTL: TTL_SECONDS,
         urgency: 'high',
         // Un message pas encore livré est remplacé par le suivant du même tag.
-        topic: message.tag,
+        topic: pushTopic(message.tag),
       });
     } catch (err) {
       if (err instanceof webpush.WebPushError && [404, 410].includes(err.statusCode)) {

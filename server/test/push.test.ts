@@ -15,6 +15,7 @@ import {
 } from '../src/push/recipients.js';
 import {
   PushGone,
+  pushTopic,
   sendPush,
   type PushMessage,
   type PushSender,
@@ -390,6 +391,16 @@ describe('push order:ready', () => {
         },
       },
     ]);
+  });
+});
+
+describe('pushTopic', () => {
+  it('toujours 32 caractères base64url, accepté par Apple quelle que soit la longueur du tag', () => {
+    for (const tag of ['order-8', 'order-123', 'station-8-bar', 'station-1234-kitchen']) {
+      expect(pushTopic(tag)).toMatch(/^[A-Za-z0-9_-]{32}$/);
+    }
+    expect(pushTopic('order-123')).toBe(pushTopic('order-123'));
+    expect(pushTopic('order-123')).not.toBe(pushTopic('order-124'));
   });
 });
 

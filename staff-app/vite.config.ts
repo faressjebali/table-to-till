@@ -12,6 +12,9 @@ export default defineConfig({
   envDir: '..',
   server: {
     port: 5174,
+    // Tunnel HTTPS pour tester sur un vrai téléphone (cloudflared). `preview`
+    // reprend ce réglage et le proxy ci-dessous.
+    allowedHosts: ['.trycloudflare.com'],
     // /socket.io : temps réel (docs/api.md § 8).
     proxy: {
       '/api': SERVER,
