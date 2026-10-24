@@ -6,7 +6,7 @@ Version 2 — refonte du 15 octobre 2026. Clôture de shift et rapports de la ma
 
 ## 1. Contexte
 
-- Coffee shop réel en Tunisie, 24 tables (plus 16 tables fictives : 5 pour les ventes directes, 11 tables d'offre ; voir `docs/tables.csv`), **97 articles** (voir `docs/menu/menu.csv`).
+- Coffee shop réel en Tunisie, 24 tables (plus 16 tables fictives : 5 pour les ventes directes, 11 tables d'offre ; voir `docs/tables.csv`), **86 articles** (voir `docs/menu/menu.csv`).
 - Le café est ouvert de **8h00 à 22h00**.
 - Le **calcul du stock** est une fonctionnalité principale (voir §12).
 - Caisse : **LegacyPOS** (éditeur local) sur un **PC Windows**. Pas d'API. On ne contacte pas l'éditeur et on ne modifie rien dans LegacyPOS.
@@ -26,11 +26,11 @@ Version 2 — refonte du 15 octobre 2026. Clôture de shift et rapports de la ma
 
 ## 3. Le menu
 
-- Source : le menu papier actuel (food et boissons). 97 articles : les 94 du menu papier, avec le Kids Menu et le Cookie comptés deux fois (ils existent chacun en deux articles en caisse : Kids Menu (Cookie) / Kids Menu (Pancakes), Cookie chocolat / Cookie pomme cannelle), + le Plat de la semaine.
+- Source : le menu papier actuel (food refait et jus d'orange ajouté le 24 octobre 2026). 86 articles : les 83 du menu papier, avec la formule burger du Kids Menu et le Cookie comptés deux fois (ils existent chacun en deux articles en caisse : Kids Menu (Cookie) / Kids Menu (Pancakes), Cookie chocolat / Cookie pomme cannelle), + le Plat de la semaine, qui n'est pas sur la carte.
 - Catégories, dans l'ordre du menu papier :
-  - Food (56) : Formules petit-déjeuner (6), Œufs (3), Extras (14), Salades (3), Plats (3), Starters (5), Accompagnements (3), Sandwichs (4), Cakes & Sweets (8), Extras sucrés (4), Kids Menu (2), Plat de la semaine (1).
-  - Boissons (41) : Jus (6), Fresh Blends (4), Thé & Infusion (9), Cafés (13), Matcha (4), Healthy Shots (3), Eau (2).
-  - Sur le menu papier, « Accompagnements » et « Extras sucrés » sont titrés « Extras ». Les extras Œuf, Steak et Pommes cannelle caramélisées n'apparaissent qu'en suggestion, dans la fiche d'un plat.
+  - Food (44) : Formules petit-déjeuner (3), Œufs (3), Extras (11), Salades (2), Plats (3), Starters (3), Sandwichs (3), Cakes & Sweets (7), Extras sucrés (4), Kids Menu (4 : la formule burger en deux articles, Croque-monsieur, Pancakes au chocolat), Plat de la semaine (1).
+  - Boissons (42) : Jus (7), Fresh Blends (4), Thé & Infusion (9), Cafés (13), Matcha (4), Healthy Shots (3), Eau (2).
+  - Sur le menu papier, « Extras sucrés » est titré « Extras ». Les Pommes cannelle caramélisées sont proposées sous les Pancakes et le Pain perdu.
 - **Pas de tailles.** Chaque article a un prix fixe.
 - **Chaque article a un code produit** LegacyPOS, affiché sur son bouton en caisse. L'agent reconnaît l'article à ce **code**, jamais à son nom (on ne peut pas taper un code : il ouvre la catégorie et touche le bouton qui porte le code).
 - **Une photo par article.**
@@ -39,7 +39,7 @@ Version 2 — refonte du 15 octobre 2026. Clôture de shift et rapports de la ma
   - dans une section « Extras » de la catégorie, toujours visible ;
   - en **suggestions dans la fiche de certains plats** (ex. Cheese Burger : +Bacon de bœuf, +Œuf, +Gouda…) : le client ne les voit qu'en ouvrant l'article, et seulement ceux de cet article (pas de Caramel dans la fiche du Cheese Burger). Rien n'est affiché sous le plat dans la carte.
   Dans les deux cas, ils arrivent en caisse comme **une ligne séparée**.
-- **Formules et articles à choix** (formules petit-déj, Kids Menu) : le client **choisit dans des listes** (café ou thé, jus, œufs), pas dans une note libre. Le Kids Menu (cookie ou pancakes) et le Cookie (chocolat ou pomme cannelle) sont chacun **deux articles distincts** en caisse ; le choix du jus du Kids Menu reste une liste.
+- **Formules et articles à choix** (formules petit-déj, Kids Menu) : le client **choisit dans des listes** (café ou thé, jus, œufs), pas dans une note libre. La formule burger du Kids Menu (cookie ou pancakes au chocolat) et le Cookie (chocolat ou pomme cannelle) sont chacun **deux articles distincts** en caisse ; le choix du jus de la formule burger reste une liste.
   - Dans une formule, le client peut prendre un **thé à 6,5 DT** ou un **café jusqu'à 8,5 DT** de la carte, et **n'importe quel jus de saison**.
   - Les jus de saison changent : pour l'instant, seulement **Grenade**. La liste doit être modifiable par la manager. Si le jus de saison est en rupture, la manager le remplace dans la liste par un autre jus de la carte (sinon les formules avec jus ne peuvent plus être commandées).
   - Les choix sont enregistrés dans l'app pour le **calcul du stock** (traçabilité).
@@ -58,7 +58,7 @@ Version 2 — refonte du 15 octobre 2026. Clôture de shift et rapports de la ma
 - **Rupture** : un article peut être marqué indisponible à tout moment ; il est grisé immédiatement chez les clients. Qui la marque dépend du poste de l'article (colonne `station` de `menu.csv`) :
   - articles du bar (boissons) : le **barista** ;
   - articles de la cuisine : le **cuisinier** ;
-  - Carrot cake, Fondant au chocolat, Cookie, Granola, Fruits, Extras sucrés, Formules petit-déjeuner et Kids Menu (`both`) : barista **ou** cuisinier ;
+  - Carrot cake, Fondant au chocolat, Cookie, Granola, Extras sucrés, Formules petit-déjeuner et formule burger du Kids Menu (`both`) : barista **ou** cuisinier ;
   - le **serveur en shift** et la **manager** peuvent marquer n'importe quel article.
 - Deux espressos distincts : **Espresso** (6,5 DT) et **Espresso premium** (9,5 DT), chacun avec son code.
 

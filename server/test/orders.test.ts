@@ -141,7 +141,7 @@ describe('POST /orders', () => {
       { ...burger(), quantity: 2 },
       { menuItemId: item('Bacon de bœuf'), quantity: 1, note: null },
       {
-        menuItemId: item('Classic Start'),
+        menuItemId: item('Early Bird'),
         quantity: 1,
         note: '',
         choices: [{ group: 'hot_drink', menuItemId: item('Capuccino') }],
@@ -150,13 +150,11 @@ describe('POST /orders', () => {
     expect(res.status).toBe(201);
     const { rows: prices } = await db.query<{ id: number; price: number }>(
       'SELECT id, price FROM menu_items WHERE id = ANY($1)',
-      [[item('Cheese Burger'), item('Bacon de bœuf'), item('Classic Start')]],
+      [[item('Cheese Burger'), item('Bacon de bœuf'), item('Early Bird')]],
     );
     const price = (id: number) => prices.find((p) => p.id === id)?.price ?? NaN;
     const total =
-      2 * price(item('Cheese Burger')) +
-      price(item('Bacon de bœuf')) +
-      price(item('Classic Start'));
+      2 * price(item('Cheese Burger')) + price(item('Bacon de bœuf')) + price(item('Early Bird'));
     expect(res.body).toEqual({
       orderId: 1,
       status: 'pending',
@@ -181,9 +179,9 @@ describe('POST /orders', () => {
         note: null,
       },
       {
-        name_fr: 'Classic Start',
+        name_fr: 'Early Bird',
         quantity: 1,
-        unit_price: price(item('Classic Start')),
+        unit_price: price(item('Early Bird')),
         note: null,
       },
     ]);
@@ -242,7 +240,7 @@ describe('POST /orders', () => {
     const res = await postOrder([
       burger(),
       {
-        menuItemId: item('Classic Start'),
+        menuItemId: item('Early Bird'),
         quantity: 1,
         choices: [{ group: 'hot_drink', menuItemId: item('Capuccino') }],
       },
@@ -251,7 +249,7 @@ describe('POST /orders', () => {
     expect(res.body).toMatchObject({
       error: {
         code: 'OUTSIDE_HOURS',
-        details: { menuItemId: item('Classic Start') },
+        details: { menuItemId: item('Early Bird') },
       },
     });
   });
@@ -261,7 +259,7 @@ describe('POST /orders', () => {
     await db.query('UPDATE menu_items SET sold_out = true WHERE id = $1', [item('Capuccino')]);
     const option = await postOrder([
       {
-        menuItemId: item('Classic Start'),
+        menuItemId: item('Early Bird'),
         quantity: 1,
         choices: [{ group: 'hot_drink', menuItemId: item('Capuccino') }],
       },
@@ -312,7 +310,7 @@ describe('POST /orders', () => {
     await waiterOnShift();
     const lines = (rawLines as Line[]).map((line) => ({
       ...line,
-      menuItemId: field === 'lines.0.choices' ? item('Classic Start') : item('Cheese Burger'),
+      menuItemId: field === 'lines.0.choices' ? item('Early Bird') : item('Cheese Burger'),
     }));
     const res = await postOrder(lines);
     expect(res.status).toBe(400);
@@ -329,7 +327,7 @@ describe('POST /orders', () => {
       ],
       [
         {
-          menuItemId: item('Classic Start'),
+          menuItemId: item('Early Bird'),
           quantity: 1,
           choices: [{ group: 'hot_drink', menuItemId: item('Cheese Burger') }],
         },
@@ -337,7 +335,7 @@ describe('POST /orders', () => {
       ],
       [
         {
-          menuItemId: item('Classic Start'),
+          menuItemId: item('Early Bird'),
           quantity: 1,
           choices: [
             { group: 'hot_drink', menuItemId: item('Capuccino') },
@@ -405,7 +403,7 @@ describe('GET /orders?status=pending', () => {
     const waiter = await waiterOnShift();
     const first = await pendingOrder([
       {
-        menuItemId: item('Classic Start'),
+        menuItemId: item('Early Bird'),
         quantity: 1,
         note: 'sans sucre',
         choices: [{ group: 'hot_drink', menuItemId: item('Capuccino') }],
@@ -424,20 +422,20 @@ describe('GET /orders?status=pending', () => {
       tableSessionId: null,
       source: 'qr',
       status: 'pending',
-      total: 14500,
+      total: 10500,
       confirmedAt: null,
       confirmedBy: null,
       offer: null,
       pos: { status: 'not_sent', error: null },
       lines: [
         {
-          menuItemId: item('Classic Start'),
-          name: { fr: 'Classic Start', en: 'Classic Start' },
+          menuItemId: item('Early Bird'),
+          name: { fr: 'Early Bird', en: 'Early Bird' },
           quantity: 1,
           note: 'sans sucre',
-          unitPrice: 14500,
+          unitPrice: 10500,
           discountPercent: 0,
-          lineTotal: 14500,
+          lineTotal: 10500,
           status: 'active',
           choices: [
             {
@@ -498,7 +496,7 @@ describe('POST /orders/:id/confirm', () => {
     const orderId = await pendingOrder([
       { ...burger(), quantity: 2 },
       {
-        menuItemId: item('Classic Start'),
+        menuItemId: item('Early Bird'),
         quantity: 1,
         note: 'sans sucre',
         choices: [{ group: 'hot_drink', menuItemId: item('Capuccino') }],
@@ -517,7 +515,7 @@ describe('POST /orders/:id/confirm', () => {
       tableSessionId: 1,
       confirmedBy: { id: backup.id, name: 'Nom karim' },
       confirmedAt: new Date(MONDAY_10H.getTime() + 60_000).toISOString(),
-      total: 48500,
+      total: 53500,
       pos: { status: 'queued', error: null },
     });
 
@@ -537,7 +535,7 @@ describe('POST /orders/:id/confirm', () => {
         payload: {
           lines: [
             { orderLineId: order.lines[0]?.id, posCode: '50', quantity: 2 },
-            { orderLineId: order.lines[1]?.id, posCode: '16', quantity: 1 },
+            { orderLineId: order.lines[1]?.id, posCode: '15', quantity: 1 },
           ],
         },
       },
@@ -555,7 +553,7 @@ describe('POST /orders/:id/confirm', () => {
       number: 7,
       state: 'occupied',
       openSessionId: 1,
-      openTotal: 48500,
+      openTotal: 53500,
       pendingOrders: 0,
       principalId: principal.id,
     });
@@ -627,7 +625,7 @@ describe('POST /orders/:id/confirm', () => {
     const burgerOrder = await pendingOrder();
     const morningOrder = await pendingOrder([
       {
-        menuItemId: item('Classic Start'),
+        menuItemId: item('Early Bird'),
         quantity: 1,
         choices: [{ group: 'hot_drink', menuItemId: item('Capuccino') }],
       },
@@ -670,7 +668,7 @@ describe('POST /orders/:id/confirm', () => {
     vi.setSystemTime(new Date('2026-10-19T11:58:00+01:00'));
     const orderId = await pendingOrder([
       {
-        menuItemId: item('Classic Start'),
+        menuItemId: item('Early Bird'),
         quantity: 1,
         choices: [{ group: 'hot_drink', menuItemId: item('Capuccino') }],
       },
@@ -775,7 +773,7 @@ describe('POST /staff-orders', () => {
       lines: [
         { ...burger(), quantity: 2, unitPrice: 1 },
         {
-          menuItemId: item('Classic Start'),
+          menuItemId: item('Early Bird'),
           quantity: 1,
           note: 'sans sucre',
           choices: [{ group: 'hot_drink', menuItemId: item('Capuccino') }],
@@ -792,14 +790,14 @@ describe('POST /staff-orders', () => {
       confirmedBy: { id: backup.id, name: 'Nom karim' },
       confirmedAt: MONDAY_10H.toISOString(),
       // Prix de la base, jamais celui envoyé par le téléphone.
-      total: 48500,
+      total: 53500,
       offer: null,
       pos: { status: 'queued', error: null },
       lines: [
         { quantity: 2, unitPrice: 28500, note: 'sans oignon' },
         {
           quantity: 1,
-          unitPrice: 14500,
+          unitPrice: 10500,
           note: 'sans sucre',
           choices: [{ group: 'hot_drink', menuItemId: item('Capuccino') }],
         },
@@ -822,7 +820,7 @@ describe('POST /staff-orders', () => {
         payload: {
           lines: [
             { orderLineId: order.lines[0]?.id, posCode: '50', quantity: 2 },
-            { orderLineId: order.lines[1]?.id, posCode: '16', quantity: 1 },
+            { orderLineId: order.lines[1]?.id, posCode: '15', quantity: 1 },
           ],
         },
       },
@@ -890,7 +888,7 @@ describe('POST /staff-orders', () => {
     const formula = await postStaffOrder(waiter.token, {
       lines: [
         {
-          menuItemId: item('Classic Start'),
+          menuItemId: item('Early Bird'),
           quantity: 1,
           choices: [{ group: 'hot_drink', menuItemId: item('Capuccino') }],
         },
@@ -898,7 +896,7 @@ describe('POST /staff-orders', () => {
     });
     expect(formula.status).toBe(409);
     expect(formula.body).toMatchObject({
-      error: { code: 'OUTSIDE_HOURS', details: { menuItemId: item('Classic Start') } },
+      error: { code: 'OUTSIDE_HOURS', details: { menuItemId: item('Early Bird') } },
     });
   });
 

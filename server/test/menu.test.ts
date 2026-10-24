@@ -122,8 +122,8 @@ describe('GET /menu', () => {
     const { categories } = await getMenu();
     expect(categories.map((c) => c.name.fr)).toEqual(menu.categories.map((c) => c.nameFr));
     expect(categories[0]?.name).toEqual({ fr: 'Formules petit-déjeuner', en: 'Breakfast sets' });
-    // 97 articles, moins le Plat de la semaine tant qu'il n'a pas de prix.
-    expect(categories.flatMap((c) => c.items)).toHaveLength(96);
+    // 86 articles, moins le Plat de la semaine tant qu'il n'a pas de prix.
+    expect(categories.flatMap((c) => c.items)).toHaveLength(85);
   });
 
   it('range chaque catégorie dans Food ou Drinks', async () => {
@@ -161,7 +161,7 @@ describe('GET /menu', () => {
       available: true,
       unavailableReason: null,
       availability: { days: [1, 2, 3, 4, 5, 6, 7], from: null, until: null },
-      suggestedExtraIds: ['Bacon de bœuf', 'Œuf', 'Gouda', 'Cheddar', 'Steak', 'Gruyère'].map(id),
+      suggestedExtraIds: ['Bacon de bœuf', 'Œuf', 'Gouda', 'Cheddar', 'Steak'].map(id),
       choiceGroups: [],
       noteHint: null,
       station: 'kitchen',
@@ -190,12 +190,12 @@ describe('GET /menu', () => {
   });
 
   it('calcule la disponibilité selon l’heure de Tunis', async () => {
-    expect(await findItem('Classic Start')).toMatchObject({
+    expect(await findItem('Early Bird')).toMatchObject({
       available: true,
       unavailableReason: null,
     });
     vi.setSystemTime(MONDAY_13H);
-    expect(await findItem('Classic Start')).toMatchObject({
+    expect(await findItem('Early Bird')).toMatchObject({
       available: false,
       unavailableReason: 'outside_hours',
     });
@@ -247,7 +247,7 @@ describe('GET /menu avec un jeton staff', () => {
       available: true,
       unavailableReason: null,
     });
-    for (const nameFr of ['Classic Start', 'Œufs brouillés']) {
+    for (const nameFr of ['Early Bird', 'Œufs brouillés']) {
       expect(await findItem(nameFr, token)).toMatchObject({
         available: false,
         unavailableReason: 'outside_hours',
@@ -329,7 +329,7 @@ describe('PATCH /menu-items/:id/availability', () => {
 
   it('reste hors horaire même sans rupture', async () => {
     vi.setSystemTime(MONDAY_13H);
-    const res = await setAvailable('waiter', 'Classic Start', true);
+    const res = await setAvailable('waiter', 'Early Bird', true);
     expect(res.body).toMatchObject({ available: false, unavailableReason: 'outside_hours' });
   });
 
@@ -342,7 +342,7 @@ describe('PATCH /menu-items/:id/availability', () => {
     ['barista', 'Carrot cake', 200],
     ['barista', 'Cheese Burger', 403],
     ['chef', 'Cheese Burger', 200],
-    ['chef', 'Classic Start', 200],
+    ['chef', 'Early Bird', 200],
     ['chef', 'Espresso', 403],
   ] as const)('%s sur %s → %i', async (role, nameFr, status) => {
     const res = await setAvailable(role, nameFr, false);

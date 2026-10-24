@@ -62,9 +62,9 @@ describe('parseAvailability', () => {
 describe('parseMenuCsv sur docs/menu/menu.csv', () => {
   const menu = parseMenuCsv(csv);
 
-  it('lit 19 catégories et 97 articles, dans l’ordre du menu papier', () => {
-    expect(menu.categories).toHaveLength(19);
-    expect(menu.items).toHaveLength(97);
+  it('lit 18 catégories et 86 articles, dans l’ordre du menu papier', () => {
+    expect(menu.categories).toHaveLength(18);
+    expect(menu.items).toHaveLength(86);
     expect(menu.categories[0]).toMatchObject({
       nameFr: 'Formules petit-déjeuner',
       section: 'food',
@@ -72,7 +72,7 @@ describe('parseMenuCsv sur docs/menu/menu.csv', () => {
     expect(menu.categories.filter((c) => c.section === 'drinks')).toHaveLength(7);
     expect(menu.categories.find((c) => c.nameFr === 'Extras')?.display).toBe('grid');
     expect(menu.items.filter((i) => i.categoryFr === 'Extras').map((i) => i.sortOrder)).toEqual(
-      Array.from({ length: 14 }, (_, i) => i + 1),
+      Array.from({ length: 11 }, (_, i) => i + 1),
     );
   });
 
@@ -93,13 +93,17 @@ describe('parseMenuCsv sur docs/menu/menu.csv', () => {
     expect(menu.items.filter((i) => i.price === null)).toHaveLength(1);
   });
 
-  it('lit les codes caisse, vides seulement pour le Plat de la semaine', () => {
+  it('lit les codes caisse, vides seulement pour le Plat de la semaine et les nouveaux articles', () => {
     expect(menu.items.find((i) => i.nameFr === 'Avocat')).toMatchObject({
       price: 7000,
       posCode: '82',
     });
+    // Codes du Croque-monsieur, des Pancakes au chocolat et du jus d'orange : pas encore relevés en caisse.
     expect(menu.items.filter((i) => i.posCode === null).map((i) => i.nameFr)).toEqual([
+      'Croque-monsieur',
+      'Pancakes au chocolat',
       'Plat de la semaine',
+      'Orange',
     ]);
   });
 
@@ -123,9 +127,9 @@ describe('parseMenuCsv sur docs/menu/menu.csv', () => {
       'Œufs brouillés',
       'Œufs Bénédicte',
     ]);
-    expect(menu.items.find((i) => i.nameFr === 'Sweet Start')?.choiceGroups).toEqual([
+    expect(menu.items.find((i) => i.nameFr === 'Full Morning')?.choiceGroups).toEqual([
       'hot_drink',
-      'eggs_with_benedict',
+      'eggs',
       'seasonal_juice',
     ]);
   });
@@ -199,9 +203,9 @@ describe('seedMenu (base de test)', () => {
   };
 
   it('charge tout le menu', async () => {
-    expect(await seedMenu(client, menu)).toEqual({ categories: 19, inserted: 97, skipped: 0 });
-    expect(await count('categories')).toBe(19);
-    expect(await count('menu_items')).toBe(97);
+    expect(await seedMenu(client, menu)).toEqual({ categories: 18, inserted: 86, skipped: 0 });
+    expect(await count('categories')).toBe(18);
+    expect(await count('menu_items')).toBe(86);
     expect(await count('choice_groups')).toBe(4);
 
     const { rows } = await client.query<{ price: number | null; name_en: string }>(
@@ -220,7 +224,6 @@ describe('seedMenu (base de test)', () => {
       'Gouda',
       'Cheddar',
       'Steak',
-      'Gruyère',
     ]);
   });
 
@@ -267,9 +270,9 @@ describe('seedMenu (base de test)', () => {
     );
     await client.query("UPDATE choice_groups SET name_en = 'Hot drink' WHERE key = 'hot_drink'");
 
-    expect(await seedMenu(client, menu)).toEqual({ categories: 19, inserted: 0, skipped: 97 });
-    expect(await count('categories')).toBe(19);
-    expect(await count('menu_items')).toBe(97);
+    expect(await seedMenu(client, menu)).toEqual({ categories: 18, inserted: 0, skipped: 86 });
+    expect(await count('categories')).toBe(18);
+    expect(await count('menu_items')).toBe(86);
 
     const { rows } = await client.query(
       `SELECT sold_out, price, name_en, pos_code, available_from, note_hint_fr, note_hint_en
@@ -297,7 +300,7 @@ describe('seedMenu (base de test)', () => {
 
   it('ne fait pas revenir un article archivé', async () => {
     await client.query("UPDATE menu_items SET archived_at = now() WHERE name_fr = 'Épinards'");
-    expect(await seedMenu(client, menu)).toMatchObject({ inserted: 0, skipped: 97 });
+    expect(await seedMenu(client, menu)).toMatchObject({ inserted: 0, skipped: 86 });
     const { rows } = await client.query<{ n: number }>(
       "SELECT count(*)::int AS n FROM menu_items WHERE name_fr = 'Épinards'",
     );
@@ -311,9 +314,9 @@ describe('seedMenu (base de test)', () => {
         '\nNouveautés,New,Tarte du jour,Pie of the day,,,9,201,,,,,,,both',
     );
     expect(await seedMenu(client, extended)).toEqual({
-      categories: 20,
+      categories: 19,
       inserted: 2,
-      skipped: 97,
+      skipped: 86,
     });
     expect(await extrasOf('Burger du chef')).toEqual(['Œuf', 'Gouda']);
     const groups = await client.query(

@@ -35,7 +35,7 @@ export const mockMenu: MenuResponse = {
             fr: 'Café ou thé, pain toasté, confiture, miel, Eau 0,5L',
             en: 'Coffee or tea, toasted bread, jam, honey, 0.5 L water',
           },
-          price: 8500,
+          price: 10500,
           availability: untilNoon,
           choiceGroups: ['hot_drink'],
           station: 'both',

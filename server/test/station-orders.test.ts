@@ -128,7 +128,7 @@ describe('GET /station-orders', () => {
       burger(),
       carrotCake(),
       {
-        menuItemId: item('Classic Start'),
+        menuItemId: item('Early Bird'),
         quantity: 1,
         choices: [{ group: 'hot_drink', menuItemId: item('Capuccino') }],
       },
@@ -147,7 +147,7 @@ describe('GET /station-orders', () => {
     expect(bar[0]?.lines.map((l) => l.name.fr)).toEqual([
       'Espresso',
       'Carrot cake',
-      'Classic Start',
+      'Early Bird',
     ]);
     expect(bar[0]?.lines[0]).toMatchObject({ quantity: 2, note: 'serré', station: 'bar' });
     expect(bar[0]?.lines[2]?.choices).toEqual([
@@ -162,7 +162,7 @@ describe('GET /station-orders', () => {
     expect(kitchen[0]?.lines.map((l) => l.name.fr)).toEqual([
       'Cheese Burger',
       'Carrot cake',
-      'Classic Start',
+      'Early Bird',
     ]);
   });
 
