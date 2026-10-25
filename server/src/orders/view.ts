@@ -1,5 +1,5 @@
 import type pg from 'pg';
-import type { Db } from '../db.js';
+import { queryAll, type Db } from '../db.js';
 import { localized, type Localized, type Station } from '../menu/items.js';
 
 // Écran bar / cuisine (docs/api.md § 5 ter) : une ligne `both` s'affiche aux deux postes.
@@ -92,9 +92,11 @@ const lineTotal = (line: LineRow) =>
 
 export async function loadOrders(db: Db | pg.PoolClient, ids: readonly number[]): Promise<Order[]> {
   if (ids.length === 0) return [];
-  const [{ rows: orders }, { rows: lines }, { rows: ready }] = await Promise.all([
-    db.query<OrderRow>(
-      `SELECT o.id, o.table_id, t.number AS table_number, o.table_session_id, o.source, o.status,
+  const [{ rows: orders }, { rows: lines }, { rows: ready }] = await queryAll(
+    db,
+    () =>
+      db.query<OrderRow>(
+        `SELECT o.id, o.table_id, t.number AS table_number, o.table_session_id, o.source, o.status,
               o.created_at, o.confirmed_at, u.id AS confirmed_by_id, u.name AS confirmed_by_name,
               j.status AS job_status, j.last_error AS job_error
          FROM orders o
@@ -104,10 +106,11 @@ export async function loadOrders(db: Db | pg.PoolClient, ids: readonly number[])
                              WHERE order_id = o.id AND type = 'enter_order'
                              ORDER BY id DESC LIMIT 1) j ON true
         WHERE o.id = ANY($1)`,
-      [ids],
-    ),
-    db.query<LineRow>(
-      `SELECT l.id, l.order_id, l.menu_item_id, l.name_fr, l.name_en, l.quantity, l.note,
+        [ids],
+      ),
+    () =>
+      db.query<LineRow>(
+        `SELECT l.id, l.order_id, l.menu_item_id, l.name_fr, l.name_en, l.quantity, l.note,
               l.unit_price, l.discount_percent, l.status, l.station,
               (SELECT json_agg(json_build_object('group', c.group_key, 'menuItemId', c.menu_item_id,
                                                  'nameFr', i.name_fr, 'nameEn', i.name_en)
@@ -120,21 +123,22 @@ export async function loadOrders(db: Db | pg.PoolClient, ids: readonly number[])
          FROM order_lines l
         WHERE l.order_id = ANY($1)
         ORDER BY l.id`,
-      [ids],
-    ),
-    db.query<{
-      order_id: number;
-      station: StationName;
-      ready_at: Date;
-      user_id: number;
-      user_name: string;
-    }>(
-      `SELECT r.order_id, r.station, r.ready_at, u.id AS user_id, u.name AS user_name
+        [ids],
+      ),
+    () =>
+      db.query<{
+        order_id: number;
+        station: StationName;
+        ready_at: Date;
+        user_id: number;
+        user_name: string;
+      }>(
+        `SELECT r.order_id, r.station, r.ready_at, u.id AS user_id, u.name AS user_name
          FROM order_ready r JOIN users u ON u.id = r.ready_by
         WHERE r.order_id = ANY($1)`,
-      [ids],
-    ),
-  ]);
+        [ids],
+      ),
+  );
 
   const byId = new Map(
     orders.map((row): [number, Order] => [

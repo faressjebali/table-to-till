@@ -1,6 +1,6 @@
 import type pg from 'pg';
 import { z } from 'zod';
-import type { Db } from '../db.js';
+import { queryAll, type Db } from '../db.js';
 import { HttpError } from '../errors.js';
 import { computeAvailability, type Audience } from '../menu/availability.js';
 import { onMenu } from '../menu/items.js';
@@ -91,23 +91,26 @@ export async function prepareLines(
     for (const choice of line.choices ?? []) ids.add(choice.menuItemId);
   }
 
-  const [{ rows: items }, { rows: options }] = await Promise.all([
-    db.query<ItemRow>(
-      `SELECT i.id, i.name_fr, i.name_en, i.price, i.pos_code, i.days,
+  const [{ rows: items }, { rows: options }] = await queryAll(
+    db,
+    () =>
+      db.query<ItemRow>(
+        `SELECT i.id, i.name_fr, i.name_en, i.price, i.pos_code, i.days,
               i.available_from::text, i.available_until::text, i.sold_out,
               array(SELECT g.group_key FROM menu_item_choice_groups g
                      WHERE g.menu_item_id = i.id
                      ORDER BY g.sort_order, g.group_key) AS choice_groups
          FROM menu_items i
         WHERE ${onMenu('i')} AND i.id = ANY($1)`,
-      [[...ids]],
-    ),
-    db.query<{ group_key: string; menu_item_id: number }>(
-      `SELECT o.group_key, o.menu_item_id FROM choice_group_options o
+        [[...ids]],
+      ),
+    () =>
+      db.query<{ group_key: string; menu_item_id: number }>(
+        `SELECT o.group_key, o.menu_item_id FROM choice_group_options o
          JOIN menu_items i ON i.id = o.menu_item_id
         WHERE ${onMenu('i')}`,
-    ),
-  ]);
+      ),
+  );
   const byId = new Map(items.map((item) => [item.id, item]));
   const optionsByGroup = new Map<string, Set<number>>();
   for (const option of options) {

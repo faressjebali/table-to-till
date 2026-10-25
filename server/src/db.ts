@@ -35,6 +35,19 @@ export async function audit(
   );
 }
 
+// Lance plusieurs requêtes indépendantes : en parallèle sur le pool (une connexion chacune),
+// l'une après l'autre sur une connexion de transaction, qui n'en exécute qu'une à la fois
+// (pg@9 refusera d'en lancer une deuxième avant la fin de la première).
+export async function queryAll<T extends unknown[]>(
+  db: Db | pg.PoolClient,
+  ...queries: { [K in keyof T]: () => Promise<T[K]> }
+): Promise<T> {
+  if (db instanceof pg.Pool) return (await Promise.all(queries.map((query) => query()))) as T;
+  const results: unknown[] = [];
+  for (const query of queries) results.push(await query());
+  return results as T;
+}
+
 // Exécute `work` dans une transaction : COMMIT si tout passe, ROLLBACK et erreur relancée sinon.
 export async function inTransaction<T>(
   db: Db,
