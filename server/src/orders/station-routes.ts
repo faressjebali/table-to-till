@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { z } from 'zod';
 import { getAuth } from '../auth/middleware.js';
+import { runInBackground } from '../background.js';
 import type { Config } from '../config.js';
 import { audit, inTransaction, type Db } from '../db.js';
 import { HttpError } from '../errors.js';
@@ -91,13 +92,9 @@ export function stationRoutes(
     const ready = { orderId: view.id, table: view.table, station };
     realtime.orderReady(ready);
     // Notification push aux serveurs en shift, sans attendre : un échec ne change rien.
-    void (async () => {
-      try {
-        await sendPush(db, push, await waitersOnShiftIds(db), orderReadyMessage(ready));
-      } catch (err) {
-        console.error('notifications push (prêt) :', err);
-      }
-    })();
+    runInBackground('notifications push (prêt)', async () => {
+      await sendPush(db, push, await waitersOnShiftIds(db), orderReadyMessage(ready));
+    });
     res.json(view);
   });
 

@@ -1,3 +1,4 @@
+import { runInBackground } from '../background.js';
 import type { Db } from '../db.js';
 import {
   orderNewMessage,
@@ -54,17 +55,10 @@ export async function notifyTables(
 // Sans attendre : le service push peut être lent, et un échec ne change rien à la commande.
 export function pushNewOrders(db: Db, push: PushSender, orderIds: readonly number[]): void {
   if (orderIds.length === 0) return;
-  void (async () => {
-    try {
-      const [orders, userIds] = await Promise.all([
-        loadOrders(db, orderIds),
-        waitersOnShiftIds(db),
-      ]);
-      for (const order of orders) await sendPush(db, push, userIds, orderNewMessage(order));
-    } catch (err) {
-      console.error('notifications push (commandes) :', err);
-    }
-  })();
+  runInBackground('notifications push (commandes)', async () => {
+    const [orders, userIds] = await Promise.all([loadOrders(db, orderIds), waitersOnShiftIds(db)]);
+    for (const order of orders) await sendPush(db, push, userIds, orderNewMessage(order));
+  });
 }
 
 // Écran bar / cuisine, après COMMIT : chaque poste reçoit la commande avec ses lignes seulement.
@@ -100,17 +94,13 @@ export async function notifyStations(
 // chose à préparer (lignes de leur poste seulement). Sans attendre, comme pushNewOrders.
 export function pushStationOrders(db: Db, push: PushSender, orderIds: readonly number[]): void {
   if (orderIds.length === 0) return;
-  void (async () => {
-    try {
-      for (const order of await loadOrders(db, orderIds)) {
-        for (const station of STATIONS) {
-          if (!hasActiveLines(order, station)) continue;
-          const message = stationOrderMessage(forStation(order, station), station);
-          await sendPush(db, push, await stationOnShiftIds(db, station), message);
-        }
+  runInBackground('notifications push (bar / cuisine)', async () => {
+    for (const order of await loadOrders(db, orderIds)) {
+      for (const station of STATIONS) {
+        if (!hasActiveLines(order, station)) continue;
+        const message = stationOrderMessage(forStation(order, station), station);
+        await sendPush(db, push, await stationOnShiftIds(db, station), message);
       }
-    } catch (err) {
-      console.error('notifications push (bar / cuisine) :', err);
     }
-  })();
+  });
 }

@@ -3,6 +3,7 @@ import { readFileSync } from 'node:fs';
 import request from 'supertest';
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { createApp } from '../src/app.js';
+import { settleBackground } from '../src/background.js';
 import { hashPassword } from '../src/auth/passwords.js';
 import type { Role } from '../src/auth/sessions.js';
 import { loadConfig, type Config } from '../src/config.js';
@@ -255,6 +256,35 @@ describe('push order:new', () => {
       expect(sent).toHaveLength(1);
     });
     expect(sent.map((s) => s.endpoint)).toEqual(['https://push.example.com/nouveau']);
+  });
+
+  it('envoyée après la réponse, attendue par settleBackground avant le test suivant', async () => {
+    await createUser('amira');
+    const amira = await tokenFor('amira');
+    await api().post('/api/shifts/start').set(auth(amira)).expect(201);
+    await subscribe(amira, 'amira');
+    // L'envoi reste bloqué jusqu'à ce que le test le libère, après avoir vérifié la réponse.
+    let release: () => void = () => undefined;
+    const released = new Promise<void>((resolve) => {
+      release = resolve;
+    });
+    const slowSender: PushSender = async (subscription, message) => {
+      await released;
+      sent.push({ endpoint: subscription.endpoint, message });
+    };
+
+    const res = await request(createApp({ db, config, push: slowSender }))
+      .post('/api/orders')
+      .send({
+        clientRequestId: randomUUID(),
+        tableToken: 'jeton-7',
+        lines: [{ menuItemId: item('Cheese Burger'), quantity: 1, note: null }],
+      });
+    expect(res.status).toBe(201);
+    expect(sent).toEqual([]);
+    setTimeout(release, 20);
+    await settleBackground();
+    expect(sent.map((s) => s.endpoint)).toEqual(['https://push.example.com/amira']);
   });
 });
 
