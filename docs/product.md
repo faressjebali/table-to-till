@@ -209,7 +209,7 @@ Commande tapée par un serveur : on démarre directement à l'étape 4.
   - bandeau « Saisie automatique en cours — ne touchez pas » pendant l'action ;
   - si un humain touche pendant l'action : arrêt immédiat, attente, vérification, reprise propre.
 - Vérifie l'écran attendu avant chaque étape ; sinon s'arrête, ne devine jamais, signale l'échec au serveur, journalise tout.
-- Démarre avec Windows.
+- Lancé **à la main chaque matin** par le staff, une fois le PC ouvert et LegacyPOS synchronisé avec NACEF (pas au démarrage de Windows, `docs/decisions.md` 26/10). Tant qu'il ne tourne pas, les tâches attendent dans la file et l'app staff affiche que l'agent ne répond pas.
 
 ## 8. Émulateur LegacyPOS (`pos-emulator/`)
 

@@ -2,6 +2,7 @@
 
 Une ligne par décision, la plus récente en haut. Format : `AAAA-MM-JJ — décision — pourquoi`.
 
+- 2026-10-26 — **L'agent caisse est lancé à la main chaque matin**, par un humain, une fois le PC ouvert (code Windows) et LegacyPOS synchronisé avec NACEF (bouton de synchronisation, PIN reçu par SMS) ; il ne démarre pas avec Windows (remplace « Démarre avec Windows », `docs/product.md` § 7). Le lancement fait partie de la formation du staff ; un oubli se voit dans l'app staff (« agent hors ligne ») et les tâches attendent dans la file — l'ouverture du PC et la synchronisation NACEF demandent un humain, l'agent ne doit rien taper avant — choix de Fares
 - 2026-10-26 — **Pas d'annulation d'article sur une table remisée** : une fois la remise staff faite, aucun article de la table ne s'annule (l'app le refuse) — dans LegacyPOS, la ligne −1 n'est pas remisée et retire le prix plein, le total de la table peut devenir négatif, ce que la caisse ne tolère pas — règle de Fares
 - 2026-10-26 — L'agent tape le **code caisse commun aux serveurs**, pas le code admin : il a les droits nécessaires (102 abandonner une vente ou saisir une quantité négative, 105 supprimer une ligne) et aucune fonction d'admin ; stocké seulement dans le `.env` du PC de caisse (remplace la décision du 17/10 sur le code admin) — un seul utilisateur ouvre toutes les tables, donc jamais « table ouverte par un autre serveur », et pas de code admin sur le PC — confirmé par Fares
 
