@@ -59,6 +59,18 @@ jobs:
         working-directory: staff-app
         run: npm run typecheck && npm test && npm run build
 
+  # l'application par UI Automation et comparent son arbre aux relevés de la caisse.
+  emulator:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+      - name: Émulateur (build et tests)
+        working-directory: pos-emulator
+        run: dotnet test LegacyEmulator.sln -nologo
+
   python:
     runs-on: ubuntu-latest
     defaults:

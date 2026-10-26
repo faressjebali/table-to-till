@@ -202,7 +202,7 @@ Commande tapée par un serveur : on démarre directement à l'étape 4.
 - Python + pywinauto, sur le PC de caisse Windows, à côté de LegacyPOS.
 - Pilote uniquement l'**interface** de LegacyPOS. Jamais sa base de données ni ses fichiers.
 - Repère les contrôles **par identifiant, nom ou texte** exposés à Windows (UI Automation, voir `docs/pos.md`), jamais par coordonnées. Trouve chaque article par le code affiché sur son bouton, en parcourant les catégories.
-- L'agent utilise le **code admin** de LegacyPOS, pour pouvoir ouvrir n'importe quelle table (même ouverte par un serveur), stocké uniquement dans le `.env` du PC de caisse. Si l'écran PIN apparaît, l'agent le tape et continue. Il n'utilise jamais les fonctions d'admin (clôture fiscale, shifts, articles, réglages).
+- L'agent tape le **code caisse commun aux serveurs** (pas le code admin) : toutes les tables sont ouvertes par le même utilisateur, il peut donc ouvrir n'importe laquelle. Ce code a les droits nécessaires (abandonner une vente, quantité négative, supprimer une ligne) et aucune fonction d'admin ; il est stocké uniquement dans le `.env` du PC de caisse. Si l'écran PIN apparaît, l'agent le tape et continue.
 - **File unique** : une action à la fois (commande, encaissement, addition…).
 - **Partage de la caisse avec les humains** :
   - l'agent n'agit que si personne n'a touché souris/clavier depuis quelques secondes **et** si l'écran est le plan des tables (ou l'écran PIN, qu'il remplit avant de continuer) ;
@@ -234,7 +234,7 @@ Tranchées le 15/10/2026 (voir §5 et `docs/decisions.md`) : encaissement depuis
 
 Restent :
 
-1. ~~Après validation, LegacyPOS revient-il au plan sans PIN ?~~ Oui (vidéo du 16/10) ; le PIN est redemandé quand on ferme le plan (✕).
+1. ~~Après validation, LegacyPOS revient-il au plan sans PIN ?~~ Oui, en passant par la fenêtre « Choisir une action » (bouton de droite, plan) qui s'ouvre après VALIDER (vidéo du 16/10, corrigé le 26/10) ; le PIN est redemandé quand on ferme le plan (✕).
 2. ~~Tables réelles, disposition, tables fictives et tables d'offre~~ : relevées le 16/10/2026, `docs/tables.csv`.
 3. Écrans de remise, d'annulation (−1 sans code), de transfert et de changement de table, quantité > 1 (à filmer ; encaissement et addition filmés le 16/10).
 
