@@ -1,2 +1,4 @@
-# Outils de développement (lint, formatage). Installer avec : pip install -r requirements-dev.txt
+# Outils de développement (lint, formatage, tests). Installer avec : pip install -r requirements-dev.txt
+-r requirements.txt
+pytest==9.1.1
 ruff==0.17.0

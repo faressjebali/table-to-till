@@ -1,2 +1,5 @@
 # Dépendances de l'agent caisse. Installer avec : pip install -r requirements.txt
-# Ajoutées avec l'agent : pywinauto, client HTTP, etc.
+# pywinauto arrive avec le pilotage de la caisse.
+httpx==0.28.1
+python-dotenv==1.2.4
+python-socketio[client]==5.17.0
