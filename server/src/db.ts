@@ -4,7 +4,13 @@ export type Db = pg.Pool;
 
 export function createPool(connectionString = process.env.DATABASE_URL): Db {
   if (!connectionString) throw new Error('DATABASE_URL manquant (voir .env.example)');
-  return new pg.Pool({ connectionString });
+  const pool = new pg.Pool({ connectionString });
+  // Connexion inactive coupée par Postgres (redémarrage, réseau) : pg la retire du pool et la
+  // suivante en ouvre une nouvelle. Sans écouteur, Node arrêterait tout le serveur.
+  pool.on('error', (err) => {
+    console.error('base de données (connexion inactive) :', err);
+  });
+  return pool;
 }
 
 // Journal d'actions : qui (NULL = système), quoi, sur quoi.
