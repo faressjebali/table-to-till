@@ -1,6 +1,6 @@
 # Contrat d'API — Coffee QR
 
-> Brouillon v2.4 (20 octobre 2026). À relire ensemble. Toute modification passe par une PR dédiée, annoncée à l'autre.
+> Brouillon v2.5 (26 octobre 2026). À relire ensemble. Toute modification passe par une PR dédiée, annoncée à l'autre.
 
 ## 1. Règles générales
 
@@ -358,8 +358,8 @@ Vente directe (`/direct-sales`) : le serveur attribue une **table fictive libre*
 | POST | `/tables/:id/move` | `{ toTableId }` (une autre table `real`) | tâche `move_table` |
 | POST | `/gifts` | `{ clientRequestId, tableId?, menuItemId, quantity, choices?, reason: "unhappy_customer" \| "staff", note? }` (`unhappy_customer` : `tableId` et `note` obligatoires ; `staff` : sans `tableId`, `note` facultative ; sinon `VALIDATION_ERROR`) | **aucune** (jamais tapé en caisse) ; 201 Gift |
 | GET | `/gifts?reason=staff&closure=current` | — | `{ items: [Gift] }` : la liste « Offres staff » du créneau (Gifts `staff` du principal en cours pas encore clôturés), la plus récente d'abord — principal, barista ou chef en shift |
-| POST | `/tables/:id/pay` | `{ method: "cash" \| "card" }` (table réelle : principal de la table ; vente directe : barista ou principal) | tâche `pay_table` ; la session est fermée (`paid`) tout de suite dans l'app ; si la tâche échoue, les tâches suivantes de la table attendent (voir PosJob) ; 409 `CANCEL_WAITING` si une annulation de la table est `waiting` |
-| POST | `/tables/:id/print-bill` | — | tâche `print_bill` |
+| POST | `/tables/:id/pay` | `{ method: "cash" \| "card" }` (table réelle : principal de la table ; vente directe : barista ou principal) | tâche `pay_table` ; réponse 200 PosJob (la tâche créée) ; la session est fermée (`paid`) tout de suite dans l'app ; table sans session ouverte (libre, ou table d'offre) → 409 `INVALID_STATUS` ; si la tâche échoue, les tâches suivantes de la table attendent (voir PosJob) ; 409 `CANCEL_WAITING` si une annulation de la table est `waiting` |
+| POST | `/tables/:id/print-bill` | — (serveur en shift, renfort compris) | tâche `print_bill` ; réponse 200 PosJob (la tâche créée) ; table sans session ouverte → 409 `INVALID_STATUS` |
 
 - **Transfert et changement de table** : seulement entre tables `real`. Table d'arrivée `virtual` (table d'offre ou de vente directe) → 400 `VALIDATION_ERROR` sur `toTableId` ; ligne ou table de départ `virtual` → 409 `INVALID_STATUS`. Une ligne transférée vers une table d'un autre principal passe dans sa caisse ; vers une table libre, la nouvelle session appartient au principal de la table de départ (même pendant une passation). Le changement de table garde la session, donc son principal.
 - **Table encaissée** : une fois la session fermée (`paid` ou `unpaid`, vente directe comprise), la table est libre et ses lignes ne changent plus : `discount`, `cancel`, `withdraw-cancel` et `transfer` sur une ligne d'une session fermée → 409 `INVALID_STATUS`.
@@ -492,6 +492,7 @@ Après reconnexion, chaque client recharge via REST.
 
 | Version | Date | Changement |
 | --- | --- | --- |
+| v2.5 brouillon | 2026-10-26 | `POST /tables/:id/pay` et `POST /tables/:id/print-bill` répondent 200 avec la tâche créée (PosJob) ; table sans session ouverte → 409 `INVALID_STATUS` ; `print-bill` ouvert au renfort |
 | v2.4 brouillon | 2026-10-20 | **Plan des tables en deux salles** : `layout.room` (`inside` / `terrace`) dans Table, AdminTable et `/admin/tables` (`inside` par défaut) ; chaque salle a sa propre grille ; une table longue est une table `square` de plusieurs cases (`w` > 1) |
 | v2.3.1 brouillon | 2026-10-19 | `POST /pos/jobs/:id/fail` sans `screenshot` : l'agent n'envoie pas de capture d'écran ; `error` et `step` suffisent |
 | v2.3 brouillon | 2026-10-19 | **Agent hors ligne** : état `offline` dans `pos:status` après 30 s sans heartbeat ; `GET /pos/status` (serveurs en shift et manager) pour relire l'état de l'agent après une reconnexion |
