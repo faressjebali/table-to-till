@@ -36,7 +36,7 @@ export function createApp({
   api.use(userRoutes(db, config, realtime));
   api.use(menuRoutes(db, config, realtime));
   api.use(shiftRoutes(db, config, realtime));
-  api.use(tableRoutes(db, config));
+  api.use(tableRoutes(db, config, realtime));
   api.use(adminTableRoutes(db, config));
   api.use(orderRoutes(db, config, realtime, push));
   api.use(stationRoutes(db, config, realtime, push));

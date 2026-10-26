@@ -70,3 +70,16 @@ export function requireOnShift(
 export function requireWaiterOnShift(db: Db, config: Config): RequestHandler[] {
   return requireOnShift(db, config, ['waiter']);
 }
+
+// Argent (encaisser, fait à la main…) : principal seulement, après requireWaiterOnShift.
+// Un seul principal pour l'instant ; le principal de la table pendant une passation arrive plus tard.
+export function requirePrincipal(db: Db): RequestHandler {
+  return async (_req, res, next) => {
+    const { rowCount } = await db.query(
+      `SELECT 1 FROM shifts WHERE user_id = $1 AND ended_at IS NULL AND principal`,
+      [getAuth(res).user.id],
+    );
+    if (!rowCount) throw new HttpError(403, 'NOT_PRINCIPAL', 'Principal only');
+    next();
+  };
+}

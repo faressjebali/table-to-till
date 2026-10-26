@@ -6,7 +6,7 @@ import type { Config } from '../config.js';
 import { audit, inTransaction, type Db } from '../db.js';
 import { HttpError, validationError } from '../errors.js';
 import { sameSecret, type Realtime } from '../realtime.js';
-import { isOnShift, requireWaiterOnShift } from '../shifts/on-shift.js';
+import { isOnShift, requirePrincipal, requireWaiterOnShift } from '../shifts/on-shift.js';
 import {
   agentStatus,
   announceFailed,
@@ -44,18 +44,6 @@ function requireAgent(config: Config): RequestHandler {
     if (config.agentKey === '' || !sameSecret(key, config.agentKey)) {
       throw new HttpError(401, 'UNAUTHORIZED', 'Invalid agent key');
     }
-    next();
-  };
-}
-
-// Un seul principal pour l'instant ; le principal de la table pendant une passation arrive plus tard.
-function requirePrincipal(db: Db): RequestHandler {
-  return async (_req, res, next) => {
-    const { rowCount } = await db.query(
-      `SELECT 1 FROM shifts WHERE user_id = $1 AND ended_at IS NULL AND principal`,
-      [getAuth(res).user.id],
-    );
-    if (!rowCount) throw new HttpError(403, 'NOT_PRINCIPAL', 'Principal only');
     next();
   };
 }
