@@ -183,6 +183,20 @@ class EcranUia:
         if bouton is not None:
             bouton.invoke()
 
+    def net(self) -> str | None:
+        champ = self._controle('fieldTotal')
+        return champ.window_text() if champ is not None else None
+
+    def especes(self) -> None:
+        bouton = self._controle('btnCash')
+        if bouton is not None:
+            bouton.invoke()
+
+    def addition(self) -> None:
+        bouton = self._controle('btnBill')
+        if bouton is not None:
+            bouton.invoke()
+
     def choix_option_ouvert(self) -> bool:
         return any(f.window_text() == CHOIX_OPTION for f in self._possedees())
 

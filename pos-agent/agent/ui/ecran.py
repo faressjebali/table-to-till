@@ -71,6 +71,18 @@ class Ecran(Protocol):
         """VALIDER (`btnSend`)."""
         ...
 
+    def net(self) -> str | None:
+        """Texte de `fieldTotal` (ex. « 17,000 TND »)."""
+        ...
+
+    def especes(self) -> None:
+        """Espèces (`btnCash`)."""
+        ...
+
+    def addition(self) -> None:
+        """NOTE (`btnBill`)."""
+        ...
+
     def choix_option_ouvert(self) -> bool:
         """« Choisir une action » (fenêtre possédée par la principale)."""
         ...

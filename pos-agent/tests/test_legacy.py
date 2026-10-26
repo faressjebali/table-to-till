@@ -3,7 +3,7 @@ import logging
 import pytest
 
 from agent.caisse import EchecCaisse
-from agent.legacy import CaisseLegacy, regrouper
+from agent.legacy import REGLEMENT, CaisseLegacy, en_dinars, millimes, regrouper
 from agent.ui.ecran import Article, Ligne
 
 from .fausse_legacy import PAGES, FausseLegacy
@@ -162,3 +162,93 @@ def test_commande_sans_choisissez_une_option_pas_de_sortir():
     assert echec(legacy, commande(5, ('10', 1))).erreur == 'COMMANDE_UNCONFIRMED'
     # Après VALIDER, un humain vérifie : l'agent ne sort pas.
     assert 'QUITTER' not in legacy.actions
+
+
+def reglement(table: int, type_: str, total: int, methode: str | None = None) -> dict:
+    tache = {'id': 2, 'type': type_, 'tableNumber': table, 'expectedTotal': total}
+    if methode is not None:
+        tache['method'] = methode
+    return tache
+
+
+def table_commandee(table: str = '7', net: str = '16,000 TND') -> FausseLegacy:
+    legacy = FausseLegacy(etat='plan')
+    legacy.envoyees[table] = [Ligne('1', 'Express', False), Ligne('1', 'CARAFE EAU 1L ', False)]
+    legacy.nets[table] = net
+    return legacy
+
+
+def test_millimes_et_dinars():
+    assert millimes('17,000 TND') == 17000
+    assert millimes('0,500 TND') == 500
+    assert millimes('-6,000 TND') == -6000
+    assert millimes('17.000') is None
+    assert en_dinars(16500) == '16,500 TND'
+
+
+def test_especes_pave_vide_puis_retour_au_plan():
+    legacy = table_commandee()
+    legacy._pave = '5'
+    caisse(legacy).executer(reglement(7, 'pay_table', 16000, 'cash'))
+    assert legacy.reglements == [('7', 'CASH', '')]
+    assert legacy.etat() == 'plan'
+    assert 'QUITTER' not in legacy.actions
+
+
+def test_carte_par_reglement_puis_commande_sans_toucher_ses_boutons():
+    legacy = table_commandee()
+    agent = caisse(legacy)
+    agent.executer(reglement(7, 'pay_table', 16000, 'card'))
+    assert legacy.reglements == [('7', 'CARD', '')]
+    assert legacy.actions[-2:] == ['catégorie Paiement', 'catégorie CARTE']
+    # « Paiement » reste affiché ; l'index des codes ne touche aucun de ses boutons.
+    assert legacy.reglement
+    agent.executer(commande(5, ('11', 1)))
+    touches = [a for a in legacy.actions if a.startswith('catégorie ')]
+    assert touches.count('catégorie CARTE') == 1
+    assert not any(a.removeprefix('catégorie ') in REGLEMENT - {'CARTE'} for a in touches)
+    assert len(legacy.reglements) == 1
+
+
+def test_addition():
+    legacy = table_commandee()
+    caisse(legacy).executer(reglement(7, 'print_bill', 16000))
+    assert legacy.reglements == [('7', 'TMP', '')]
+    assert legacy.actions[-1] == 'NOTE'
+
+
+@pytest.mark.parametrize(
+    ('preparer', 'code'),
+    [
+        (lambda k: k.nets.update({'7': '17,000 TND'}), 'TOTAL_MISMATCH'),
+        (lambda k: k.envoyees.update({'7': [Ligne('1', 'Express', True)]}), 'UNSENT_LINES'),
+        (lambda k: k.envoyees.pop('7'), 'EMPTY_TABLE'),
+        (lambda k: k.nets.update({'7': '17.000'}), 'SCREEN_UNEXPECTED'),
+    ],
+)
+def test_verifications_avant_de_toucher_l_argent(preparer, code):
+    legacy = table_commandee()
+    preparer(legacy)
+    erreur = echec(legacy, reglement(7, 'pay_table', 16000, 'cash'))
+    assert erreur.erreur == code
+    assert legacy.reglements == []
+    assert legacy.actions[-1] == 'QUITTER'
+
+
+def test_ecart_de_total_donne_les_deux_montants():
+    legacy = table_commandee(net='17,000 TND')
+    erreur = echec(legacy, reglement(7, 'pay_table', 16000, 'card'))
+    assert erreur.etape == 'fieldTotal 17,000 TND ≠ attendu 16,000 TND'
+
+
+def test_paiement_non_confirme_sans_sortir():
+    legacy = table_commandee()
+    legacy.choix_option_ouvert = lambda: False
+    assert echec(legacy, reglement(7, 'pay_table', 16000, 'cash')).erreur == 'PAYMENT_UNCONFIRMED'
+    assert 'QUITTER' not in legacy.actions
+
+
+def test_methode_inconnue_non_supportee():
+    legacy = table_commandee()
+    assert echec(legacy, reglement(7, 'pay_table', 16000, 'cheque')).erreur == 'UNSUPPORTED_JOB'
+    assert legacy.actions == []

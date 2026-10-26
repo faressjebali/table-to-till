@@ -1,4 +1,5 @@
-"""Saisie d'une commande dans LegacyPOS (`enter_order`), d'après `docs/pos.md`.
+"""Saisie d'une commande (`enter_order`), encaissement (`pay_table`) et addition (`print_bill`)
+dans LegacyPOS, d'après `docs/pos.md`.
 
 L'agent ne tape jamais de code : il ouvre la catégorie de chaque article et touche le bouton qui
 porte son code (`posCode`). Notes et choix des formules ne vont jamais en caisse. Avant chaque
@@ -7,6 +8,7 @@ est abandonnée par QUITTER, pour ne jamais laisser de lignes non envoyées.
 """
 
 import logging
+import re
 import time
 from collections.abc import Callable
 
@@ -19,6 +21,36 @@ PAGE_2 = 'page2'
 # Boutons de catégorie qui ne sont pas des catégories d'articles.
 NAVIGATION = {'Paiement', 'Page 2', 'Page 1'}
 FRESH_BLENDS = 'FRESH BLENDS'
+# Boutons de la page « Paiement ». Pour UI Automation, ils ressemblent à des
+# catégories ; la caisse garde la page affichée d'une table à l'autre. L'agent ne les prend
+# jamais pour des catégories, et ne touche CARTE que pour un encaissement demandé.
+REGLEMENT = {
+    'ESPECES',
+    'CARTE',
+    'ESPECES_AUTRE',
+    'REMISE STAFF',
+    'TRANSFERT',
+    'CHANGER',
+    'PARTAGE',
+    'PASSATION',
+    'MULTI_PAIEMENT',
+}
+# Ligne affichée après le bouton (SolderAsync) : nom du règlement.
+LIGNE_APRES = {'cash': 'CASH', 'card': 'CARD', 'bill': 'TMP'}
+
+
+def millimes(texte: str | None) -> int | None:
+    """`fieldTotal` : « 17,000 TND » → 17000 ; None si illisible."""
+    trouve = re.fullmatch(r'\s*(-?)(\d+),(\d{3})\s*TND\s*', texte or '')
+    if trouve is None:
+        return None
+    montant = int(trouve.group(2)) * 1000 + int(trouve.group(3))
+    return -montant if trouve.group(1) else montant
+
+
+def en_dinars(montant: int) -> str:
+    signe = '-' if montant < 0 else ''
+    return f'{signe}{abs(montant) // 1000},{abs(montant) % 1000:03d} TND'
 
 
 def regrouper(lignes: list[dict]) -> list[tuple[str, int]]:
@@ -48,9 +80,21 @@ class CaisseLegacy:
         self._index: dict[str, tuple[str, str]] | None = None
 
     def executer(self, tache: Tache) -> None:
-        if tache.get('type') != 'enter_order':
-            raise EchecCaisse('UNSUPPORTED_JOB', f'type {tache.get("type")}')
-        self._saisir_commande(tache)
+        type_ = tache.get('type')
+        if type_ == 'enter_order':
+            self._saisir_commande(tache)
+        elif type_ == 'pay_table' and tache.get('method') in ('cash', 'card'):
+            self._regler(tache, str(tache['method']))
+        elif type_ == 'print_bill':
+            self._regler(tache, 'bill')
+        else:
+            raise EchecCaisse(
+                'UNSUPPORTED_JOB', f'type {type_} {tache.get("method") or ""}'.strip()
+            )
+
+    def _categories(self) -> list[str]:
+        """Catégories affichées, sans les boutons de « Paiement »."""
+        return [c for c in self._ecran.categories() if c not in REGLEMENT]
 
     # --- Attente -----------------------------------------------------------------------------
 
@@ -119,7 +163,7 @@ class CaisseLegacy:
         QUITTER, retaper le PIN, rouvrir la table. Un essai, sinon échec."""
         for essai in range(2):
             self._page(PAGE_1)
-            categories = self._ecran.categories()
+            categories = self._categories()
             if FRESH_BLENDS in categories or 'Express' not in categories:
                 return
             if essai == 1:
@@ -143,7 +187,7 @@ class CaisseLegacy:
         return False
 
     def _page(self, page: str) -> None:
-        categories = self._ecran.categories()
+        categories = self._categories()
         if page == PAGE_1 and 'Page 1' in categories:
             self._ecran.toucher_categorie('Page 1')
         elif page == PAGE_2 and 'Page 2' in categories:
@@ -151,12 +195,12 @@ class CaisseLegacy:
         else:
             return
         bouton = 'Page 2' if page == PAGE_1 else 'Page 1'
-        self._attendre(
-            lambda: bouton in self._ecran.categories(), 'SCREEN_UNEXPECTED', f'page {page}'
-        )
+        self._attendre(lambda: bouton in self._categories(), 'SCREEN_UNEXPECTED', f'page {page}')
 
     def _afficher(self, categorie: str) -> list[Article]:
         """Touche la catégorie et rend ses articles (une catégorie peut être vide)."""
+        if categorie in REGLEMENT:
+            raise EchecCaisse('SCREEN_UNEXPECTED', f"« {categorie} » n'est pas une catégorie")
         avant = self._ecran.articles()
         if not self._ecran.toucher_categorie(categorie):
             raise EchecCaisse('SCREEN_UNEXPECTED', f'catégorie « {categorie} » introuvable')
@@ -172,7 +216,7 @@ class CaisseLegacy:
         index: dict[str, tuple[str, str]] = {}
         for page in (PAGE_1, PAGE_2):
             self._page(page)
-            for categorie in self._ecran.categories():
+            for categorie in self._categories():
                 if categorie in NAVIGATION:
                     continue
                 for article in self._afficher(categorie):
@@ -230,3 +274,68 @@ class CaisseLegacy:
             'COMMANDE_UNCONFIRMED',
             f'retour au plan après la table {table}',
         )
+
+    # --- Encaissement et addition ------------------------------------------------------------
+
+    def _regler(self, tache: Tache, mode: str) -> None:
+        """`cash` (Espèces), `card` (Paiement → CARTE) ou `bill` (NOTE). Avant de
+        toucher l'argent : table avec des lignes, toutes envoyées, et `fieldTotal` = `expectedTotal` ;
+        sinon QUITTER, rien n'est encaissé."""
+        table = str(tache['tableNumber'])
+        attendu = int(tache['expectedTotal'])
+        quoi = 'addition' if mode == 'bill' else f'encaissement {mode}'
+        self._vers_plan()
+        self._ouvrir_table(table)
+        try:
+            self._verifier_avant_reglement(table, attendu)
+            if mode == 'card':
+                self._ecran.toucher_categorie('Paiement')
+                self._attendre(
+                    lambda: 'CARTE' in self._ecran.categories(),
+                    'SCREEN_UNEXPECTED',
+                    'page Paiement',
+                )
+        except EchecCaisse:
+            self._journal.warning('%s de la table %s abandonné (QUITTER)', quoi, table)
+            self._sortir()
+            raise
+        if mode == 'cash':
+            # Un nombre resté au pavé compterait comme montant donné (monnaie rendue).
+            self._ecran.ecrire_pave('')
+            self._ecran.especes()
+        elif mode == 'card':
+            self._ecran.toucher_categorie('CARTE')
+        else:
+            self._ecran.addition()
+        # Le bouton est touché : plus de QUITTER, un humain vérifie en cas de doute.
+        erreur = 'BILL_UNCONFIRMED' if mode == 'bill' else 'PAYMENT_UNCONFIRMED'
+        etape = f'{quoi} de la table {table}'
+        self._attendre(self._ecran.choix_option_ouvert, erreur, etape)
+        ligne = LIGNE_APRES[mode]
+
+        def confirme() -> bool:
+            lignes = self._ecran.lignes()
+            return bool(lignes) and lignes[-1].article.strip() == ligne
+
+        self._attendre(confirme, erreur, f'{etape} : ligne « {ligne} » absente')
+        self._ecran.choisir_plan()
+        self._attendre(lambda: self._ecran.etat() == 'plan', erreur, f'{etape} : retour au plan')
+        self._journal.info('%s de la table %s fait (%s)', quoi, table, en_dinars(attendu))
+
+    def _verifier_avant_reglement(self, table: str, attendu: int) -> None:
+        try:
+            self._attendre(lambda: bool(self._ecran.lignes()), 'EMPTY_TABLE', f'table {table}')
+        except EchecCaisse as err:
+            if err.erreur != 'EMPTY_TABLE':
+                raise
+            raise EchecCaisse('EMPTY_TABLE', f'table {table} sans article en caisse') from err
+        if any(ligne.active for ligne in self._ecran.lignes()):
+            raise EchecCaisse('UNSENT_LINES', f'table {table} : lignes pas encore envoyées')
+        texte = self._ecran.net()
+        net = millimes(texte)
+        if net is None:
+            raise EchecCaisse('SCREEN_UNEXPECTED', f'fieldTotal illisible : {texte!r}')
+        if net != attendu:
+            raise EchecCaisse(
+                'TOTAL_MISMATCH', f'fieldTotal {en_dinars(net)} ≠ attendu {en_dinars(attendu)}'
+            )
