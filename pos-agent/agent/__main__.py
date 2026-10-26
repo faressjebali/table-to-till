@@ -4,7 +4,6 @@ import signal
 import sys
 
 from .boucle import Agent
-from .caisse import CaisseNonSupportee
 from .client import Client
 from .config import ConfigInvalide, charger
 from .journal import configurer
@@ -19,10 +18,14 @@ def main() -> int:
         return 2
     journal = configurer(config.logs_dir)
     journal.info('agent démarré, serveur %s', config.server_url)
+    # Windows seulement : pywinauto pilote LegacyPOS (ou l'émulateur) par UI Automation.
+    from .legacy import CaisseLegacy
+    from .ui.uia import EcranUia
+
     client = Client(config.server_url, config.agent_key)
     agent = Agent(
         client,
-        CaisseNonSupportee(),
+        CaisseLegacy(EcranUia(), config.legacy_pin, journal),
         config.logs_dir / 'en-cours.json',
         journal,
         poll_seconds=config.poll_seconds,

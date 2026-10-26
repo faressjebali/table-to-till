@@ -45,11 +45,15 @@ def _nombre(valeurs: dict[str, str | None], nom: str, defaut: float) -> float:
 
 
 def charger(env_path: Path | None = None) -> Config:
-    """Le fichier `.env`, puis les variables d'environnement, qui l'emportent."""
+    """`pos-agent/.env` d'abord ; l'environnement ne complète qu'une valeur absente du fichier.
+
+    Un éditeur peut charger le `.env` de la racine (serveur) dans ses terminaux : ses variables
+    homonymes (`SERVER_URL` sans `/api`…) ne doivent pas remplacer celles de l'agent.
+    """
     chemin = env_path or DOSSIER_AGENT / '.env'
     valeurs: dict[str, str | None] = dict(dotenv_values(chemin)) if chemin.exists() else {}
     for nom in ('SERVER_URL', 'AGENT_KEY', 'LEGACY_PIN', 'AGENT_IDLE_SECONDS', 'AGENT_POLL_SECONDS'):
-        if nom in os.environ:
+        if not valeurs.get(nom) and os.environ.get(nom):
             valeurs[nom] = os.environ[nom]
     manquantes = [n for n in ('SERVER_URL', 'AGENT_KEY', 'LEGACY_PIN') if not valeurs.get(n)]
     if manquantes:

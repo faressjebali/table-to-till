@@ -25,11 +25,16 @@ def test_lecture_du_env_et_adresse_du_temps_reel(tmp_path):
     assert '1234' not in repr(config)
 
 
-def test_variables_d_environnement_prioritaires(tmp_path, monkeypatch):
+def test_le_env_de_l_agent_l_emporte_sur_l_environnement(tmp_path, monkeypatch):
     env = tmp_path / '.env'
-    env.write_text('SERVER_URL=http://a/api\nAGENT_KEY=k\nLEGACY_PIN=1\n')
-    monkeypatch.setenv('SERVER_URL', 'http://b/api')
-    assert charger(env).server_url == 'http://b/api'
+    env.write_text('SERVER_URL=http://a/api\nAGENT_KEY=k\n')
+    # Ex. le .env du serveur chargé par l'éditeur dans le terminal.
+    monkeypatch.setenv('SERVER_URL', 'http://localhost:3000')
+    monkeypatch.setenv('LEGACY_PIN', '1')
+    config = charger(env)
+    assert config.server_url == 'http://a/api'
+    # L'environnement complète seulement ce qui manque au fichier.
+    assert config.legacy_pin == '1'
 
 
 def test_reglages_manquants_ou_faux(tmp_path):
