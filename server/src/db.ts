@@ -2,9 +2,16 @@ import pg from 'pg';
 
 export type Db = pg.Pool;
 
+// Réglages de chaque connexion (pool, migrations, scripts) : la session Postgres est toujours en
+// Africa/Tunis, quel que soit le fuseau de la base chez l'hébergeur. SSL : variable standard
+// PGSSLMODE (ex. `no-verify` chez un hébergeur au certificat auto-signé), lue par pg.
+export function pgConfig(connectionString: string): pg.ClientConfig {
+  return { connectionString, options: '-c timezone=Africa/Tunis' };
+}
+
 export function createPool(connectionString = process.env.DATABASE_URL): Db {
   if (!connectionString) throw new Error('DATABASE_URL manquant (voir .env.example)');
-  const pool = new pg.Pool({ connectionString });
+  const pool = new pg.Pool(pgConfig(connectionString));
   // Connexion inactive coupée par Postgres (redémarrage, réseau) : pg la retire du pool et la
   // suivante en ouvre une nouvelle. Sans écouteur, Node arrêterait tout le serveur.
   pool.on('error', (err) => {

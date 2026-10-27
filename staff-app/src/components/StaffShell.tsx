@@ -48,7 +48,8 @@ function Screens({ me, onLogout, onShiftChange }: ShellProps) {
 
   useEffect(() => {
     // L'adresse de la notification ne doit pas rouvrir la commande au prochain rechargement.
-    if (orderFromUrl(location.href) !== null) history.replaceState(null, '', '/');
+    if (orderFromUrl(location.href) !== null)
+      history.replaceState(null, '', import.meta.env.BASE_URL);
   }, []);
   useEffect(() => {
     const worker = 'serviceWorker' in navigator ? navigator.serviceWorker : null;

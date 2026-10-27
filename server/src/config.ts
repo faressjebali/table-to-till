@@ -20,6 +20,15 @@ export type Config = {
   vapidPublicKey: string;
   vapidPrivateKey: string;
   vapidSubject: string;
+  // Nombre de proxys devant le serveur (hébergeur, tunnel) dont on croit X-Forwarded-For : sans
+  // lui, toutes les requêtes ont l'adresse du proxy (limite de connexion par IP). 0 : aucun.
+  trustProxy: number;
+  // Chemin de l'app staff (« / » ou « /staff/ ») où le serveur la sert avec SERVE_WEB. Le même
+  // réglage sert de `base` au build de staff-app.
+  staffBasePath: string;
+  // Le serveur sert aussi les deux apps construites : menu QR à la racine, app staff sous
+  // staffBasePath. Faux en local : chaque app a son serveur Vite.
+  serveWeb: boolean;
 };
 
 function positiveInt(name: string, fallback: number): number {
@@ -41,8 +50,34 @@ function timeOfDay(name: string, fallback: string): string {
   return raw;
 }
 
+function nonNegativeInt(name: string, fallback: number): number {
+  const raw = process.env[name];
+  if (raw === undefined || raw === '') return fallback;
+  const value = Number(raw);
+  if (!Number.isInteger(value) || value < 0) {
+    throw new Error(`${name} doit être un entier positif ou nul (reçu : ${raw})`);
+  }
+  return value;
+}
+
+function basePath(name: string, fallback: string): string {
+  const raw = process.env[name];
+  if (raw === undefined || raw === '') return fallback;
+  if (!/^\/([a-z0-9-]+\/)*$/.test(raw)) {
+    throw new Error(`${name} doit être un chemin comme /staff/ (reçu : ${raw})`);
+  }
+  return raw;
+}
+
+function bool(name: string): boolean {
+  const raw = process.env[name];
+  if (raw === undefined || raw === '' || raw === 'false') return false;
+  if (raw === 'true') return true;
+  throw new Error(`${name} doit être true ou false (reçu : ${raw})`);
+}
+
 export function loadConfig(): Config {
-  return {
+  const config: Config = {
     sessionDays: positiveInt('SESSION_DAYS', 30),
     // Fixé par la spec : blocage après 5 essais ratés.
     loginMaxFailures: 5,
@@ -58,5 +93,14 @@ export function loadConfig(): Config {
     vapidPublicKey: process.env.VAPID_PUBLIC_KEY ?? '',
     vapidPrivateKey: process.env.VAPID_PRIVATE_KEY ?? '',
     vapidSubject: process.env.VAPID_SUBJECT ?? '',
+    trustProxy: nonNegativeInt('TRUST_PROXY', 0),
+    staffBasePath: basePath('STAFF_BASE_PATH', '/'),
+    serveWeb: bool('SERVE_WEB'),
   };
+  if (config.serveWeb && config.staffBasePath === '/') {
+    throw new Error(
+      'SERVE_WEB=true demande STAFF_BASE_PATH (ex. /staff/) : le menu QR est à la racine',
+    );
+  }
+  return config;
 }

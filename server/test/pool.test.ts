@@ -38,4 +38,18 @@ describe('pool de connexions', () => {
     expect(after.rows).toEqual([{ ok: 1 }]);
     error.mockRestore();
   });
+
+  it('session Postgres en Africa/Tunis, alors que la base de test est en UTC', async () => {
+    const sql = `SELECT current_setting('timezone') AS tz`;
+    const { rows } = await db.query<{ tz: string }>(sql);
+    expect(rows).toEqual([{ tz: 'Africa/Tunis' }]);
+
+    const plain = new pg.Client({ connectionString: testUrl });
+    await plain.connect();
+    try {
+      expect((await plain.query<{ tz: string }>(sql)).rows).toEqual([{ tz: 'UTC' }]);
+    } finally {
+      await plain.end();
+    }
+  });
 });

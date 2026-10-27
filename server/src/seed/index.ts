@@ -3,6 +3,7 @@
 // En production : lancé une seule fois, sur une base vide.
 import { readFile } from 'node:fs/promises';
 import pg from 'pg';
+import { pgConfig } from '../db.js';
 import { parseMenuCsv } from './menu-csv.js';
 import { seedMenu } from './seed-menu.js';
 import { seedTables } from './seed-tables.js';
@@ -17,7 +18,7 @@ async function main(): Promise<void> {
 
   const menu = parseMenuCsv(await readFile(MENU_CSV, 'utf8'));
   const tables = parseTablesCsv(await readFile(TABLES_CSV, 'utf8'));
-  const client = new pg.Client({ connectionString: databaseUrl });
+  const client = new pg.Client(pgConfig(databaseUrl));
   await client.connect();
   try {
     const result = await seedMenu(client, menu);

@@ -3,6 +3,7 @@ import { authRoutes } from './auth/routes.js';
 import type { Config } from './config.js';
 import type { Db } from './db.js';
 import { errorBody, HttpError } from './errors.js';
+import { healthRoutes } from './health.js';
 import { menuRoutes } from './menu/routes.js';
 import { orderRoutes } from './orders/routes.js';
 import { stationRoutes } from './orders/station-routes.js';
@@ -14,12 +15,14 @@ import { shiftRoutes } from './shifts/routes.js';
 import { adminTableRoutes } from './tables/admin-routes.js';
 import { tableRoutes } from './tables/routes.js';
 import { userRoutes } from './users/routes.js';
+import { webRoutes, type WebDirs } from './web.js';
 
 export function createApp({
   db,
   config,
   realtime = noopRealtime,
   push = noopPushSender,
+  webDirs,
 }: {
   db: Db;
   config: Config;
@@ -27,11 +30,16 @@ export function createApp({
   realtime?: Realtime;
   // Absent : aucune notification push (tests, clés VAPID vides).
   push?: PushSender;
+  // Absent : les apps construites (customer-web/dist, staff-app/dist), si config.serveWeb.
+  webDirs?: WebDirs;
 }): Express {
   const app = express();
+  // Derrière un hébergeur ou un tunnel : l'adresse du téléphone vient de X-Forwarded-For.
+  app.set('trust proxy', config.trustProxy);
   app.use(express.json());
 
   const api = express.Router();
+  api.use(healthRoutes(db));
   api.use(authRoutes(db, config, realtime));
   api.use(userRoutes(db, config, realtime));
   api.use(menuRoutes(db, config, realtime));
@@ -44,9 +52,13 @@ export function createApp({
   api.use(posRoutes(db, config, realtime));
   app.use('/api', api);
 
-  app.use((_req, res) => {
+  const notFound: express.Handler = (_req, res) => {
     res.status(404).json(errorBody('NOT_FOUND', 'Not found'));
-  });
+  };
+  // Une adresse /api inconnue reste une erreur JSON, jamais une page des apps.
+  app.use('/api', notFound);
+  if (config.serveWeb) app.use(webRoutes(config.staffBasePath, webDirs));
+  app.use(notFound);
 
   const onError: ErrorRequestHandler = (err: unknown, _req, res, _next) => {
     if (err instanceof HttpError) {

@@ -1,6 +1,7 @@
 // npm run tables:links : lien du QR de chaque table réelle (<CUSTOMER_WEB_URL>/t/<tableToken>, docs/api.md § 3).
 // Les jetons sont créés par npm run seed et ne changent jamais (sauf rotate-token).
 import pg from 'pg';
+import { pgConfig } from '../db.js';
 
 const CUSTOMER_WEB_URL = process.env.CUSTOMER_WEB_URL ?? 'http://localhost:5173';
 
@@ -8,7 +9,7 @@ async function main(): Promise<void> {
   const databaseUrl = process.env.DATABASE_URL;
   if (!databaseUrl) throw new Error('DATABASE_URL manquant (voir .env.example)');
 
-  const client = new pg.Client({ connectionString: databaseUrl });
+  const client = new pg.Client(pgConfig(databaseUrl));
   await client.connect();
   try {
     const { rows } = await client.query<{ number: number; qr_token: string }>(

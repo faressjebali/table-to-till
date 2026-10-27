@@ -8,13 +8,14 @@
   "scripts": {
     "dev": "tsx watch --env-file=../.env src/index.ts",
     "build": "tsc -p tsconfig.build.json",
-    "start": "node --env-file=../.env dist/index.js",
+    "start": "node --env-file-if-exists=../.env dist/index.js",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
-    "migrate": "node --env-file=../.env node_modules/node-pg-migrate/bin/node-pg-migrate.js up",
-    "migrate:down": "node --env-file=../.env node_modules/node-pg-migrate/bin/node-pg-migrate.js down",
-    "seed": "tsx --env-file=../.env src/seed/index.ts",
-    "tables:links": "tsx --env-file=../.env src/seed/table-links.ts"
+    "migrate": "tsx --env-file-if-exists=../.env src/migrate.ts",
+    "migrate:down": "tsx --env-file-if-exists=../.env src/migrate.ts down",
+    "migrate:release": "node --env-file-if-exists=../.env dist/migrate.js",
+    "seed": "tsx --env-file-if-exists=../.env src/seed/index.ts",
+    "tables:links": "tsx --env-file-if-exists=../.env src/seed/table-links.ts"
   },
   "dependencies": {
     "argon2": "^0.45.1",

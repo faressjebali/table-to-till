@@ -1,12 +1,16 @@
 import react from '@vitejs/plugin-react';
+import { loadEnv } from 'vite';
 import { defineConfig } from 'vitest/config';
 
 // En développement, l'API vient du serveur (server/, port 3000), via Vite pour que le téléphone
 // passe aussi par le Wi-Fi. Port 5174 : le menu QR (customer-web) est sur 5173.
 const SERVER = 'http://localhost:3000';
 
-export default defineConfig({
+export default defineConfig(({ mode }) => ({
   plugins: [react()],
+  // Chemin de l'app : `/` par défaut ; STAFF_BASE_PATH (ex. `/staff/`) quand le serveur sert les
+  // deux apps à la même adresse (SERVE_WEB). Lu dans le .env de la racine ou l'environnement.
+  base: loadEnv(mode, '..', '').STAFF_BASE_PATH || '/',
   // Le .env de la racine, comme le serveur : VITE_VAPID_PUBLIC_KEY à côté de la paire VAPID.
   // Vite n'expose à l'app que les variables VITE_*.
   envDir: '..',
@@ -27,4 +31,4 @@ export default defineConfig({
     environment: 'jsdom',
     setupFiles: ['./src/test/setup.ts'],
   },
-});
+}));

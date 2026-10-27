@@ -16,7 +16,7 @@ export type PushMessage = {
   tag: string;
   title: string;
   body: string;
-  // Page ouverte au toucher de la notification.
+  // Page ouverte au toucher de la notification, relative à l'adresse de l'app staff (`./?order=12`).
   url: string;
 };
 

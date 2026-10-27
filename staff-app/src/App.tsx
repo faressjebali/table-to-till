@@ -45,7 +45,12 @@ function StaffApp() {
     <>
       <header className="header">
         {/* Icône de 180 px affichée à 32 : nette sur les écrans d'iPhone (3x) */}
-        <img src="/icons/apple-touch-icon.png" alt="" width={32} height={32} />
+        <img
+          src={`${import.meta.env.BASE_URL}icons/apple-touch-icon.png`}
+          alt=""
+          width={32}
+          height={32}
+        />
         <p className="header__name">{t('app.name')}</p>
       </header>
       <main className="main">

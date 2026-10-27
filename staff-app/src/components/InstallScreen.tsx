@@ -18,7 +18,7 @@ export function InstallScreen({ browser }: { browser: 'safari' | 'other' | 'in-a
     <main className="install">
       <img
         className="install__icon"
-        src="/icons/apple-touch-icon.png"
+        src={`${import.meta.env.BASE_URL}icons/apple-touch-icon.png`}
         alt=""
         width={96}
         height={96}
@@ -92,7 +92,7 @@ export function UpdateIosScreen() {
     <main className="install">
       <img
         className="install__icon"
-        src="/icons/apple-touch-icon.png"
+        src={`${import.meta.env.BASE_URL}icons/apple-touch-icon.png`}
         alt=""
         width={96}
         height={96}

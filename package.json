@@ -4,14 +4,16 @@
   "type": "module",
   "description": "Outils partagés du repo (lint, formatage). Chaque projet a ses propres dépendances.",
   "engines": {
-    "node": ">=22"
+    "node": "22.x"
   },
   "scripts": {
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "test:scripts": "node --test scripts/*.test.mjs"
+    "test:scripts": "node --test scripts/*.test.mjs",
+    "build": "npm --prefix server run build && npm --prefix customer-web run build && npm --prefix staff-app run build",
+    "heroku-postbuild": "npm --prefix server ci --include=dev && npm --prefix customer-web ci --include=dev && npm --prefix staff-app ci --include=dev && npm run build"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

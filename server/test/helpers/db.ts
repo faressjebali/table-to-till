@@ -1,6 +1,7 @@
 import path from 'node:path';
 import { runner } from 'node-pg-migrate';
 import pg from 'pg';
+import { pgConfig } from '../../src/db.js';
 
 // Base de test séparée (TEST_DATABASE_URL), créée si besoin et vidée à chaque lancement.
 try {
@@ -15,7 +16,7 @@ const migrationsDir = path.join(import.meta.dirname, '../../migrations');
 
 export async function migrate(direction: 'up' | 'down') {
   await runner({
-    databaseUrl: testUrl,
+    databaseUrl: pgConfig(testUrl),
     dir: migrationsDir,
     direction,
     count: Infinity,
@@ -33,6 +34,9 @@ async function createTestDatabase(url: string) {
       dbName,
     ]);
     if (!rowCount) await admin.query(`CREATE DATABASE "${dbName}"`);
+    // Base en UTC, comme chez un hébergeur : seul le réglage de session de pgConfig
+    // (src/db.ts) doit mettre les connexions du serveur en Africa/Tunis.
+    await admin.query(`ALTER DATABASE "${dbName}" SET timezone TO 'UTC'`);
   } finally {
     await admin.end();
   }

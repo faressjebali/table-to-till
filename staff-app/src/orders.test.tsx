@@ -1,4 +1,4 @@
-import { act, render, screen, within } from '@testing-library/react';
+import { act, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import type { CurrentShifts, Me, Order, OrderLine } from './api/types';
@@ -314,7 +314,10 @@ describe('ouverture depuis une notification', () => {
     mockApi(routesFor([order({ id: 153, table: { id: 8, number: 8 } }), order()]));
     renderShell();
     const target = await screen.findByRole('article', { name: /^Table 7/ });
-    expect(target).toHaveFocus();
+    // Le focus est posé par un effet, juste après l'affichage de la carte : l'attendre.
+    await waitFor(() => {
+      expect(target).toHaveFocus();
+    });
     expect(location.search).toBe('');
   });
 
@@ -335,7 +338,10 @@ describe('ouverture depuis une notification', () => {
         new MessageEvent('message', { data: { type: 'open', url: '/?order=154' } }),
       );
     });
-    expect(await screen.findByRole('article', { name: /^Table 7/ })).toHaveFocus();
+    const target = await screen.findByRole('article', { name: /^Table 7/ });
+    await waitFor(() => {
+      expect(target).toHaveFocus();
+    });
   });
 
   it('commande déjà traitée : l’écran le dit', async () => {

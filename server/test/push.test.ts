@@ -235,7 +235,7 @@ describe('push order:new', () => {
           tag: `order-${String(orderId)}`,
           title: 'Nouvelle commande',
           body: 'Table 7 · 3 articles',
-          url: `/?order=${String(orderId)}`,
+          url: `./?order=${String(orderId)}`,
         },
       },
     ]);
@@ -325,7 +325,7 @@ const stationMessage = (orderId: number, station: 'bar' | 'kitchen', body: strin
   tag: `station-${String(orderId)}-${station}`,
   title: 'Nouvelle commande',
   body,
-  url: '/',
+  url: './',
 });
 
 describe('push station:order', () => {
@@ -417,7 +417,7 @@ describe('push order:ready', () => {
           tag: `ready-${String(orderId)}-bar`,
           title: 'Commande prête',
           body: 'Table 7 : boissons prêtes',
-          url: '/',
+          url: './',
         },
       },
     ]);
@@ -464,7 +464,7 @@ describe('sendPush', () => {
           tag: 'ready-12-bar',
           title: 'Commande prête',
           body: 'Table 7 : boissons prêtes',
-          url: '/',
+          url: './',
         },
       },
     ]);

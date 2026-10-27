@@ -48,7 +48,13 @@ export function LoginScreen({
 
   return (
     <main className="auth">
-      <img className="auth__icon" src="/icons/apple-touch-icon.png" alt="" width={72} height={72} />
+      <img
+        className="auth__icon"
+        src={`${import.meta.env.BASE_URL}icons/apple-touch-icon.png`}
+        alt=""
+        width={72}
+        height={72}
+      />
       <h1 className="title">{t('login.title')}</h1>
       <form className="form" onSubmit={(event) => void submit(event)} noValidate>
         <div className="field">

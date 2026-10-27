@@ -162,6 +162,27 @@ describe('POST /auth/login', () => {
   });
 });
 
+describe('limite par adresse IP derrière un proxy', () => {
+  const tryLogin = (target: ReturnType<typeof app>, ip: string) =>
+    request(target)
+      .post('/api/auth/login')
+      .set('X-Forwarded-For', ip)
+      .send({ login: 'x', password: 'y' });
+
+  it('TRUST_PROXY=1 : chaque téléphone a son propre compteur', async () => {
+    const proxied = app({ loginRateLimitPerMinute: 1, trustProxy: 1 });
+    expect((await tryLogin(proxied, '41.1.1.1')).status).toBe(401);
+    expect((await tryLogin(proxied, '41.2.2.2')).status).toBe(401);
+    expect((await tryLogin(proxied, '41.1.1.1')).status).toBe(429);
+  });
+
+  it('sans TRUST_PROXY : X-Forwarded-For est ignoré (on ne peut pas changer d’adresse)', async () => {
+    const direct = app({ loginRateLimitPerMinute: 1, trustProxy: 0 });
+    expect((await tryLogin(direct, '41.1.1.1')).status).toBe(401);
+    expect((await tryLogin(direct, '41.2.2.2')).status).toBe(429);
+  });
+});
+
 describe('GET /me et vérification du token', () => {
   it('renvoie l’utilisateur et son état de shift', async () => {
     const id = await createUser('sami');

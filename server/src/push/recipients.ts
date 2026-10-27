@@ -40,8 +40,9 @@ export function orderNewMessage(order: Order): PushMessage {
     tag: `order-${String(order.id)}`,
     title: 'Nouvelle commande',
     body: `Table ${String(order.table.number)} · ${articles(count)}`,
-    // Toucher la notification ouvre cette commande dans l'onglet Commandes (public/sw.js).
-    url: `/?order=${String(order.id)}`,
+    // Toucher la notification ouvre cette commande dans l'onglet Commandes (public/sw.js). Adresse
+    // relative à celle de l'app staff (`/` en local, `/staff/` sur un hébergement).
+    url: `./?order=${String(order.id)}`,
   };
 }
 
@@ -57,7 +58,7 @@ export function stationOrderMessage(order: Order, station: StationName): PushMes
     tag: `station-${String(order.id)}-${station}`,
     title: 'Nouvelle commande',
     body: `Table ${String(order.table.number)} · ${articles(count)}`,
-    url: '/',
+    url: './',
   };
 }
 
@@ -73,6 +74,6 @@ export function orderReadyMessage(data: {
     tag: `ready-${String(data.orderId)}-${data.station}`,
     title: 'Commande prête',
     body: `Table ${String(data.table.number)} : ${what}`,
-    url: '/',
+    url: './',
   };
 }

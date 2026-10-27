@@ -24,7 +24,10 @@ createRoot(root).render(
 // construite : en développement, il resterait dans le navigateur avec une ancienne version.
 if (import.meta.env.PROD && 'serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/sw.js').catch(() => {
+    // Chemin de l'app (`/`, ou `/staff/` sur un hébergement) : le service worker ne gère que
+    // l'app staff, jamais le menu QR ni l'API.
+    const base = import.meta.env.BASE_URL;
+    navigator.serviceWorker.register(`${base}sw.js`, { scope: base }).catch(() => {
       // Sans service worker (navigateur ancien, http sur le Wi-Fi) : l'app marche, sans installation.
     });
   });

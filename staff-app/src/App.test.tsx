@@ -684,6 +684,7 @@ describe('manifeste', () => {
   const manifest = JSON.parse(manifestText) as {
     display: string;
     start_url: string;
+    scope: string;
     orientation?: string;
     icons: { src: string; sizes: string; purpose: string }[];
   };
@@ -694,7 +695,9 @@ describe('manifeste', () => {
 
   it('rend l’app installable : plein écran, icônes 192, 512 et maskable', () => {
     expect(manifest.display).toBe('standalone');
-    expect(manifest.start_url).toBe('/');
+    // Relatifs au manifeste : l'app marche à `/` (local) comme sous `/staff/` (staging).
+    expect(manifest.start_url).toBe('./');
+    expect(manifest.scope).toBe('./');
     // Pas de verrou : une tablette au comptoir peut passer en paysage.
     expect(manifest.orientation).toBeUndefined();
     const icons = manifest.icons.map((i) => `${i.sizes} ${i.purpose}`);
@@ -704,7 +707,8 @@ describe('manifeste', () => {
   });
 
   it('pointe vers des icônes qui existent, avec l’icône iPhone', () => {
-    expect(iconFiles).toEqual(expect.arrayContaining(manifest.icons.map((i) => i.src)));
+    expect(manifest.icons.every((i) => !i.src.startsWith('/'))).toBe(true);
+    expect(iconFiles).toEqual(expect.arrayContaining(manifest.icons.map((i) => `/${i.src}`)));
     expect(iconFiles).toContain('/icons/apple-touch-icon.png');
   });
 });

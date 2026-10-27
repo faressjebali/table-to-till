@@ -25,8 +25,8 @@ self.addEventListener('push', (event) => {
     self.registration.showNotification(title, {
       body: message.body || '',
       tag: message.tag,
-      icon: '/icons/icon-192.png',
-      data: { url: message.url || '/' },
+      icon: new URL('icons/icon-192.png', self.registration.scope).href,
+      data: { url: message.url || './' },
     }),
   );
 });
@@ -36,10 +36,13 @@ self.addEventListener('push', (event) => {
 // message, sans recharger la page (src/components/StaffShell.tsx).
 self.addEventListener('notificationclick', (event) => {
   event.notification.close();
-  const url = new URL(event.notification.data?.url || '/', self.location.origin).href;
+  // Adresse relative à celle de l'app (`./?order=154`) : `/` en local, `/staff/` sur un
+  // hébergement où le menu QR est à la racine du même site.
+  const scope = self.registration.scope;
+  const url = new URL(event.notification.data?.url || './', scope).href;
   event.waitUntil(
     self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((windows) => {
-      const open = windows.find((client) => client.url.startsWith(self.location.origin));
+      const open = windows.find((client) => client.url.startsWith(scope));
       if (!open) return self.clients.openWindow(url);
       open.postMessage({ type: 'open', url });
       return open.focus();
