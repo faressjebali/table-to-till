@@ -3,6 +3,7 @@ import type { Me } from '../api/types';
 import { t } from '../i18n/fr';
 import { navigationFor, type Destination } from '../navigation';
 import { orderFromUrl, usePendingOrders } from '../pendingOrders';
+import { AccountsScreen } from './AccountsScreen';
 import { MeScreen } from './MeScreen';
 import { OffShiftScreen } from './OffShiftScreen';
 import { OrdersScreen } from './OrdersScreen';
@@ -111,6 +112,8 @@ function Screens({ me, onLogout, onShiftChange }: ShellProps) {
           <TablesScreen me={me} />
         ) : active === 'orders' ? (
           <OrdersScreen focusId={focusId} />
+        ) : active === 'accounts' ? (
+          <AccountsScreen me={me} />
         ) : (
           <PlaceholderScreen destination={active} />
         )}

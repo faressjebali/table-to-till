@@ -1,7 +1,16 @@
 // Appels à l'API du serveur (docs/api.md § 4), avec le jeton de session du staff.
 // En développement, Vite renvoie /api vers le serveur (vite.config.ts).
 import { loadToken } from '../session';
-import type { CurrentShifts, LoginResponse, Me, Order, Table, TableSessionDetail } from './types';
+import type {
+  CurrentShifts,
+  LoginResponse,
+  Me,
+  Order,
+  Role,
+  Table,
+  TableSessionDetail,
+  User,
+} from './types';
 
 /**
  * Erreur au format du contrat (`{ error: { code, message, details? } }`), ou `NETWORK` sans
@@ -116,3 +125,22 @@ export const endShift = () => request<undefined>('/shifts/end', { method: 'POST'
 /** Abonnement Web Push du téléphone (`PushSubscription.toJSON()`), lié à cette session. */
 export const subscribePush = (body: PushSubscriptionJSON) =>
   request<undefined>('/push/subscribe', { method: 'POST', body });
+
+/** Comptes (docs/api.md § 6), manager seulement. */
+export const getUsers = () => request<{ users: User[] }>('/users');
+
+/** 400 `VALIDATION_ERROR` sur `login` : identifiant déjà pris. Mot de passe renvoyé une fois. */
+export const createUser = (body: { name: string; login: string; role: Role; title?: string }) =>
+  request<{ user: User; temporaryPassword: string }>('/users', { method: 'POST', body });
+
+/** 409 `INVALID_STATUS` : soi-même, dernier manager actif, ou serveur en shift. */
+export const updateUser = (
+  userId: number,
+  body: { role?: Role; title?: string | null; active?: boolean },
+) => request<User>(`/users/${String(userId)}`, { method: 'PATCH', body });
+
+/** Débloque le compte et coupe ses sessions ; nouveau mot de passe renvoyé une fois. */
+export const resetUserPassword = (userId: number) =>
+  request<{ user: User; temporaryPassword: string }>(`/users/${String(userId)}/reset-password`, {
+    method: 'POST',
+  });

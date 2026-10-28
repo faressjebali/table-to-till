@@ -28,6 +28,21 @@ export interface Me {
   currentPrincipal?: boolean;
 }
 
+/** User de docs/api.md § 2 : un compte staff, vu par la manager (`/users`). */
+export interface User {
+  id: number;
+  name: string;
+  login: string;
+  role: Role;
+  /** Au contrat, pas encore renvoyé par le serveur : optionnel ici. */
+  title?: string | null;
+  active: boolean;
+  mustChangePassword: boolean;
+  locked: boolean;
+  lastLoginAt: string | null;
+  createdAt: string;
+}
+
 /** Texte en français et en anglais (le staff lit le français). */
 export interface Localized {
   fr: string;

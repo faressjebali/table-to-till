@@ -674,3 +674,29 @@
   outline: 3px solid var(--color-focus);
   outline-offset: 2px;
 }
+
+/* Mot de passe temporaire d'un compte : montré une seule fois, à dicter ou recopier */
+.secret {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-4);
+  border: 2px solid var(--color-accent);
+  border-radius: var(--radius);
+  background: var(--color-surface);
+}
+
+.secret__label {
+  font-size: var(--text-small);
+  font-weight: 600;
+  color: var(--color-muted);
+}
+
+.secret__value {
+  font-family: var(--font-mono);
+  font-size: var(--text-title);
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  overflow-wrap: anywhere;
+  user-select: all;
+}

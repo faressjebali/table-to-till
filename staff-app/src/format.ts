@@ -1,3 +1,6 @@
+import type { Role } from './api/types';
+import { t } from './i18n/fr';
+
 // Espace insécable : « 5,5 » et « DT » restent sur la même ligne.
 const NBSP = '\u00a0';
 
@@ -16,4 +19,10 @@ export function formatAmount(millimes: number): string {
     .padStart(3, '0')
     .replace(/0+$/, '');
   return `${String(dinars)}${rest === '' ? '' : `,${rest}`}`;
+}
+
+/** Rôle et titre d'un compte (« Manager · Patronne ») ; le rôle seul si le titre le répète. */
+export function roleLabel(role: Role, title: string | null | undefined): string {
+  const name = t(`role.${role}`);
+  return title && title !== name ? `${name} · ${title}` : name;
 }

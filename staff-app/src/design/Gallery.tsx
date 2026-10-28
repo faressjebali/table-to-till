@@ -383,6 +383,55 @@ export function Gallery() {
           </nav>
         </Section>
 
+        <Section title="Comptes">
+          <ul className="rows">
+            <li>
+              <button type="button" className="row">
+                <span className="row__text">
+                  <span className="row__label">Amira</span>
+                  <span className="row__hint">Serveur</span>
+                  <span className="row__chips">
+                    <span className="status-chip">Mot de passe à changer</span>
+                  </span>
+                </span>
+                <span className="row__chevron" aria-hidden="true">
+                  ›
+                </span>
+              </button>
+            </li>
+            <li>
+              <button type="button" className="row">
+                <span className="row__text">
+                  <span className="row__label">Rania (vous)</span>
+                  <span className="row__hint">Manager · Patronne</span>
+                </span>
+                <span className="row__chevron" aria-hidden="true">
+                  ›
+                </span>
+              </button>
+            </li>
+            <li>
+              <button type="button" className="row">
+                <span className="row__text">
+                  <span className="row__label">Sami</span>
+                  <span className="row__hint">Barista</span>
+                  <span className="row__chips">
+                    <span className="status-chip status-chip--danger">Désactivé</span>
+                    <span className="status-chip status-chip--danger">Bloqué</span>
+                  </span>
+                </span>
+                <span className="row__chevron" aria-hidden="true">
+                  ›
+                </span>
+              </button>
+            </li>
+          </ul>
+          <div className="secret">
+            <p className="secret__label">Mot de passe temporaire</p>
+            <p className="secret__value">k7xm2qp9ad</p>
+          </div>
+        </Section>
+
         <Section title="Bandeaux d’alerte">
           <div className="alert alert--danger" role="alert">
             <span className="alert__icon">

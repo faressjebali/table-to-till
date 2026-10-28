@@ -72,7 +72,7 @@ Un bouton désactivé (opacité 50 %) n'a pas d'exigence de contraste ; il dit t
 
 ## 4. Texte
 
-**Police système** (`--font-body`) : rien à télécharger, marche hors ligne, nette sur chaque téléphone. Pas de police de marque.
+**Police système** (`--font-body`) : rien à télécharger, marche hors ligne, nette sur chaque téléphone. Pas de police de marque. Seule exception : le mot de passe temporaire d'un compte, en chasse fixe système (`--font-mono`), pour bien distinguer chaque caractère.
 
 Deux styles :
 
@@ -138,6 +138,8 @@ Formes : **carrée** (48 × 60), **ronde** (56 px de diamètre : 5, 17, 25) et *
 | Bouton icône | `.icon-button` | `components.css` | Rond de 48 px, un signe ou une icône, toujours un `aria-label` (« ? » = Légende) |
 | **Légende du plan** | `<TablesLegend>` / `.legend` | `components/TablesLegend.tsx` | Les 7 états avec la même carte de table (`decorative`) et leur nom, ouverte en un tap |
 | État d'une commande | `.status-chip` (+ `--danger`, `--ready`) | `components.css` | Icône + texte : en caisse ✓, en attente, échec ⚠, à la main, boissons / plats prêts |
+| **Liste de comptes** | `.rows`, `.row` + `.row__text`, `.row__hint`, `.row__chips` | `app.css` | Écran Comptes (manager) : nom (« (vous) » pour soi), rôle · titre en texte secondaire, états en `.status-chip` (Désactivé et Bloqué en `--danger`, « Mot de passe à changer » neutre), chevron ; un tap ouvre le compte |
+| **Mot de passe temporaire** | `.secret`, `.secret__label`, `.secret__value` | `components.css` | Montré **une seule fois** après création ou réinitialisation : bord orange, valeur en 28 px gras, chasse fixe (`--font-mono`) et espacée pour la dicter ou la recopier |
 | Titre caché | `.visually-hidden` | `components.css` | Titre lu par le lecteur d'écran quand l'onglet le dit déjà (écran Tables) |
 | **Bandeau « Pas de connexion »** | `.banner.banner--offline` | `components.css` | Collé en haut, **couleurs inversées** (ink / paper) : ne ressemble à rien d'autre ; icône réseau barré |
 | **Bandeau « Nouvelle version disponible »** | `.banner.banner--update` | `components.css` | Collé en haut, discret, bouton « Recharger » de 48 px |

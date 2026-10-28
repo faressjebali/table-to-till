@@ -383,6 +383,25 @@
   flex: 1;
 }
 
+.row__text {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: var(--space-1);
+  min-width: 0;
+}
+
+.row__hint {
+  font-size: var(--text-small);
+  color: var(--color-muted);
+}
+
+.row__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
 .row__chevron {
   font-size: 1.5rem;
   color: var(--color-muted);

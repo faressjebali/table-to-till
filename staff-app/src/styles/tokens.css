@@ -26,6 +26,7 @@
   --color-on-ready: #ffffff;
 
   --font-body: system-ui, -apple-system, 'Segoe UI', Roboto, 'Noto Sans', sans-serif;
+  --font-mono: ui-monospace, 'SF Mono', Menlo, Consolas, monospace; /* mot de passe à recopier */
 
   /* Deux styles de texte : Titre (700, interligne 1.2) et Texte (400 ou 600, interligne 1.45) */
   --text-title: 1.75rem; /* 28 px : titre d'écran */
