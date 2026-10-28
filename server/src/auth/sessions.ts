@@ -2,12 +2,19 @@ import { createHash, randomBytes } from 'node:crypto';
 import type { PoolClient } from 'pg';
 import type { Db } from '../db.js';
 
-export const ROLES = ['manager', 'waiter', 'barista', 'chef'] as const;
+export const ROLES = ['manager', 'waiter', 'barista', 'chef', 'accountant'] as const;
 export type Role = (typeof ROLES)[number];
 
 export type AuthContext = {
   sessionId: number;
-  user: { id: number; login: string; name: string; role: Role; mustChangePassword: boolean };
+  user: {
+    id: number;
+    login: string;
+    name: string;
+    role: Role;
+    title: string | null;
+    mustChangePassword: boolean;
+  };
 };
 
 // Le token n'est jamais stocké en clair : seulement son empreinte SHA-256.
@@ -32,6 +39,7 @@ type SessionRow = {
   login: string;
   name: string;
   role: Role;
+  title: string | null;
   must_change_password: boolean;
   disabled: boolean;
 };
@@ -44,7 +52,7 @@ export async function findSession(db: Db, token: string, days: number): Promise<
   const { rows } = await db.query<SessionRow>(
     `SELECT s.id AS session_id,
             s.last_seen_at IS NULL OR s.last_seen_at < now() - interval '1 day' AS extend,
-            u.id AS user_id, u.login, u.name, u.role, u.must_change_password,
+            u.id AS user_id, u.login, u.name, u.role, u.title, u.must_change_password,
             u.disabled_at IS NOT NULL AS disabled
        FROM sessions s JOIN users u ON u.id = s.user_id
       WHERE s.token_hash = $1 AND s.revoked_at IS NULL AND s.expires_at > now()`,
@@ -69,6 +77,7 @@ export async function findSession(db: Db, token: string, days: number): Promise<
         login: row.login,
         name: row.name,
         role: row.role,
+        title: row.title,
         mustChangePassword: row.must_change_password,
       },
     },

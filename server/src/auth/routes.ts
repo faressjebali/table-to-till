@@ -29,6 +29,7 @@ type UserRow = {
   id: number;
   name: string;
   role: Role;
+  title: string | null;
   password_hash: string;
   must_change_password: boolean;
   disabled: boolean;
@@ -51,7 +52,7 @@ export function authRoutes(db: Db, config: Config, realtime: Realtime): Router {
       const { login, password } = parsed.data;
 
       const { rows } = await db.query<UserRow>(
-        `SELECT id, name, role, password_hash, must_change_password,
+        `SELECT id, name, role, title, password_hash, must_change_password,
                 disabled_at IS NOT NULL AS disabled,
                 coalesce(locked_until > now(), false) AS locked
            FROM users WHERE lower(login) = lower($1)`,
@@ -110,6 +111,7 @@ export function authRoutes(db: Db, config: Config, realtime: Realtime): Router {
           id: user.id,
           name: user.name,
           role: user.role,
+          title: user.title,
           mustChangePassword: user.must_change_password,
         },
       });
@@ -193,6 +195,7 @@ export function authRoutes(db: Db, config: Config, realtime: Realtime): Router {
       id: user.id,
       name: user.name,
       role: user.role,
+      title: user.title,
       onShift: shift !== undefined,
       // Serveur principal en shift (docs/api.md v1.8) : c'est lui qui gère l'argent.
       principal: shift?.principal ?? false,

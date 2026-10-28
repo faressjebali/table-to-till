@@ -10,24 +10,38 @@ import { HttpError, validationError } from '../errors.js';
 import type { Realtime } from '../realtime.js';
 import { generateTemporaryPassword } from './temporary-password.js';
 
+// Titre affiché (docs/api.md § 2 User) : texte libre ; vide ou absent = aucun (null).
+const titleField = z
+  .string()
+  .trim()
+  .nullable()
+  .transform((title) => (title === '' ? null : title));
+
 const createBody = z.object({
   name: z.string().trim().min(1).max(100),
   login: z.string().trim().min(1).max(100),
   role: z.enum(ROLES),
+  title: titleField.optional(),
 });
 
 const patchBody = z
-  .object({ role: z.enum(ROLES).optional(), active: z.boolean().optional() })
+  .object({
+    role: z.enum(ROLES).optional(),
+    title: titleField.optional(),
+    active: z.boolean().optional(),
+  })
   .strict()
-  .refine((body) => body.role !== undefined || body.active !== undefined, {
-    message: 'Nothing to change',
-  });
+  .refine(
+    (body) => body.role !== undefined || body.title !== undefined || body.active !== undefined,
+    { message: 'Nothing to change' },
+  );
 
 type UserRow = {
   id: number;
   name: string;
   login: string;
   role: Role;
+  title: string | null;
   active: boolean;
   must_change_password: boolean;
   locked: boolean;
@@ -35,7 +49,7 @@ type UserRow = {
   created_at: Date;
 };
 
-const USER_COLUMNS = `id, name, login, role, disabled_at IS NULL AS active, must_change_password,
+const USER_COLUMNS = `id, name, login, role, title, disabled_at IS NULL AS active, must_change_password,
   coalesce(locked_until > now(), false) AS locked, last_login_at, created_at`;
 
 // Forme User de docs/api.md § 2.
@@ -45,6 +59,7 @@ function toUser(row: UserRow) {
     name: row.name,
     login: row.login,
     role: row.role,
+    title: row.title,
     active: row.active,
     mustChangePassword: row.must_change_password,
     locked: row.locked,
@@ -101,6 +116,7 @@ export function userRoutes(db: Db, config: Config, realtime: Realtime): Router {
     const parsed = createBody.safeParse(req.body);
     if (!parsed.success) throw validationError(parsed.error);
     const { name, login, role } = parsed.data;
+    const title = parsed.data.title ?? null;
     const { user: me } = getAuth(res);
 
     const temporaryPassword = generateTemporaryPassword();
@@ -108,10 +124,10 @@ export function userRoutes(db: Db, config: Config, realtime: Realtime): Router {
     let rows: UserRow[];
     try {
       ({ rows } = await db.query<UserRow>(
-        `INSERT INTO users (name, login, role, password_hash, must_change_password)
-         VALUES ($1, $2, $3, $4, true)
+        `INSERT INTO users (name, login, role, title, password_hash, must_change_password)
+         VALUES ($1, $2, $3, $4, $5, true)
          RETURNING ${USER_COLUMNS}`,
-        [name, login, role, passwordHash],
+        [name, login, role, title, passwordHash],
       ));
     } catch (err) {
       if (isUniqueViolation(err)) throw loginTaken();
@@ -124,7 +140,7 @@ export function userRoutes(db: Db, config: Config, realtime: Realtime): Router {
       action: 'user.created',
       entityType: 'user',
       entityId: created.id,
-      details: { role },
+      details: { role, title },
     });
     res.status(201).json({ user: toUser(created), temporaryPassword });
   });
@@ -133,7 +149,7 @@ export function userRoutes(db: Db, config: Config, realtime: Realtime): Router {
     const id = parseId(req.params['id']);
     const parsed = patchBody.safeParse(req.body);
     if (!parsed.success) throw validationError(parsed.error);
-    const { role, active } = parsed.data;
+    const { role, title, active } = parsed.data;
     const { user: me } = getAuth(res);
 
     const { user: updated, before } = await inTransaction(db, async (client) => {
@@ -151,6 +167,7 @@ export function userRoutes(db: Db, config: Config, realtime: Realtime): Router {
 
       const newRole = role ?? before.role;
       const newActive = active ?? before.active;
+      const newTitle = title === undefined ? before.title : title;
       // Un serveur en shift garde son rôle et son compte jusqu'à la fin de son shift :
       // le principal ne doit pas perdre sa caisse sans clôture.
       if (newRole !== before.role || newActive !== before.active) {
@@ -184,11 +201,12 @@ export function userRoutes(db: Db, config: Config, realtime: Realtime): Router {
       const { rows: after } = await client.query<UserRow>(
         `UPDATE users SET
             role = $2,
+            title = $4,
             disabled_at = CASE WHEN $3 THEN NULL ELSE coalesce(disabled_at, now()) END,
             updated_at = now()
           WHERE id = $1
           RETURNING ${USER_COLUMNS}`,
-        [id, newRole, newActive],
+        [id, newRole, newActive, newTitle],
       );
       const user = after[0];
       if (!user) throw notFound();
@@ -200,6 +218,15 @@ export function userRoutes(db: Db, config: Config, realtime: Realtime): Router {
           entityType: 'user',
           entityId: id,
           details: { from: before.role, to: newRole },
+        });
+      }
+      if (newTitle !== before.title) {
+        await audit(client, {
+          userId: me.id,
+          action: 'user.title_changed',
+          entityType: 'user',
+          entityId: id,
+          details: { from: before.title, to: newTitle },
         });
       }
       if (newActive !== before.active) {

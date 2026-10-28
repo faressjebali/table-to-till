@@ -12,8 +12,9 @@ import { localized, loadMenuItems, onMenu, toMenuItem, type Station } from './it
 const idParam = z.coerce.number().int().positive();
 const availabilityBody = z.object({ available: z.boolean() });
 
-// Qui peut marquer une rupture, selon le poste de l'article (docs/product.md § 3).
-const stationsByRole: Record<Role, readonly Station[]> = {
+// Qui peut marquer une rupture, selon le poste de l'article (docs/product.md § 3). Le comptable,
+// absent, ne peut pas.
+const stationsByRole: Partial<Record<Role, readonly Station[]>> = {
   waiter: ['bar', 'kitchen', 'both'],
   manager: ['bar', 'kitchen', 'both'],
   barista: ['bar', 'both'],
@@ -89,7 +90,7 @@ export function menuRoutes(db: Db, config: Config, realtime: Realtime): Router {
 
       const [row] = await loadMenuItems(db, [id.data]);
       if (!row) throw new HttpError(404, 'NOT_FOUND', 'Menu item not found');
-      if (!stationsByRole[user.role].includes(row.station)) {
+      if (!stationsByRole[user.role]?.includes(row.station)) {
         throw new HttpError(403, 'FORBIDDEN', 'Forbidden');
       }
       // Hors shift, le serveur, le barista et le cuisinier ne voient que « Démarrer mon shift ».

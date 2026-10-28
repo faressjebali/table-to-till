@@ -73,7 +73,7 @@ describe('POST /auth/login', () => {
     expect(res.status).toBe(200);
     expect(res.body).toEqual({
       token: expect.any(String) as unknown,
-      user: { id, name: 'Nom sami', role: 'waiter', mustChangePassword: false },
+      user: { id, name: 'Nom sami', role: 'waiter', title: null, mustChangePassword: false },
     });
     expect(await auditActions()).toEqual(['auth.login']);
   });
@@ -193,6 +193,7 @@ describe('GET /me et vérification du token', () => {
       id,
       name: 'Nom sami',
       role: 'waiter',
+      title: null,
       onShift: false,
       principal: false,
     });

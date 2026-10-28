@@ -24,6 +24,26 @@ describe('migrations', () => {
     expect(rowCount).toBe(0);
     await migrate('up');
   });
+
+  it('rôle comptable : jamais changé en manager, retour arrière refusé tant qu’il en reste', async () => {
+    await db.query(`TRUNCATE users RESTART IDENTITY CASCADE`);
+    await db.query(
+      `INSERT INTO users (login, name, password_hash, role, title)
+       VALUES ('mounir', 'Mounir', 'x', 'accountant', 'Comptable')`,
+    );
+    await expect(migrate('down', 1)).rejects.toThrow(/comptes comptable/);
+    const { rows } = await db.query<{ role: string }>(`SELECT role FROM users`);
+    expect(rows).toEqual([{ role: 'accountant' }]);
+
+    await db.query(`TRUNCATE users RESTART IDENTITY CASCADE`);
+    await migrate('down', 1);
+    await expect(
+      db.query(
+        `INSERT INTO users (login, name, password_hash, role) VALUES ('x', 'X', 'x', 'accountant')`,
+      ),
+    ).rejects.toThrow();
+    await migrate('up');
+  });
 });
 
 describe('contraintes du schéma', () => {

@@ -14,12 +14,13 @@ if (!testUrl) throw new Error('TEST_DATABASE_URL manquant (voir .env.example)');
 
 const migrationsDir = path.join(import.meta.dirname, '../../migrations');
 
-export async function migrate(direction: 'up' | 'down') {
+// `count` : nombre de migrations à appliquer ou annuler (toutes par défaut).
+export async function migrate(direction: 'up' | 'down', count = Infinity) {
   await runner({
     databaseUrl: pgConfig(testUrl),
     dir: migrationsDir,
     direction,
-    count: Infinity,
+    count,
     migrationsTable: 'pgmigrations',
     log: () => undefined,
   });

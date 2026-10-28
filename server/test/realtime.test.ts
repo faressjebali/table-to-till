@@ -629,3 +629,20 @@ describe('sessions', () => {
     expect(socket1.connected).toBe(true);
   });
 });
+
+describe('rapports', () => {
+  it('report:updated aux managers et au comptable, à personne d’autre', async () => {
+    const manager = record(await connect({ token: (await staff('nadia', 'manager')).token }));
+    const accountant = record(
+      await connect({ token: (await staff('mounir', 'accountant')).token }),
+    );
+    const waiter = record(await connect({ token: (await waiterOnShift('amira')).token }));
+
+    realtime.reportUpdated();
+
+    expect(await manager.next('report:updated')).toEqual({});
+    expect(await accountant.next('report:updated')).toEqual({});
+    await quiet();
+    expect(waiter.of('report:updated')).toEqual([]);
+  });
+});

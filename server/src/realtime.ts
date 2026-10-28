@@ -233,8 +233,8 @@ export function createRealtime(
       io.to([room.role('manager'), room.waitersOnShift]).emit('pos:status', data);
     },
     reportUpdated() {
-      // Le comptable aussi quand son rôle existera.
-      io.to(room.role('manager')).emit('report:updated', {});
+      // Managers et comptable (docs/api.md § 8).
+      io.to([room.role('manager'), room.role('accountant')]).emit('report:updated', {});
     },
     sessionRevoked(sessionId, reason) {
       io.to(room.session(sessionId)).emit('session:revoked', { reason });

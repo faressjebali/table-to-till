@@ -15,8 +15,8 @@ export interface LoginResponse {
 }
 
 /**
- * Réponse de `GET /me`. `title` et `currentPrincipal` sont au contrat mais pas encore renvoyés
- * par le serveur : optionnels ici.
+ * Réponse de `GET /me`. `currentPrincipal` est au contrat mais pas encore renvoyé par le serveur
+ * : optionnel ici, comme `title` (renvoyé, `null` si aucun).
  */
 export interface Me {
   id: number;
@@ -34,7 +34,7 @@ export interface User {
   name: string;
   login: string;
   role: Role;
-  /** Au contrat, pas encore renvoyé par le serveur : optionnel ici. */
+  /** Titre affiché, `null` si aucun. */
   title?: string | null;
   active: boolean;
   mustChangePassword: boolean;

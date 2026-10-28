@@ -95,6 +95,7 @@ describe('GET /users', () => {
       name: 'Nom gerante',
       login: 'gerante',
       role: 'manager',
+      title: null,
       active: true,
       mustChangePassword: false,
       locked: false,
@@ -130,6 +131,32 @@ describe('POST /users', () => {
       .send({ login: 'amira', password: body.temporaryPassword });
     expect(login.body).toMatchObject({ user: { mustChangePassword: true } });
     expect(await auditActions()).toEqual(['user.created']);
+  });
+
+  it('crée un comptable avec un titre, sans espaces autour ; titre vide = aucun', async () => {
+    const { token } = await managerToken();
+    const res = await api
+      .post('/api/users')
+      .set('Authorization', `Bearer ${token}`)
+      .send({ name: 'Mounir', login: 'mounir', role: 'accountant', title: '  Comptable ' });
+    expect(res.status).toBe(201);
+    expect((res.body as { user: unknown }).user).toMatchObject({
+      role: 'accountant',
+      title: 'Comptable',
+    });
+
+    for (const [login, title] of [
+      ['nour', ''],
+      ['hedi', null],
+      ['sami', undefined],
+    ] as const) {
+      const other = await api
+        .post('/api/users')
+        .set('Authorization', `Bearer ${token}`)
+        .send({ name: login, login, role: 'waiter', title });
+      expect(other.status).toBe(201);
+      expect((other.body as { user: unknown }).user).toMatchObject({ title: null });
+    }
   });
 
   it('refuse un identifiant déjà pris, sans tenir compte des majuscules', async () => {
@@ -169,6 +196,48 @@ describe('PATCH /users/:id', () => {
     expect(res.status).toBe(200);
     expect(res.body).toMatchObject({ id, role: 'chef', active: true });
     expect(await auditActions()).toEqual(['user.role_changed']);
+  });
+
+  it('change le titre seul, puis l’efface (chaîne vide ou null)', async () => {
+    const { token } = await managerToken();
+    const id = await createUser('rania', 'manager');
+    const patch = (body: object) =>
+      api
+        .patch(`/api/users/${String(id)}`)
+        .set('Authorization', `Bearer ${token}`)
+        .send(body);
+
+    const set = await patch({ title: ' Patronne ' });
+    expect(set.status).toBe(200);
+    expect(set.body).toMatchObject({ role: 'manager', title: 'Patronne' });
+    expect((await patch({ title: 'Patronne' })).status).toBe(200);
+    expect((await patch({ title: '' })).body).toMatchObject({ title: null });
+    expect((await patch({ title: 'Patronne' })).body).toMatchObject({ title: 'Patronne' });
+    expect((await patch({ title: null })).body).toMatchObject({ title: null });
+
+    // Un titre identique n'écrit rien au journal.
+    expect(await auditActions()).toEqual([
+      'user.title_changed',
+      'user.title_changed',
+      'user.title_changed',
+      'user.title_changed',
+    ]);
+    const { rows } = await db.query<{ details: unknown }>(
+      `SELECT details FROM audit_log WHERE action = 'user.title_changed' ORDER BY id LIMIT 1`,
+    );
+    expect(rows[0]?.details).toEqual({ from: null, to: 'Patronne' });
+  });
+
+  it('passe un compte en comptable, et un comptable en serveur', async () => {
+    const { token } = await managerToken();
+    const id = await createUser('mounir', 'manager');
+    const patch = (body: object) =>
+      api
+        .patch(`/api/users/${String(id)}`)
+        .set('Authorization', `Bearer ${token}`)
+        .send(body);
+    expect((await patch({ role: 'accountant' })).body).toMatchObject({ role: 'accountant' });
+    expect((await patch({ role: 'waiter' })).body).toMatchObject({ role: 'waiter' });
   });
 
   it('désactive un compte et coupe ses sessions, puis le réactive', async () => {
@@ -232,6 +301,21 @@ describe('PATCH /users/:id', () => {
       .set('Authorization', `Bearer ${token}`)
       .send({ role: 'barista' });
     expect(res.status).toBe(200);
+  });
+
+  it('un comptable ne compte pas comme manager : le dernier manager ne peut pas passer comptable', async () => {
+    const { id, token } = await managerToken();
+    await createUser('mounir', 'accountant');
+    const res = await api
+      .patch(`/api/users/${String(id)}`)
+      .set('Authorization', `Bearer ${token}`)
+      .send({ role: 'accountant' });
+    expect(res.status).toBe(409);
+    expect(res.body).toMatchObject({ error: { code: 'INVALID_STATUS' } });
+    const { rows } = await db.query<{ count: number }>(
+      `SELECT count(*)::int AS count FROM users WHERE role = 'manager' AND disabled_at IS NULL`,
+    );
+    expect(rows[0]?.count).toBe(1);
   });
 
   it('laisse désactiver un autre manager tant qu’il en reste un actif', async () => {
