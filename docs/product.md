@@ -2,7 +2,7 @@
 
 Ce que nous construisons et quand une fonctionnalité est « terminée ». Si quelque chose manque ou n'est pas clair : demander, ne pas inventer.
 
-Version 2 — refonte du 15 octobre 2026. Clôture de shift et rapports de la manager ajoutés le 15 octobre 2026 (v1.7 du contrat). Caisse unique (principal et renfort), passation, commandes des managers : 15 octobre 2026 (v1.8). Fin de journée sans blocage, numéro des clôtures, file caisse après un échec : 16 octobre 2026 (v1.8.2). Comptable, tables d'offre, notes jamais en caisse : 17 octobre 2026 (v1.9). Demandes d'achat, dépenses fournisseurs, inventaire hebdomadaire : 17 octobre 2026 (v1.9.2). Offres saisies par un serveur, table encaissée : 17 octobre 2026 (v1.9.3). Deux principaux pendant la passation, vente directe encaissée depuis l'app, remise sur toute la table, transferts entre tables réelles, code admin de l'agent : 17 octobre 2026 (v2.0). Écran bar / cuisine, shift du barista et du cuisinier, transfert de toute la caisse à un renfort, vente directe gardée par son principal, liste « Offres staff » : 19 octobre 2026 (v2.1). Shift 2 choisi au démarrage, transfert vers une table libre : 19 octobre 2026 (v2.2).
+Version 2 — refonte du 15 octobre 2026. Clôture de shift et rapports de la manager ajoutés le 15 octobre 2026 (v1.7 du contrat). Caisse unique (principal et renfort), passation, commandes des managers : 15 octobre 2026 (v1.8). Fin de journée sans blocage, numéro des clôtures, file caisse après un échec : 16 octobre 2026 (v1.8.2). Comptable, tables d'offre, notes jamais en caisse : 17 octobre 2026 (v1.9). Demandes d'achat, dépenses fournisseurs, inventaire hebdomadaire : 17 octobre 2026 (v1.9.2). Offres saisies par un serveur, table encaissée : 17 octobre 2026 (v1.9.3). Deux principaux pendant la passation, vente directe encaissée depuis l'app, remise sur toute la table, transferts entre tables réelles, code admin de l'agent : 17 octobre 2026 (v2.0). Écran bar / cuisine, shift du barista et du cuisinier, transfert de toute la caisse à un renfort, vente directe gardée par son principal, liste « Offres staff » : 19 octobre 2026 (v2.1). Shift 2 choisi au démarrage, transfert vers une table libre : 19 octobre 2026 (v2.2). Relevé de la caisse (X / Z) à la clôture et ventes tapées à la main : 28 octobre 2026 (contrat à venir).
 
 ## 1. Contexte
 
@@ -130,6 +130,12 @@ Le plan des tables et les commandes sont gérés **entièrement par les serveurs
 
 ### Clôture
 - Le principal appuie sur **Clôturer**, compte les espèces qu'il a encaissées et saisit le montant compté. S'il reste un autre principal (passation), ses tables encore ouvertes passent à celui-ci ; sinon c'est la fin de journée.
+- **Relevé de la caisse** : pour voir les ventes tapées à la main sans l'app, chaque clôture compare le CA de LegacyPOS à celui de l'app. Avant le relevé, aucune tâche caisse ne doit être en échec ni en attente.
+  - Le principal appuie sur « Imprimer le X » (« Imprimer le Z » à la dernière clôture) : la file caisse se met en pause (l'agent finit sa tâche en cours), l'app affiche « Vous pouvez imprimer », le principal imprime le ticket dans LegacyPOS, le photographie et saisit son montant et le montant « en instances », puis la file reprend. Le relevé est obligatoire pour valider la clôture.
+  - Le **X** (relevé intermédiaire, ne remet rien à zéro, ne touche pas à la journée fiscale) et le **Z** (clôture fiscale de la journée) comptent les **commandes**, encaissées ou non, **remises et −1 déduits** ; « en instances » est le montant des tables encore ouvertes.
+  - Comparaison **par période, pas par principal** : X ↔ CA net de tout ce que l'app a fait taper depuis le matin jusqu'à la pause, tous principaux confondus ; Z − X ↔ CA net de tout ce qui vient après le X ; « en instances » ↔ total des tables encore ouvertes dans l'app.
+  - **Écart positif** (la caisse compte plus) : le principal déclare les **ventes tapées à la main** (articles, quantités, espèces ou carte). Elles ne passent jamais par l'agent ; elles comptent dans le stock, le CA, les espèces attendues et le PDF. Prix calculé par le serveur. L'écart restant est signalé aux managers. **Écart négatif** (l'app compte plus) : rien à déclarer, signalé aux managers.
+  - Sans X : un seul principal toute la journée → seulement le Z, comparé à toute la journée. Caisse passée à un renfort → pas de X au passage ; le renfort fait le relevé à sa clôture, sur toute la période, et ce qu'il ignore reste dans l'écart signalé. Clôture forcée → le serveur qui remplace fait le relevé ; si la manager termine elle-même le shift, elle saisit le Z s'il a été imprimé, sinon comparaison « manquante ». Clôture automatique → comparaison « manquante » sur le PDF, notifiée aux managers ; un manager peut saisir le Z plus tard dans les rapports, sans changer le PDF archivé.
 - Un **PDF de clôture par principal** est généré et archivé. Il couvre **sa caisse**, quel que soit le serveur (principal ou renfort) ou le poste (barista, cuisinier) qui a fait l'action : ses tables et ses ventes directes (ouvertes pendant qu'il était le principal en cours, ou reçues d'un autre principal), et ce qui n'est sur aucune table (dépenses, offres staff, commandes des tables d'offre) pendant qu'il était le principal en cours. Après un passage de caisse à un renfort (voir plus haut), la clôture du renfort couvre la caisse entière, depuis le début, avec les noms et l'heure du passage. Ce que le nouveau principal fait pendant que le premier finit ses tables n'y figure pas :
   - les articles vendus (quantités et montants) et le **CA** : les commandes confirmées de sa caisse, envoyées en caisse, moins les remises staff et les annulations **faites pendant qu'il avait la table**, même sur un article commandé avant (sur une table reçue, ou dans un créneau précédent) ; le PDF déjà archivé ne change jamais ;
   - les encaissements **espèces** et **carte** ;
@@ -137,7 +143,8 @@ Le plan des tables et les commandes sont gérés **entièrement par les serveurs
   - les articles **offerts** (clients mécontents, liste « Offres staff ») et les **commandes des tables d'offre** (managers, patrons, comptable, invités), mentionnés à 0 DT avec la table d'offre et qui les a offerts ou commandés : ils ne comptent pas dans le CA mais sortent du stock ;
   - les articles **annulés**, avec leur note, en séparant ceux **déjà préparés** (perte de stock) et ceux **pas préparés**, et les annulations retirées (payées par le serveur) ;
   - les **espèces attendues** (espèces encaissées − dépenses ; pas de fond de caisse), les **espèces comptées** et l'**écart** ;
-  - les tables passées à l'autre principal, et les tables fermées **non encaissées** (clôture forcée ou automatique).
+  - les tables passées à l'autre principal, et les tables fermées **non encaissées** (clôture forcée ou automatique) ;
+  - le **relevé de la caisse** : photo du X ou du Z, montant saisi, CA de l'app sur la période, écart, ventes saisies à la main (déclarées par qui) et écart restant, ou « comparaison manquante ».
 
 ### Tables d'offre
 - Des **tables fictives d'offre** (liste dans `docs/tables.csv`) servent à tout ce qui est offert hors clients mécontents et staff : une par manager, patron et comptable, et des tables sans compte (propriétaire du local, artistes, invitées, table de test). Elles ne servent jamais aux ventes directes et ne sont pas sur le plan.
@@ -225,7 +232,7 @@ Commande tapée par un serveur : on démarre directement à l'étape 4.
 
 ## 10. Panne
 
-- Internet coupé : données mobiles, ou retour à la méthode classique (le serveur saisit à la caisse). C'est la seule exception à « rien n'est tapé directement en caisse » ; il faudra rattraper ces ventes pour le stock (à définir).
+- Internet coupé : données mobiles, ou retour à la méthode classique (le serveur saisit à la caisse). C'est la seule exception à « rien n'est tapé directement en caisse » ; ces ventes sont rattrapées à la clôture : l'écart avec le X ou le Z les fait apparaître, et le principal les déclare comme ventes tapées à la main (§ 5 Clôture).
 - Agent en panne : la caisse reste utilisable à la main ; les serveurs en shift et la manager voient que l'agent ne répond plus ; les commandes en attente sont signalées. Les ventes directes occupent chacune une table fictive jusqu'à leur encaissement (dans l'app, puis en caisse) : avec 5 tables de vente directe, la 6ᵉ est refusée tant que les précédentes ne sont pas encaissées et que l'agent n'a pas rattrapé son retard ; le comptoir passe alors à la méthode classique.
 
 ## 11. Questions ouvertes (à trancher après la vidéo)
@@ -241,7 +248,7 @@ Restent :
 ## 12. Stock (fonctionnalité principale — à détailler)
 
 - But : **tout calculer pour minimiser les écarts inexpliqués** entre le stock théorique et le stock réel.
-- **Toutes les ventes passent par l'app** (QR, saisie serveur, comptoir) : une vente tapée directement en caisse sans l'app serait un écart inexpliqué.
+- **Toutes les ventes passent par l'app** (QR, saisie serveur, comptoir) : une vente tapée directement en caisse sans l'app serait un écart inexpliqué. Le relevé de la caisse à chaque clôture (X / Z, § 5) la fait apparaître, et le principal la déclare pour qu'elle sorte du stock.
 - Consommation théorique de chaque article vendu à partir des **fiches techniques** (bar et cuisine), y compris les choix précis dans les formules (type de café, thé, jus, œufs).
 - Sorties hors ventes : offerts (clients mécontents, liste « Offres staff »), commandes des tables d'offre, annulations d'articles déjà préparés.
 - Approvisionnement : arrivages (pointés à chaque livraison, payée ou non), avaries ; demandes d'achat aux managers. Seuls le **barista** (bar) et le **cuisinier** (cuisine) pointent arrivages, avaries et inventaire.
