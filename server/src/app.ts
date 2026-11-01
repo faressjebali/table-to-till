@@ -11,6 +11,7 @@ import { posRoutes } from './pos/routes.js';
 import { pushRoutes } from './push/routes.js';
 import { noopPushSender, type PushSender } from './push/send.js';
 import { noopRealtime, type Realtime } from './realtime.js';
+import { securityHeaders } from './security-headers.js';
 import { shiftRoutes } from './shifts/routes.js';
 import { adminTableRoutes } from './tables/admin-routes.js';
 import { tableRoutes } from './tables/routes.js';
@@ -36,6 +37,8 @@ export function createApp({
   const app = express();
   // Derrière un hébergeur ou un tunnel : l'adresse du téléphone vient de X-Forwarded-For.
   app.set('trust proxy', config.trustProxy);
+  app.disable('x-powered-by');
+  app.use(securityHeaders);
   app.use(express.json());
 
   const api = express.Router();
