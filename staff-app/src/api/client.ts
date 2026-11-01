@@ -5,6 +5,7 @@ import type {
   CurrentShifts,
   LoginResponse,
   Me,
+  MenuResponse,
   Order,
   Role,
   Table,
@@ -88,6 +89,28 @@ export const getStationOrders = () => request<{ items: Order[] }>('/station-orde
 
 export const markReady = (orderId: number) =>
   request<Order>(`/orders/${String(orderId)}/ready`, { method: 'POST' });
+
+/** Carte vue par le staff : disponibilité selon les horaires propres des articles. */
+export const getMenu = () => request<MenuResponse>('/menu');
+
+/** Ligne de `POST /staff-orders` : `choices` seulement pour un article à choix. */
+export interface StaffOrderLine {
+  menuItemId: number;
+  quantity: number;
+  note: string | null;
+  choices?: { group: string; menuItemId: number }[];
+}
+
+/**
+ * Commande saisie par un serveur en shift sur une table réelle : confirmée tout de suite.
+ * 409 `ITEM_UNAVAILABLE` ou `OUTSIDE_HOURS` avec `details.menuItemId` ; `clientRequestId` évite
+ * un doublon si la requête est renvoyée.
+ */
+export const createStaffOrder = (body: {
+  clientRequestId: string;
+  tableId: number;
+  lines: StaffOrderLine[];
+}) => request<Order>('/staff-orders', { method: 'POST', body });
 
 /** Plan de la salle (serveur en shift). */
 export const getTables = () => request<{ tables: Table[] }>('/tables');

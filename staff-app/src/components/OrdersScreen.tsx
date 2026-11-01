@@ -3,7 +3,7 @@ import { ApiError, confirmOrder, getCurrentShifts, rejectOrder } from '../api/cl
 import type { CurrentShifts, Order, StationName } from '../api/types';
 import { formatPrice } from '../format';
 import { t } from '../i18n/fr';
-import { unstaffedStations, usePendingOrders } from '../pendingOrders';
+import { nobodyText, unstaffedStations, usePendingOrders } from '../pendingOrders';
 import { useOnConnect, useRealtimeEvent } from '../realtime';
 import { placeLabel, timeLabel } from '../stationOrders';
 import { StateIcon } from './StateIcon';
@@ -270,15 +270,6 @@ function offerText(offer: NonNullable<Order['offer']>): string {
     ? `${offer.requestedBy.name} (${offer.requestedBy.title})`
     : offer.requestedBy.name;
   return `${t(offer.forClient ? 'orders.offerForClient' : 'orders.offerFor')} ${who}`;
-}
-
-// « Personne au bar : prévenez à l'oral. »
-function nobodyText(missing: StationName[]): string {
-  const where =
-    missing.length === 2
-      ? t('orders.nobodyBoth')
-      : t(missing[0] === 'bar' ? 'orders.nobodyBar' : 'orders.nobodyKitchen');
-  return `${where} ${t('orders.tellThem')}`;
 }
 
 // Nom de l'article (ou de l'option de formule) en rupture.

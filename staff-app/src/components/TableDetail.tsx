@@ -1,11 +1,13 @@
 import { useCallback, useEffect, useState } from 'react';
 import { ApiError, getTableSession } from '../api/client';
-import type { Order, OrderLine, Table, TableSessionDetail } from '../api/types';
+import type { Order, OrderLine, StationName, Table, TableSessionDetail } from '../api/types';
 import { formatPrice } from '../format';
 import { t } from '../i18n/fr';
+import { nobodyText } from '../pendingOrders';
 import { useOnConnect, useRealtimeEvent } from '../realtime';
 import { timeLabel } from '../stationOrders';
 import { ofName, pendingText } from '../tablePlan';
+import { NewOrderScreen } from './NewOrderScreen';
 import { StateIcon, type State as IconState } from './StateIcon';
 
 type State =
@@ -22,10 +24,13 @@ const clock = new Intl.DateTimeFormat('fr-FR', {
 
 // Commandes d'une table (docs/api.md § 5, `GET /tables/:id/session` ; apparence : docs/design.md) :
 // chaque commande confirmée avec ses lignes, notes et choix, son état en caisse, ce qui est prêt,
-// et le total. Rien n'est modifiable ici pour l'instant : les actions (saisir, encaisser,
+// et le total. « Saisir une commande » ouvre la saisie ; les autres actions (encaisser,
 // remise…) arrivent chacune avec son issue.
 export function TableDetail({ table, onBack }: { table: Table; onBack: () => void }) {
   const [state, setState] = useState<State>({ status: 'loading' });
+  const [entering, setEntering] = useState(false);
+  // Après un envoi : « Commande envoyée. » et, s'il le faut, « Personne au bar ».
+  const [sent, setSent] = useState<StationName[] | null>(null);
 
   const load = useCallback(() => {
     getTableSession(table.id).then(
@@ -49,6 +54,20 @@ export function TableDetail({ table, onBack }: { table: Table; onBack: () => voi
 
   const title = `${t('table.label')} ${String(table.number)}`;
 
+  if (entering) {
+    return (
+      <NewOrderScreen
+        table={table}
+        onBack={() => setEntering(false)}
+        onSent={(_order, missing) => {
+          setEntering(false);
+          setSent(missing);
+          load();
+        }}
+      />
+    );
+  }
+
   return (
     <>
       <button type="button" className="back" onClick={onBack}>
@@ -69,6 +88,34 @@ export function TableDetail({ table, onBack }: { table: Table; onBack: () => voi
           {openedText(state.detail.session.principal?.name ?? null, state.detail.session.openedAt)}
         </p>
       )}
+
+      {sent && (
+        <div className="alert" role="status">
+          {sent.length > 0 && (
+            <span className="alert__icon">
+              <StateIcon state={sent[0] === 'kitchen' ? 'kitchen' : 'bar'} />
+            </span>
+          )}
+          <p className="alert__text">
+            {t('entry.sent')}
+            {sent.length > 0 && ` ${nobodyText(sent)}`}
+          </p>
+          <button type="button" className="button button--secondary" onClick={() => setSent(null)}>
+            {t('orders.dismiss')}
+          </button>
+        </div>
+      )}
+
+      <button
+        type="button"
+        className="button button--block"
+        onClick={() => {
+          setSent(null);
+          setEntering(true);
+        }}
+      >
+        {t('entry.start')}
+      </button>
 
       {table.pendingOrders > 0 && (
         <div className="alert">

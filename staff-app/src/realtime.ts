@@ -1,6 +1,6 @@
 import { createContext, useContext, useEffect, useRef } from 'react';
 import type { Socket } from 'socket.io-client';
-import type { Order, OrderReady, Table } from './api/types';
+import type { MenuUpdate, Order, OrderReady, Table } from './api/types';
 
 // Temps réel (docs/api.md § 8) : une connexion Socket.IO par téléphone connecté. Le serveur range
 // la connexion selon le rôle et le shift au moment où elle s'ouvre : elle est refaite quand le
@@ -18,6 +18,8 @@ export interface ServerEvents {
   'order:new': (order: Order) => void;
   /** Serveurs en shift : commande confirmée, rejetée ou expirée (ou modifiée). */
   'order:updated': (order: Order) => void;
+  /** Tout le staff : un article passe en rupture ou redevient disponible. */
+  'menu:updated': (update: MenuUpdate) => void;
 }
 
 // Socket sans types d'événements : useRealtimeEvent les type à l'écoute, depuis ServerEvents.

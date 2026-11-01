@@ -345,7 +345,7 @@ describe('commandes d’une table', () => {
     expect(screen.getByRole('group', { name: fr['tables.plan'] })).toBeInTheDocument();
   });
 
-  it('aucune action d’argent ni de modification pour l’instant', async () => {
+  it('seulement « Saisir une commande », aucune action d’argent pour l’instant', async () => {
     await openPlan([occupied()], {
       '/api/tables/7/session': { status: 200, body: session([order()]) },
     });
@@ -356,7 +356,7 @@ describe('commandes d’une table', () => {
     const buttons = within(main)
       .getAllByRole('button')
       .map((b) => b.textContent);
-    expect(buttons).toEqual([`‹ ${fr['table.back']}`]);
+    expect(buttons).toEqual([`‹ ${fr['table.back']}`, fr['entry.start']]);
   });
 });
 

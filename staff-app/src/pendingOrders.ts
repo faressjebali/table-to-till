@@ -1,5 +1,6 @@
 import { createContext, useContext } from 'react';
-import type { CurrentShifts, Order, StationName } from './api/types';
+import type { CurrentShifts, Order, OrderLine, Station, StationName } from './api/types';
+import { t } from './i18n/fr';
 
 // Commandes à confirmer (docs/product.md § 5, « Commandes entrantes ») : commandes QR et commandes
 // offertes des managers et du comptable. La liste vit au niveau des écrans du serveur en shift
@@ -32,15 +33,28 @@ export function upsertPending(list: Order[], order: Order): Order[] {
  * Postes sans personne en shift pour les lignes de la commande : le serveur prévient à l'oral, la
  * commande passe quand même. Une ligne `both` n'attend personne si l'un des deux postes est là.
  */
-export function unstaffedStations(order: Order, shifts: CurrentShifts): StationName[] {
+export function unstaffedStations(
+  order: { lines: { station: Station; status?: OrderLine['status'] }[] },
+  shifts: CurrentShifts,
+): StationName[] {
   const has = (role: 'barista' | 'chef') => shifts.stations.some((s) => s.role === role);
-  const lines = order.lines.filter((line) => line.status === 'active');
+  // Sans `status` : ligne d'une commande pas encore envoyée (saisie en cours).
+  const lines = order.lines.filter((line) => (line.status ?? 'active') === 'active');
   const needs = (station: 'bar' | 'kitchen') => lines.some((line) => line.station === station);
   const both = lines.some((line) => line.station === 'both') && !has('barista') && !has('chef');
   const missing: StationName[] = [];
   if (!has('barista') && (needs('bar') || both)) missing.push('bar');
   if (!has('chef') && (needs('kitchen') || both)) missing.push('kitchen');
   return missing;
+}
+
+/** « Personne au bar : prévenez à l'oral. » */
+export function nobodyText(missing: StationName[]): string {
+  const where =
+    missing.length === 2
+      ? t('orders.nobodyBoth')
+      : t(missing[0] === 'bar' ? 'orders.nobodyBar' : 'orders.nobodyKitchen');
+  return `${where} ${t('orders.tellThem')}`;
 }
 
 /** Numéro de commande d'une adresse de notification (`/?order=154`), sinon `null`. */

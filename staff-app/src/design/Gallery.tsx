@@ -432,6 +432,88 @@ export function Gallery() {
           </div>
         </Section>
 
+        <Section title="Saisie d’une commande">
+          <section className="menu-section" aria-label="Cafés">
+            <h2 className="menu-section__title">Cafés</h2>
+            <ul className="rows">
+              <li className="menu-row">
+                <button type="button" className="row menu-row__open">
+                  <span className="row__text">
+                    <span className="menu-row__name">Capuccino</span>
+                    <span className="row__hint">7 DT</span>
+                  </span>
+                  <span className="menu-row__count" aria-label="2 dans la commande">
+                    2
+                  </span>
+                </button>
+                <button
+                  type="button"
+                  className="icon-button menu-row__add"
+                  aria-label="Ajouter 1 Capuccino"
+                >
+                  +
+                </button>
+              </li>
+              <li className="menu-row">
+                <button type="button" className="row menu-row__open">
+                  <span className="row__text">
+                    <span className="menu-row__name">Classic Start</span>
+                    <span className="row__hint">15 DT · Choix à faire</span>
+                  </span>
+                </button>
+              </li>
+              <li className="menu-row menu-row--off">
+                <button type="button" className="row menu-row__open" disabled>
+                  <span className="row__text">
+                    <span className="menu-row__name">Espresso premium</span>
+                    <span className="row__hint">9 DT</span>
+                  </span>
+                  <span className="status-chip">Rupture</span>
+                </button>
+              </li>
+            </ul>
+          </section>
+          <fieldset className="options">
+            <legend className="options__legend">Café ou thé</legend>
+            <label className="option">
+              <input type="radio" name="galerie-choix" defaultChecked />
+              <span className="option__label">Capuccino</span>
+            </label>
+            <label className="option">
+              <input type="radio" name="galerie-choix" />
+              <span className="option__label">Espresso</span>
+            </label>
+            <label className="option option--off">
+              <input type="radio" name="galerie-choix" disabled />
+              <span className="option__label">Thé à la menthe</span>
+              <span className="option__hint">Rupture</span>
+            </label>
+          </fieldset>
+          <fieldset className="options">
+            <legend className="options__legend">Extras (une ligne chacun)</legend>
+            <label className="option">
+              <input type="checkbox" defaultChecked />
+              <span className="option__label">+Bacon de bœuf</span>
+              <span className="option__hint">7 DT</span>
+            </label>
+          </fieldset>
+          <div className="stepper" role="group" aria-label="Quantité">
+            <button type="button" className="stepper__button" aria-label="Un de moins" disabled>
+              −
+            </button>
+            <output className="stepper__value">1</output>
+            <button type="button" className="stepper__button" aria-label="Un de plus">
+              +
+            </button>
+          </div>
+          <div className="draft-bar">
+            <p className="draft-bar__text">3 articles · 20 DT</p>
+            <button type="button" className="button">
+              Voir la commande
+            </button>
+          </div>
+        </Section>
+
         <Section title="Bandeaux d’alerte">
           <div className="alert alert--danger" role="alert">
             <span className="alert__icon">

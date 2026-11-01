@@ -53,6 +53,53 @@ export interface Localized {
 export type Station = 'bar' | 'kitchen' | 'both';
 export type StationName = 'bar' | 'kitchen';
 
+/** MenuItem de docs/api.md § 2, vu par le staff (avec `posCode`). Prix en millimes. */
+export interface MenuItem {
+  id: number;
+  categoryId: number;
+  name: Localized;
+  description: Localized | null;
+  price: number;
+  photoUrl: string | null;
+  /** Commandable maintenant (staff : horaires propres de l'article seulement, pas l'ouverture). */
+  available: boolean;
+  unavailableReason: 'sold_out' | 'outside_hours' | null;
+  availability: { days: number[]; from: string | null; until: string | null };
+  suggestedExtraIds: number[];
+  /** Clés des groupes de choix obligatoires (formules, Kids Menu) ; `[]` sinon. */
+  choiceGroups: string[];
+  noteHint: Localized | null;
+  station: Station;
+  posCode?: string | null;
+}
+
+/** ChoiceGroup de docs/api.md § 2 : exactement une option par groupe, chacune un article. */
+export interface ChoiceGroup {
+  key: string;
+  name: Localized;
+  optionIds: number[];
+}
+
+/** Réponse de `GET /menu` avec un jeton staff. */
+export interface MenuResponse {
+  categories: {
+    id: number;
+    name: Localized;
+    section: 'food' | 'drinks';
+    display: 'list' | 'grid';
+    sortOrder: number;
+    items: MenuItem[];
+  }[];
+  choiceGroups: ChoiceGroup[];
+}
+
+/** Données de `menu:updated` (staff) : une rupture marquée ou levée. */
+export interface MenuUpdate {
+  menuItemId: number;
+  available: boolean;
+  unavailableReason: MenuItem['unavailableReason'];
+}
+
 /** Ligne d'une commande (Order `lines`). */
 export interface OrderLine {
   id: number;

@@ -700,3 +700,189 @@
   overflow-wrap: anywhere;
   user-select: all;
 }
+
+/*
+ * Saisie d'une commande : carte en lignes de 48 px (nom, prix, « + »), fiche d'un article
+ * (choix, extras, quantité, note), barre de la commande en cours collée au-dessus des onglets.
+ */
+.menu-section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.menu-section__title {
+  font-size: var(--text-body);
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.menu-row {
+  display: flex;
+  align-items: center;
+  gap: var(--tap-gap);
+  padding-right: var(--space-2);
+}
+
+.menu-row__open {
+  flex: 1;
+  min-width: 0;
+}
+
+.menu-row__open:disabled {
+  cursor: default;
+}
+
+.menu-row--off .menu-row__name,
+.menu-row--off .row__hint {
+  color: var(--color-muted);
+}
+
+.menu-row__name {
+  font-weight: 600;
+}
+
+.menu-row .row__hint,
+.menu-row__count,
+.stepper__value,
+.draft-bar__text {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Combien de cet article sont déjà dans la commande : pastille neutre (pas l'orange « à confirmer ») */
+.menu-row__count {
+  display: grid;
+  flex: none;
+  place-items: center;
+  min-width: 1.75rem;
+  height: 1.75rem;
+  padding: 0 var(--space-1);
+  border-radius: var(--radius-full);
+  background: var(--color-action);
+  color: var(--color-on-action);
+  font-size: var(--text-small);
+  font-weight: 700;
+}
+
+.menu-row__add {
+  border-color: var(--color-action);
+}
+
+.draft-bar {
+  position: sticky;
+  bottom: calc(var(--tabbar-height) + env(safe-area-inset-bottom) + var(--space-2));
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-2) var(--space-2) var(--space-2) var(--space-4);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  background: var(--color-surface);
+  box-shadow: 0 4px 16px rgb(0 0 0 / 0.12); /* même ombre que l’icône de l’installation (app.css) */
+}
+
+.draft-bar__text {
+  font-weight: 600;
+}
+
+/* Choix d'une formule (radio, un par groupe) et extras (cases) : une ligne de 48 px par option */
+.options {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  background: var(--color-surface);
+}
+
+.options__legend {
+  float: left;
+  width: 100%;
+  padding: var(--space-3) var(--space-4) var(--space-1);
+  font-weight: 600;
+}
+
+.option {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-height: var(--tap-min);
+  padding: var(--space-1) var(--space-4);
+  border-top: 1px solid var(--color-border);
+  cursor: pointer;
+}
+
+.option input {
+  flex: none;
+  width: 1.375rem;
+  height: 1.375rem;
+  margin: 0;
+  accent-color: var(--color-action);
+}
+
+.option__label {
+  flex: 1;
+}
+
+.option__hint {
+  font-size: var(--text-small);
+  color: var(--color-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.option--off {
+  color: var(--color-muted);
+  cursor: default;
+}
+
+/* − quantité + */
+.stepper {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--tap-gap);
+  align-self: flex-start;
+}
+
+.stepper__button {
+  display: grid;
+  place-items: center;
+  width: var(--tap-min);
+  height: var(--tap-min);
+  padding: 0;
+  border: 2px solid var(--color-action);
+  border-radius: var(--radius);
+  background: var(--color-surface);
+  color: var(--color-ink);
+  font: inherit;
+  font-size: var(--text-card);
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.stepper__button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.stepper__value {
+  min-width: 2ch;
+  font-size: var(--text-card);
+  font-weight: 700;
+  text-align: center;
+}
+
+.field__input--multiline {
+  padding: var(--space-2) var(--space-3);
+  resize: vertical;
+}
+
+.draft-line__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--tap-gap);
+  margin-top: var(--space-2);
+}
