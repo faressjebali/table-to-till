@@ -291,7 +291,7 @@ describe('POST /orders', () => {
       expect(res.status).toBe(409);
       expect(res.body).toMatchObject({ error: { code: 'ITEM_UNAVAILABLE' } });
     } finally {
-      await db.query(`UPDATE menu_items SET pos_code = '50' WHERE id = $1`, [
+      await db.query(`UPDATE menu_items SET pos_code = '250' WHERE id = $1`, [
         item('Cheese Burger'),
       ]);
     }
@@ -515,7 +515,7 @@ describe('POST /orders/:id/confirm', () => {
       tableSessionId: 1,
       confirmedBy: { id: backup.id, name: 'Nom karim' },
       confirmedAt: new Date(MONDAY_10H.getTime() + 60_000).toISOString(),
-      total: 53500,
+      total: 67500,
       pos: { status: 'queued', error: null },
     });
 
@@ -534,8 +534,8 @@ describe('POST /orders/:id/confirm', () => {
         order_id: orderId,
         payload: {
           lines: [
-            { orderLineId: order.lines[0]?.id, posCode: '50', quantity: 2 },
-            { orderLineId: order.lines[1]?.id, posCode: '15', quantity: 1 },
+            { orderLineId: order.lines[0]?.id, posCode: '250', quantity: 2 },
+            { orderLineId: order.lines[1]?.id, posCode: '215', quantity: 1 },
           ],
         },
       },
@@ -553,7 +553,7 @@ describe('POST /orders/:id/confirm', () => {
       number: 7,
       state: 'occupied',
       openSessionId: 1,
-      openTotal: 53500,
+      openTotal: 67500,
       pendingOrders: 0,
       principalId: principal.id,
     });
@@ -790,7 +790,7 @@ describe('POST /staff-orders', () => {
       confirmedBy: { id: backup.id, name: 'Nom karim' },
       confirmedAt: MONDAY_10H.toISOString(),
       // Prix de la base, jamais celui envoyé par le téléphone.
-      total: 53500,
+      total: 67500,
       offer: null,
       pos: { status: 'queued', error: null },
       lines: [
@@ -819,8 +819,8 @@ describe('POST /staff-orders', () => {
         order_id: order.id,
         payload: {
           lines: [
-            { orderLineId: order.lines[0]?.id, posCode: '50', quantity: 2 },
-            { orderLineId: order.lines[1]?.id, posCode: '15', quantity: 1 },
+            { orderLineId: order.lines[0]?.id, posCode: '250', quantity: 2 },
+            { orderLineId: order.lines[1]?.id, posCode: '215', quantity: 1 },
           ],
         },
       },

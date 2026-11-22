@@ -171,7 +171,7 @@ describe('POST /tables/:id/pay', () => {
       `SELECT action, details FROM audit_log WHERE action = 'table.paid'`,
     );
     expect(log).toEqual([
-      { action: 'table.paid', details: { method: 'card', total: 10500, jobId: job.id } },
+      { action: 'table.paid', details: { method: 'card', total: 13000, jobId: job.id } },
     ]);
   });
 

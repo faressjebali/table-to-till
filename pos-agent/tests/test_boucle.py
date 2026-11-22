@@ -54,7 +54,9 @@ def test_taches_faites_une_a_une_dans_l_ordre(tmp_path):
 def test_echec_de_la_caisse_signale_avec_erreur_et_etape(tmp_path):
     serveur = FauxServeur([{'id': 5, 'type': 'pay_table'}])
     a = agent(
-        serveur, FausseCaisse(serveur, EchecCaisse('TOTAL_MISMATCH', 'lecture de fieldTotal')), tmp_path
+        serveur,
+        FausseCaisse(serveur, EchecCaisse('TOTAL_MISMATCH', 'lecture de fieldTotal')),
+        tmp_path,
     )
     a.un_tour()
     assert serveur.statut(5) == 'failed'

@@ -372,7 +372,7 @@ describe('commande saisie par un serveur', () => {
     expect(await waiters.next('table:updated')).toMatchObject({
       number: 8,
       state: 'occupied',
-      openTotal: 10_500,
+      openTotal: 13_000,
     });
     expect(await agent.next('pos:job')).toMatchObject({ jobId: expect.any(Number) as number });
     await quiet();

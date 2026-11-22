@@ -5,7 +5,13 @@ from agent.config import ConfigInvalide, charger
 
 @pytest.fixture(autouse=True)
 def sans_variables(monkeypatch):
-    for nom in ('SERVER_URL', 'AGENT_KEY', 'LEGACY_PIN', 'AGENT_IDLE_SECONDS', 'AGENT_POLL_SECONDS'):
+    for nom in (
+        'SERVER_URL',
+        'AGENT_KEY',
+        'LEGACY_PIN',
+        'AGENT_IDLE_SECONDS',
+        'AGENT_POLL_SECONDS',
+    ):
         monkeypatch.delenv(nom, raising=False)
 
 

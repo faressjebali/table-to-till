@@ -145,7 +145,7 @@ describe('rupture en temps réel', () => {
     const sheet = screen.getByRole('dialog');
     const egg = within(sheet).getByRole('checkbox', { name: /Œuf/ });
     await userEvent.click(egg);
-    expect(within(sheet).getByRole('button', { name: /^Ajouter/ })).toHaveTextContent('10,5 DT');
+    expect(within(sheet).getByRole('button', { name: /^Ajouter/ })).toHaveTextContent('14 DT');
 
     update(EGG, 'sold_out');
     expect(egg).toBeDisabled();

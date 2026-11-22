@@ -20,8 +20,8 @@ const csvWith = (...rows: string[]) => [header, ...baseRows, ...rows].join('\n')
 
 describe('parsePrice', () => {
   it('convertit les dinars en millimes sans flottant', () => {
-    expect(parsePrice('12', 2)).toBe(10500);
-    expect(parsePrice('5.5', 2)).toBe(6000);
+    expect(parsePrice('12', 2)).toBe(12000);
+    expect(parsePrice('5.5', 2)).toBe(5500);
     expect(parsePrice('0.125', 2)).toBe(125);
     expect(parsePrice('', 2)).toBeNull();
   });
@@ -96,7 +96,7 @@ describe('parseMenuCsv sur docs/menu/menu.csv', () => {
   it('lit les codes caisse, vides seulement pour le Plat de la semaine et les nouveaux articles', () => {
     expect(menu.items.find((i) => i.nameFr === 'Avocat')).toMatchObject({
       price: 7000,
-      posCode: '82',
+      posCode: '282',
     });
     // Codes du Croque-monsieur, des Pancakes au chocolat et du jus d'orange : pas encore relevés en caisse.
     expect(menu.items.filter((i) => i.posCode === null).map((i) => i.nameFr)).toEqual([
@@ -328,7 +328,7 @@ describe('seedMenu (base de test)', () => {
       `SELECT c.name_en, m.price, m.pos_code FROM menu_items m JOIN categories c ON c.id = m.category_id
         WHERE m.name_fr = 'Tarte du jour'`,
     );
-    expect(rows).toEqual([{ name_en: 'New', price: 7000, pos_code: '201' }]);
+    expect(rows).toEqual([{ name_en: 'New', price: 9000, pos_code: '201' }]);
     // Les articles déjà là gardent leurs extras : Cheese Burger toujours sans Gouda.
     expect(await extrasOf('Cheese Burger')).not.toContain('Gouda');
   });

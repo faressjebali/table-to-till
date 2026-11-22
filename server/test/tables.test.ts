@@ -217,7 +217,7 @@ describe('GET /tables', () => {
     expect(row).toMatchObject({
       state: 'occupied',
       openSessionId: sessionId,
-      openTotal: 18400,
+      openTotal: 21800,
       principalId: waiter.id,
     });
   });
@@ -308,11 +308,11 @@ describe('GET /tables/:id/session', () => {
       tableId: table.id,
       closedAt: null,
       status: 'open',
-      total: 18400,
+      total: 21800,
       orderIds: body.orders.map((order) => order.id),
       principal: { id: waiter.id, name: 'Nom amira' },
     });
-    expect(body.orders.map((order) => order.total)).toEqual([11000, 4400]);
+    expect(body.orders.map((order) => order.total)).toEqual([17000, 4800]);
     expect(body.orders[0]?.lines).toHaveLength(2);
     expect(body.gifts).toEqual([]);
   });

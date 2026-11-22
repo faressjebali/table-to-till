@@ -144,11 +144,7 @@ describe('GET /station-orders', () => {
       table: { number: 7 },
       confirmedBy: { id: waiter.id },
     });
-    expect(bar[0]?.lines.map((l) => l.name.fr)).toEqual([
-      'Espresso',
-      'Carrot cake',
-      'Early Bird',
-    ]);
+    expect(bar[0]?.lines.map((l) => l.name.fr)).toEqual(['Espresso', 'Carrot cake', 'Early Bird']);
     expect(bar[0]?.lines[0]).toMatchObject({ quantity: 2, note: 'serré', station: 'bar' });
     expect(bar[0]?.lines[2]?.choices).toEqual([
       {

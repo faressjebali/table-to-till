@@ -295,7 +295,7 @@ describe('commandes d’une table', () => {
       screen.getByText(`${fr['table.cash']} d’Amira, ${fr['table.openedAt'].toLowerCase()} 09:05`),
     ).toBeInTheDocument();
     expect(screen.getByText('1 commande à confirmer')).toBeInTheDocument();
-    expect(tableTotal()).toHaveTextContent(`${fr['table.total']}${shown(36000)}`);
+    expect(tableTotal()).toHaveTextContent(`${fr['table.total']}${shown(50000)}`);
 
     const [first, second] = screen.getAllByRole('article');
     if (!first || !second) throw new Error('deux commandes attendues');
@@ -339,7 +339,7 @@ describe('commandes d’une table', () => {
     await vi.waitFor(() => {
       expect(screen.getAllByRole('article')).toHaveLength(2);
     });
-    expect(tableTotal()).toHaveTextContent(shown(31500));
+    expect(tableTotal()).toHaveTextContent(shown(28000));
 
     await userEvent.click(screen.getByRole('button', { name: `‹ ${fr['table.back']}` }));
     expect(screen.getByRole('group', { name: fr['tables.plan'] })).toBeInTheDocument();

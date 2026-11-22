@@ -322,13 +322,13 @@ describe('fiche article', () => {
     await userEvent.click(within(sheet).getByRole('button', { name: fr['sheet.increase'] }));
     await userEvent.click(within(sheet).getByRole('checkbox', { name: /Œuf/ }));
     // 2 salades à 11,5 DT + 1 œuf à 2,5 DT
-    expect(add()).toHaveTextContent('20,5 DT');
+    expect(add()).toHaveTextContent('25,5 DT');
     // Avocat en rupture : ne peut pas être coché.
     expect(within(sheet).getByRole('checkbox', { name: /Avocat/ })).toBeDisabled();
 
     await userEvent.click(add());
     expect(screen.queryByRole('dialog')).toBeNull();
-    expect(cartBar()).toHaveTextContent('3 articles · 20,5 DT');
+    expect(cartBar()).toHaveTextContent('3 articles · 25,5 DT');
   });
 
   it('montre seulement les extras de l’article, pas les autres Extras', async () => {
@@ -424,14 +424,14 @@ describe('panier', () => {
       { menuItemId: 40, quantity: 2, note: 'sans oignon', choices: [] },
       { menuItemId: 12, quantity: 1, note: null, choices: [] },
     ]);
-    expect(linesTotal(lines, itemsById(mockMenu))).toBe(20500);
+    expect(linesTotal(lines, itemsById(mockMenu))).toBe(25500);
   });
 });
 
 describe('panier et envoi', () => {
   const ORDER_STATE = '/api/orders/123?tableToken=k3J9x';
 
-  /** Carte chargée, puis une Salade classique + 1 Œuf au panier (2 articles, 10,5 DT). */
+  /** Carte chargée, puis une Salade classique + 1 Œuf au panier (2 articles, 14 DT). */
   async function withSaladInCart(routes: Record<string, Route> = {}) {
     const fetchMock = mockApi({
       '/api/tables/k3J9x': table7,
@@ -462,18 +462,18 @@ describe('panier et envoi', () => {
     await withSaladInCart();
     const cart = await openCart();
     expect(within(cart).getByText('« sans oignon »')).toBeInTheDocument();
-    expect(sendButton(cart)).toHaveTextContent('10,5 DT');
+    expect(sendButton(cart)).toHaveTextContent('14 DT');
 
     const salad = within(cart).getByRole('heading', { name: 'Salade classique' }).closest('li');
     if (!salad) throw new Error('pas de ligne salade');
     await userEvent.click(within(salad).getByRole('button', { name: fr['sheet.increase'] }));
-    expect(sendButton(cart)).toHaveTextContent('20,5 DT');
+    expect(sendButton(cart)).toHaveTextContent('25,5 DT');
 
     const egg = within(cart).getByRole('heading', { name: 'Œuf' }).closest('li');
     if (!egg) throw new Error('pas de ligne œuf');
     await userEvent.click(within(egg).getByRole('button', { name: /Retirer/ }));
     expect(within(cart).queryByRole('heading', { name: 'Œuf' })).toBeNull();
-    expect(sendButton(cart)).toHaveTextContent('21 DT');
+    expect(sendButton(cart)).toHaveTextContent('23 DT');
   });
 
   it('envoie POST /orders au format du contrat, puis « Commande envoyée »', async () => {
@@ -520,7 +520,7 @@ describe('panier et envoi', () => {
     });
     await userEvent.click(sendButton(await openCart()));
     expect(await screen.findByText(message)).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /^Panier/ })).toHaveTextContent('2 articles · 10,5 DT');
+    expect(screen.getByRole('button', { name: /^Panier/ })).toHaveTextContent('2 articles · 14 DT');
   });
 
   it.each([
@@ -578,7 +578,7 @@ describe('panier et envoi', () => {
     view.unmount();
     renderAt('/t/k3J9x');
     expect(await screen.findByRole('button', { name: /^Panier/ })).toHaveTextContent(
-      '2 articles · 10,5 DT',
+      '2 articles · 14 DT',
     );
   });
 
@@ -590,7 +590,7 @@ describe('panier et envoi', () => {
     await userEvent.click(screen.getByRole('button', { name: /^Add/ }));
     await userEvent.click(screen.getByRole('button', { name: /^Cart/ }));
     const cart = screen.getByRole('dialog', { name: en['cart.heading'] });
-    expect(within(cart).getByRole('button', { name: /^Send order/ })).toHaveTextContent('11,5 DT');
+    expect(within(cart).getByRole('button', { name: /^Send order/ })).toHaveTextContent('11.5 DT');
   });
 });
 

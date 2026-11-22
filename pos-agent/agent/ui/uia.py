@@ -120,7 +120,8 @@ class EcranUia:
 
     def _boutons_sans_nom(self) -> list[tuple[BaseWrapper, list[str]]]:
         """Catégories et articles : sans nom **et sans AutomationId**. VALIDER, NOTE, NOTE et
-        Espèces n'ont pas de nom non plus, mais un AutomationId (`btnSend`…) : jamais touchés ici."""
+        Espèces n'ont pas de nom non plus, mais un AutomationId (`btnSend`…) :
+        jamais touchés ici."""
         principale = self._principale()
         if principale is None:
             return []

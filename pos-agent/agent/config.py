@@ -52,7 +52,13 @@ def charger(env_path: Path | None = None) -> Config:
     """
     chemin = env_path or DOSSIER_AGENT / '.env'
     valeurs: dict[str, str | None] = dict(dotenv_values(chemin)) if chemin.exists() else {}
-    for nom in ('SERVER_URL', 'AGENT_KEY', 'LEGACY_PIN', 'AGENT_IDLE_SECONDS', 'AGENT_POLL_SECONDS'):
+    for nom in (
+        'SERVER_URL',
+        'AGENT_KEY',
+        'LEGACY_PIN',
+        'AGENT_IDLE_SECONDS',
+        'AGENT_POLL_SECONDS',
+    ):
         if not valeurs.get(nom) and os.environ.get(nom):
             valeurs[nom] = os.environ[nom]
     manquantes = [n for n in ('SERVER_URL', 'AGENT_KEY', 'LEGACY_PIN') if not valeurs.get(n)]

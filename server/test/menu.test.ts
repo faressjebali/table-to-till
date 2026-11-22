@@ -233,8 +233,8 @@ describe('GET /menu', () => {
 describe('GET /menu avec un jeton staff', () => {
   it('renvoie le posCode de chaque article', async () => {
     const token = await tokenFor('barista');
-    expect(await findItem('Fondant au chocolat', token)).toMatchObject({ posCode: '53' });
-    expect(await findItem('Grenade', token)).toMatchObject({ posCode: '134' });
+    expect(await findItem('Fondant au chocolat', token)).toMatchObject({ posCode: '253' });
+    expect(await findItem('Grenade', token)).toMatchObject({ posCode: '334' });
   });
 
   it.each([
@@ -324,7 +324,7 @@ describe('PATCH /menu-items/:id/availability', () => {
   it('répond avec la disponibilité du staff après la fermeture', async () => {
     vi.setSystemTime(MONDAY_22H30);
     const res = await setAvailable('manager', 'Espresso', true);
-    expect(res.body).toMatchObject({ available: true, posCode: '10' });
+    expect(res.body).toMatchObject({ available: true, posCode: '210' });
   });
 
   it('reste hors horaire même sans rupture', async () => {

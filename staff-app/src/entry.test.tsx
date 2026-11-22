@@ -144,7 +144,7 @@ describe('brouillon de commande', () => {
     expect(lines).toHaveLength(2);
     expect(lines[1]?.note).toBe('sans sucre');
     expect(draftCount(lines)).toBe(3);
-    expect(draftTotal(lines, items)).toBe(20000);
+    expect(draftTotal(lines, items)).toBe(25500);
   });
 
   it('chaque extra coché devient une ligne de 1, au format du contrat', () => {

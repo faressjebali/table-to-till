@@ -159,16 +159,23 @@ class CaisseLegacy:
             raise EchecCaisse('MULTIPLE_TICKETS', f'table {table} : plusieurs tickets ouverts')
 
     def _verifier_fresh_blends(self, table: str) -> None:
-        """Bug connu : le bouton « FRESH BLENDS » s'affiche « Express ». Seul remède (Fares, 26/10) :
-        QUITTER, retaper le PIN, rouvrir la table. Un essai, sinon échec."""
+        """Bug connu : le bouton « FRESH BLENDS » s'affiche « Express ».
+
+        Seul remède (relevé au café) : QUITTER, retaper le PIN, rouvrir la table.
+        Un essai, sinon échec.
+        """
         for essai in range(2):
             self._page(PAGE_1)
             categories = self._categories()
             if FRESH_BLENDS in categories or 'Express' not in categories:
                 return
             if essai == 1:
-                raise EchecCaisse('CATEGORY_LABEL_BUG', '« FRESH BLENDS » toujours affiché « Express »')
-            self._journal.warning('bouton FRESH BLENDS affiché « Express » : QUITTER et nouveau PIN')
+                raise EchecCaisse(
+                    'CATEGORY_LABEL_BUG', '« FRESH BLENDS » toujours affiché « Express »'
+                )
+            self._journal.warning(
+                'bouton FRESH BLENDS affiché « Express » : QUITTER et nouveau PIN'
+            )
             if not self._sortir():
                 raise EchecCaisse('SCREEN_UNEXPECTED', "QUITTER sans retour à l'écran PIN")
             self._vers_plan()
@@ -279,7 +286,8 @@ class CaisseLegacy:
 
     def _regler(self, tache: Tache, mode: str) -> None:
         """`cash` (Espèces), `card` (Paiement → CARTE) ou `bill` (NOTE). Avant de
-        toucher l'argent : table avec des lignes, toutes envoyées, et `fieldTotal` = `expectedTotal` ;
+        toucher l'argent : table avec des lignes, toutes envoyées,
+        et `fieldTotal` = `expectedTotal` ;
         sinon QUITTER, rien n'est encaissé."""
         table = str(tache['tableNumber'])
         attendu = int(tache['expectedTotal'])
