@@ -218,7 +218,9 @@ Commande tapée par un serveur : on démarre directement à l'étape 4.
 - Vérifie l'écran attendu avant chaque étape ; sinon s'arrête, ne devine jamais, signale l'échec au serveur, journalise tout.
 - Lancé **à la main chaque matin** par le staff, une fois le PC ouvert et LegacyPOS synchronisé avec NACEF (pas au démarrage de Windows, `docs/decisions.md` 26/10). Tant qu'il ne tourne pas, les tâches attendent dans la file et l'app staff affiche que l'agent ne répond pas.
 
-## 8. Émulateur LegacyPOS (`pos-emulator/`)
+## 8. Émulateur LegacyPOS (`pos-emulator/`, non publié)
+
+Il reproduit l'interface d'un logiciel tiers : il reste dans le dépôt privé de l'équipe (voir `docs/pos.md`).
 
 - Application Windows qui reproduit les écrans de LegacyPOS utilisés par l'agent, **avec les mêmes noms de contrôles** : écran PIN, plan des tables, saisie de table (catégories, boutons d'articles avec leur code), validation, retour au plan ; puis encaissement et addition.
 - Construit à partir de la vidéo de saisie réelle (`docs/pos.md`).
