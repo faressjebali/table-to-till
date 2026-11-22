@@ -2,7 +2,7 @@
   "name": "coffee-qr",
   "private": true,
   "type": "module",
-  "description": "Outils partagés du repo (lint, formatage). Chaque projet a ses propres dépendances.",
+  "description": "Shared repo tooling (lint, format) and the in-browser demo. Each project has its own dependencies.",
   "engines": {
     "node": "22.x"
   },
@@ -13,7 +13,10 @@
     "format:check": "prettier --check .",
     "test:scripts": "node --test scripts/*.test.mjs",
     "build": "npm --prefix server run build && npm --prefix customer-web run build && npm --prefix staff-app run build",
-    "heroku-postbuild": "npm --prefix server ci --include=dev && npm --prefix customer-web ci --include=dev && npm --prefix staff-app ci --include=dev && npm run build"
+    "heroku-postbuild": "npm --prefix server ci --include=dev && npm --prefix customer-web ci --include=dev && npm --prefix staff-app ci --include=dev && npm run build",
+    "demo:data": "bash demo/scripts/snapshot.sh",
+    "demo:build": "node demo/scripts/build-site.mjs",
+    "demo": "node demo/scripts/build-site.mjs && node demo/scripts/serve.mjs"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

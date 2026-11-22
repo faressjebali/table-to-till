@@ -12,7 +12,10 @@ import { useSession } from './useSession';
 // App staff : installation d'abord (iPhone), puis connexion et, à la première connexion,
 // changement du mot de passe temporaire. `requireInstall` : vrai dans la version construite
 // (build, preview, déploiement), faux avec `npm run dev` (pas d'installation possible en http).
-export function App({ requireInstall = import.meta.env.PROD }: { requireInstall?: boolean }) {
+// La démo en ligne s'ouvre dans le navigateur, sans installation.
+const INSTALL_REQUIRED = import.meta.env.PROD && import.meta.env.VITE_DEMO !== '1';
+
+export function App({ requireInstall = INSTALL_REQUIRED }: { requireInstall?: boolean }) {
   const [device] = useState(currentDevice);
   const gate = installGate(device, requireInstall);
 

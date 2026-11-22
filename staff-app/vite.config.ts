@@ -6,7 +6,26 @@ import { defineConfig } from 'vitest/config';
 // passe aussi par le Wi-Fi. Port 5174 : le menu QR (customer-web) est sur 5173.
 const SERVER = 'http://localhost:3000';
 
+// Démo (`vite --mode demo`, demo/README.md) : le faux temps réel remplace socket.io-client et
+// aucune clé de notification n'est lue.
+// Chemin d'un fichier à côté de cette config (sans les types de Node), sous Windows aussi.
+const local = (path: string) =>
+  decodeURIComponent(new URL(path, import.meta.url).pathname).replace(/^\/(?=[A-Za-z]:)/, '');
+const demo = (mode: string) =>
+  mode === 'demo'
+    ? {
+        resolve: {
+          alias: { 'socket.io-client': local('../demo/backend/bus.ts') },
+        },
+        define: {
+          'import.meta.env.VITE_DEMO': JSON.stringify('1'),
+          'import.meta.env.VITE_VAPID_PUBLIC_KEY': JSON.stringify(''),
+        },
+      }
+    : {};
+
 export default defineConfig(({ mode }) => ({
+  ...demo(mode),
   plugins: [react()],
   // Chemin de l'app : `/` par défaut ; STAFF_BASE_PATH (ex. `/staff/`) quand le serveur sert les
   // deux apps à la même adresse (SERVE_WEB). Lu dans le .env de la racine ou l'environnement.

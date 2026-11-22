@@ -14,15 +14,27 @@ if (!root) throw new Error('#root introuvable dans index.html');
 applyTheme(loadTheme());
 unlockSoundOnFirstTouch();
 
-createRoot(root).render(
-  <StrictMode>
-    <App />
-  </StrictMode>,
-);
+const render = () =>
+  createRoot(root).render(
+    <StrictMode>
+      <App />
+    </StrictMode>,
+  );
+
+// Démo (`--mode demo`) : faux serveur dans le navigateur, données fictives (demo/README.md).
+// Hors démo, ce bloc disparaît du build.
+if (import.meta.env.VITE_DEMO === '1') {
+  void import('../../demo/backend/install').then(({ installDemo }) => {
+    installDemo('staff', import.meta.env.BASE_URL.replace(/staff\/$/, 'menu/'));
+    render();
+  });
+} else {
+  render();
+}
 
 // Service worker : installation de l'app, puis notifications push. Seulement dans la version
 // construite : en développement, il resterait dans le navigateur avec une ancienne version.
-if (import.meta.env.PROD && 'serviceWorker' in navigator) {
+if (import.meta.env.PROD && import.meta.env.VITE_DEMO !== '1' && 'serviceWorker' in navigator) {
   window.addEventListener('load', () => {
     // Chemin de l'app (`/`, ou `/staff/` sur un hébergement) : le service worker ne gère que
     // l'app staff, jamais le menu QR ni l'API.

@@ -7,13 +7,7 @@ import tseslint from 'typescript-eslint';
 
 export default tseslint.config(
   {
-    ignores: [
-      '**/node_modules/',
-      '**/dist/',
-      '**/build/',
-      '**/coverage/',
-      '**/.venv/',
-    ],
+    ignores: ['**/node_modules/', '**/dist/', '**/build/', '**/coverage/', '**/.venv/'],
   },
 
   // Base commune
@@ -45,6 +39,16 @@ export default tseslint.config(
       ...reactHooks.configs.recommended.rules,
       'react-refresh/only-export-components': ['warn', { allowConstantExport: true }],
     },
+  },
+
+  // Démo : faux serveur dans le navigateur (demo/backend), scripts de la démo en Node
+  {
+    files: ['demo/backend/**/*.ts'],
+    languageOptions: { globals: globals.browser },
+  },
+  {
+    files: ['demo/scripts/**/*.mjs'],
+    languageOptions: { globals: globals.node },
   },
 
   // Fichiers de config et scripts en JS (ce fichier, vite.config, scripts/*.mjs...)

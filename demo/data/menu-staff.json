@@ -1,0 +1,1667 @@
+{
+  "categories": [
+    {
+      "id": 1,
+      "name": { "fr": "Formules petit-déjeuner", "en": "Breakfast sets" },
+      "section": "food",
+      "display": "list",
+      "sortOrder": 1,
+      "items": [
+        {
+          "id": 1,
+          "categoryId": 1,
+          "name": { "fr": "Early Bird", "en": "Early Bird" },
+          "description": {
+            "fr": "Café ou thé, pain toasté, confiture, miel, Eau 0,5L",
+            "en": "Coffee or tea, toasted bread, jam, honey, 0.5L water"
+          },
+          "price": 10500,
+          "photoUrl": null,
+          "available": false,
+          "unavailableReason": "outside_hours",
+          "availability": { "days": [1, 2, 3, 4, 5, 6, 7], "from": "08:00", "until": "12:00" },
+          "suggestedExtraIds": [],
+          "choiceGroups": ["hot_drink"],
+          "noteHint": null,
+          "station": "both",
+          "posCode": "215"
+        },
+        {
+          "id": 2,
+          "categoryId": 1,
+          "name": { "fr": "Sunrise Plate", "en": "Sunrise Plate" },
+          "description": {
+            "fr": "Café ou thé, pain toasté, confiture, miel, omelette ou œufs brouillés, Eau 0,5L",
+            "en": "Coffee or tea, toasted bread, jam, honey, omelette or scrambled eggs, 0.5L water"
+          },
+          "price": 20500,
+          "photoUrl": null,
+          "available": false,
+          "unavailableReason": "outside_hours",
+          "availability": { "days": [1, 2, 3, 4, 5, 6, 7], "from": "08:00", "until": "12:00" },
+          "suggestedExtraIds": [],
+          "choiceGroups": ["hot_drink", "eggs"],
+          "noteHint": null,
+          "station": "both",
+          "posCode": "229"
+        },
+        {
+          "id": 3,
+          "categoryId": 1,
+          "name": { "fr": "Full Morning", "en": "Full Morning" },
+          "description": {
+            "fr": "Café ou thé, pain toasté, confiture, miel, omelette ou œufs brouillés, Jus de saison, Eau 1L",
+            "en": "Coffee or tea, toasted bread, jam, honey, omelette or scrambled eggs, seasonal juice, 1L water"
+          },
+          "price": 32000,
+          "photoUrl": null,
+          "available": false,
+          "unavailableReason": "outside_hours",
+          "availability": { "days": [1, 2, 3, 4, 5, 6, 7], "from": "08:00", "until": "12:00" },
+          "suggestedExtraIds": [],
+          "choiceGroups": ["hot_drink", "eggs", "seasonal_juice"],
+          "noteHint": null,
+          "station": "both",
+          "posCode": "230"
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "name": { "fr": "Œufs", "en": "Eggs" },
+      "section": "food",
+      "display": "list",
+      "sortOrder": 2,
+      "items": [
+        {
+          "id": 4,
+          "categoryId": 2,
+          "name": { "fr": "Œufs brouillés", "en": "Scrambled eggs" },
+          "description": {
+            "fr": "Œufs (4), salade classique, pickles maison",
+            "en": "Eggs (4), classic salad, homemade pickles"
+          },
+          "price": 9000,
+          "photoUrl": null,
+          "available": false,
+          "unavailableReason": "outside_hours",
+          "availability": { "days": [1, 2, 3, 4, 5, 6, 7], "from": "08:00", "until": "15:00" },
+          "suggestedExtraIds": [7, 8, 9, 11, 12, 14, 15],
+          "choiceGroups": [],
+          "noteHint": null,
+          "station": "kitchen",
+          "posCode": "233"
+        },
+        {
+          "id": 5,
+          "categoryId": 2,
+          "name": { "fr": "Omelette nature", "en": "Plain omelette" },
+          "description": {
+            "fr": "Œufs (4), salade classique, pickles maison",
+            "en": "Eggs (4), classic salad, homemade pickles"
+          },
+          "price": 13500,
+          "photoUrl": null,
+          "available": false,
+          "unavailableReason": "outside_hours",
+          "availability": { "days": [1, 2, 3, 4, 5, 6, 7], "from": "08:00", "until": "15:00" },
+          "suggestedExtraIds": [7, 8, 9, 11, 12, 14, 15],
+          "choiceGroups": [],
+          "noteHint": null,
+          "station": "kitchen",
+          "posCode": "234"
+        },
+        {
+          "id": 6,
+          "categoryId": 2,
+          "name": { "fr": "Œufs Bénédicte", "en": "Eggs Benedict" },
+          "description": {
+            "fr": "Pain brioché, œufs pochés, sauce hollandaise, salade classique, pickles maison",
+            "en": "Brioche bread, poached eggs, hollandaise sauce, classic salad, homemade pickles"
+          },
+          "price": 14500,
+          "photoUrl": null,
+          "available": false,
+          "unavailableReason": "outside_hours",
+          "availability": { "days": [1, 2, 3, 4, 5, 6, 7], "from": "08:00", "until": "15:00" },
+          "suggestedExtraIds": [7, 8, 9, 11, 12, 14, 15],
+          "choiceGroups": [],
+          "noteHint": null,
+          "station": "kitchen",
+          "posCode": "235"
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "name": { "fr": "Extras", "en": "Extras" },
+      "section": "food",
+      "display": "grid",
+      "sortOrder": 3,
+      "items": [
+        {
+          "id": 7,
+          "categoryId": 3,
+          "name": { "fr": "Épinards", "en": "Spinach" },
+          "description": null,
+          "price": 6000,
+          "photoUrl": null,
+          "available": true,
+          "unavailableReason": null,
+          "availability": { "days": [1, 2, 3, 4, 5, 6, 7], "from": null, "until": null },
+          "suggestedExtraIds": [],
+          "choiceGroups": [],
+          "noteHint": null,
+          "station": "kitchen",
+          "posCode": "280"
+        },
+        {
+          "id": 8,
+          "categoryId": 3,
+          "name": { "fr": "Champignons", "en": "Mushrooms" },
+          "description": null,
+          "price": 6000,
+          "photoUrl": null,
+          "available": true,
+          "unavailableReason": null,
+          "availability": { "days": [1, 2, 3, 4, 5, 6, 7], "from": null, "until": null },
+          "suggestedExtraIds": [],
+          "choiceGroups": [],
+          "noteHint": null,
+          "station": "kitchen",
+          "posCode": "281"
+        },
+        {
+          "id": 9,
+          "categoryId": 3,
+          "name": { "fr": "Avocat", "en": "Avocado" },
+          "description": null,
+          "price": 7000,
+          "photoUrl": null,
+          "available": true,
+          "unavailableReason": null,
+          "availability": { "days": [1, 2, 3, 4, 5, 6, 7], "from": null, "until": null },
+          "suggestedExtraIds": [],
+          "choiceGroups": [],
+          "noteHint": null,
+          "station": "kitchen",
+          "posCode": "282"
+        },
+        {
+          "id": 10,
+          "categoryId": 3,
+          "name": { "fr": "Frites maison", "en": "Homemade fries" },
+          "description": null,
+          "price": 8000,
+          "photoUrl": null,
+          "available": true,
+          "unavailableReason": null,
+          "availability": { "days": [1, 2, 3, 4, 5, 6, 7], "from": null, "until": null },
+          "suggestedExtraIds": [],
+          "choiceGroups": [],
+          "noteHint": null,
+          "station": "kitchen",
+          "posCode": "283"
+        },
+        {
+          "id": 11,
+          "categoryId": 3,
+          "name": { "fr": "Gouda", "en": "Gouda" },
+          "description": null,
+          "price": 6500,
+          "photoUrl": null,
+          "available": true,
+          "unavailableReason": null,
+          "availability": { "days": [1, 2, 3, 4, 5, 6, 7], "from": null, "until": null },
+          "suggestedExtraIds": [],
+          "choiceGroups": [],
+          "noteHint": null,
+          "station": "kitchen",
+          "posCode": "284"
+        },
+        {
+          "id": 12,
+          "categoryId": 3,
+          "name": { "fr": "Cheddar", "en": "Cheddar" },
+          "description": null,
+          "price": 6000,
+          "photoUrl": null,
+          "available": true,
+          "unavailableReason": null,
+          "availability": { "days": [1, 2, 3, 4, 5, 6, 7], "from": null, "until": null },
+          "suggestedExtraIds": [],
+          "choiceGroups": [],
+          "noteHint": null,
+          "station": "kitchen",
+          "posCode": "285"
+        },
+        {
+          "id": 13,
+          "categoryId": 3,
+          "name": { "fr": "Thon", "en": "Tuna" },
+          "description": null,
+          "price": 7500,
+          "photoUrl": null,
+          "available": true,
+          "unavailableReason": null,
+          "availability": { "days": [1, 2, 3, 4, 5, 6, 7], "from": null, "until": null },
+          "suggestedExtraIds": [],
+          "choiceGroups": [],
+          "noteHint": null,
+          "station": "kitchen",
+          "posCode": "289"
+        },
+        {
+          "id": 14,
+          "categoryId": 3,
+          "name": { "fr": "Poulet", "en": "Chicken" },
+          "description": null,
+          "price": 6000,
+          "photoUrl": null,
+          "available": true,
+          "unavailableReason": null,
+          "availability": { "days": [1, 2, 3, 4, 5, 6, 7], "from": null, "until": null },
+          "suggestedExtraIds": [],
+          "choiceGroups": [],
+          "noteHint": null,
+          "station": "kitchen",
+          "posCode": "290"
+        },
+        {
+          "id": 15,
+          "categoryId": 3,
+          "name": { "fr": "Bacon de bœuf", "en": "Beef bacon" },
+          "description": null,
+          "price": 8500,
+          "photoUrl": null,
+          "available": true,
+          "unavailableReason": null,
+          "availability": { "days": [1, 2, 3, 4, 5, 6, 7], "from": null, "until": null },
+          "suggestedExtraIds": [],
+          "choiceGroups": [],
+          "noteHint": null,
+          "station": "kitchen",
+          "posCode": "291"
+        },
+        {
+          "id": 16,
+          "categoryId": 3,
+          "name": { "fr": "Œuf", "en": "Egg" },
+          "description": null,
+          "price": 2500,
+          "photoUrl": null,
+          "available": true,
+          "unavailableReason": null,
+          "availability": { "days": [1, 2, 3, 4, 5, 6, 7], "from": null, "until": null },
+          "suggestedExtraIds": [],
+          "choiceGroups": [],
+          "noteHint": null,
+          "station": "kitchen",
+          "posCode": "307"
+        },
+        {
+          "id": 17,
+          "categoryId": 3,
+          "name": { "fr": "Steak", "en": "Steak" },
+          "description": null,
+          "price": 7500,
+          "photoUrl": null,
+          "available": true,
+          "unavailableReason": null,
+          "availability": { "days": [1, 2, 3, 4, 5, 6, 7], "from": null, "until": null },
+          "suggestedExtraIds": [],
+          "choiceGroups": [],
+          "noteHint": null,
+          "station": "kitchen",
+          "posCode": "309"
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "name": { "fr": "Salades", "en": "Salads" },
+      "section": "food",
+      "display": "list",
+      "sortOrder": 4,
+      "items": [
+        {
+          "id": 18,
+          "categoryId": 4,
+          "name": { "fr": "Salade classique", "en": "Classic salad" },
+          "description": {
+            "fr": "Laitue, tomates cerises, graines de courge, vinaigrette maison, pickles",
+            "en": "Lettuce, cherry tomatoes, pumpkin seeds, house vinaigrette, pickles"
+          },
+          "price": 11500,
+          "photoUrl": null,
+          "available": true,
+          "unavailableReason": null,
+          "availability": { "days": [1, 2, 3, 4, 5, 6, 7], "from": null, "until": null },
+          "suggestedExtraIds": [16, 9, 14, 13],
+          "choiceGroups": [],
+          "noteHint": null,
+          "station": "kitchen",
+          "posCode": "236"
+        },
+        {
+          "id": 19,
+          "categoryId": 4,
+          "name": { "fr": "Salade César", "en": "Caesar salad" },
+          "description": {
+            "fr": "Romaine, poulet cuit à basse température, tomates cerises, croûtons, Grana, sauce César",
+            "en": "Romaine, slow-cooked chicken, cherry tomatoes, croutons, Grana, Caesar sauce"
+          },
+          "price": 37500,
+          "photoUrl": null,
+          "available": true,
+          "unavailableReason": null,
+          "availability": { "days": [1, 2, 3, 4, 5, 6, 7], "from": null, "until": null },
+          "suggestedExtraIds": [16, 9, 15],
+          "choiceGroups": [],
+          "noteHint": null,
+          "station": "kitchen",
+          "posCode": "237"
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "name": { "fr": "Plats", "en": "Mains" },
+      "section": "food",
+      "display": "list",
+      "sortOrder": 5,
+      "items": [
+        {
+          "id": 20,
+          "categoryId": 5,
+          "name": { "fr": "Power Bowl", "en": "Power Bowl" },
+          "description": {
+            "fr": "Poulet cuit à basse température, bulgur, champignons, épinards, Grana, œuf poché, salade classique, sauce César",
+            "en": "Slow-cooked chicken, bulgur, mushrooms, spinach, Grana, poached egg, classic salad, Caesar sauce"
+          },
+          "price": 31500,
+          "photoUrl": null,
+          "available": true,
+          "unavailableReason": null,
+          "availability": { "days": [1, 2, 3, 4, 5, 6, 7], "from": null, "until": null },
+          "suggestedExtraIds": [16, 9],
+          "choiceGroups": [],
+          "noteHint": null,
+          "station": "kitchen",
+          "posCode": "239"
+        },
+        {
+          "id": 21,
+          "categoryId": 5,
+          "name": { "fr": "VG Power Bowl", "en": "VG Power Bowl" },
+          "description": {
+            "fr": "Falafel, salade bulgur, salade classique, sauce tahini",
+            "en": "Falafel, bulgur salad, classic salad, tahini sauce"
+          },
+          "price": 22000,
+          "photoUrl": null,
+          "available": true,
+          "unavailableReason": null,
+          "availability": { "days": [1, 2, 3, 4, 5, 6, 7], "from": null, "until": null },
+          "suggestedExtraIds": [9],
+          "choiceGroups": [],
+          "noteHint": null,
+          "station": "kitchen",
+          "posCode": "240"
+        },
+        {
+          "id": 22,
+          "categoryId": 5,
+          "name": { "fr": "Spiced Lentil Bowl", "en": "Spiced Lentil Bowl" },
+          "description": {
+            "fr": "Riz Masala, œufs brouillés, Crispy chicken, concombre sunomono, sauce Général Tao, sweet chili sauce, pickles",
+            "en": "Masala rice, scrambled eggs, Crispy chicken, sunomono cucumber, General Tso sauce, sweet chili sauce, pickles"
+          },
+          "price": 29000,
+          "photoUrl": null,
+          "available": true,
+          "unavailableReason": null,
+          "availability": { "days": [1, 2, 3, 4, 5, 6, 7], "from": null, "until": null },
+          "suggestedExtraIds": [16],
+          "choiceGroups": [],
+          "noteHint": null,
+          "station": "kitchen",
+          "posCode": "330"
+        }
+      ]
+    },
+    {
+      "id": 6,
+      "name": { "fr": "Starters", "en": "Starters" },
+      "section": "food",
+      "display": "list",
+      "sortOrder": 6,
+      "items": [
+        {
+          "id": 23,
+          "categoryId": 6,
+          "name": { "fr": "Falafel", "en": "Falafel" },
+          "description": {
+            "fr": "Falafel, hommous, sauce tahini, salade classique",
+            "en": "Falafel, hummus, tahini sauce, classic salad"
+          },
+          "price": 19500,
+          "photoUrl": null,
+          "available": true,
+          "unavailableReason": null,
+          "availability": { "days": [1, 2, 3, 4, 5, 6, 7], "from": null, "until": null },
+          "suggestedExtraIds": [],
+          "choiceGroups": [],
+          "noteHint": null,
+          "station": "kitchen",
+          "posCode": "243"
+        },
+        {
+          "id": 24,
+          "categoryId": 6,
+          "name": { "fr": "Chicken Tenders", "en": "Chicken Tenders" },
+          "description": {
+            "fr": "Poulet Crispy, sauce Général Tao, graines de sésame, herbes fraîches, pickles",
+            "en": "Crispy chicken, General Tso sauce, sesame seeds, fresh herbs, pickles"
+          },
+          "price": 15000,
+          "photoUrl": null,
+          "available": true,
+          "unavailableReason": null,
+          "availability": { "days": [1, 2, 3, 4, 5, 6, 7], "from": null, "until": null },
+          "suggestedExtraIds": [],
+          "choiceGroups": [],
+          "noteHint": null,
+          "station": "kitchen",
+          "posCode": "244"
+        },
+        {
+          "id": 25,
+          "categoryId": 6,
+          "name": { "fr": "Chakchouka", "en": "Shakshuka" },
+          "description": {
+            "fr": "Tomate, oignon, poivron, œufs mollets",
+            "en": "Tomato, onion, bell pepper, soft-boiled eggs"
+          },
+          "price": 16000,
+          "photoUrl": null,
+          "available": true,
+          "unavailableReason": null,
+          "availability": { "days": [1, 2, 3, 4, 5, 6, 7], "from": null, "until": null },
+          "suggestedExtraIds": [10],
+          "choiceGroups": [],
+          "noteHint": null,
+          "station": "kitchen",
+          "posCode": "245"
+        }
+      ]
+    },
+    {
+      "id": 7,
+      "name": { "fr": "Sandwichs", "en": "Sandwiches" },
+      "section": "food",
+      "display": "list",
+      "sortOrder": 7,
+      "items": [
+        {
+          "id": 26,
+          "categoryId": 7,
+          "name": { "fr": "Cheese Burger", "en": "Cheese Burger" },
+          "description": {
+            "fr": "Steak haché de bœuf, sauce maison, cheddar, frites et salade classique",
+            "en": "Beef patty, house sauce, cheddar, fries and classic salad"
+          },
+          "price": 28500,
+          "photoUrl": null,
+          "available": true,
+          "unavailableReason": null,
+          "availability": { "days": [1, 2, 3, 4, 5, 6, 7], "from": null, "until": null },
+          "suggestedExtraIds": [15, 16, 11, 12, 17],
+          "choiceGroups": [],
+          "noteHint": null,
+          "station": "kitchen",
+          "posCode": "250"
+        },
+        {
+          "id": 27,
+          "categoryId": 7,
+          "name": { "fr": "Club sandwich poulet", "en": "Chicken club sandwich" },
+          "description": {
+            "fr": "Laitue, tomate, blanc de poulet grillé, gouda, œuf, mayonnaise maison, salade classique",
+            "en": "Lettuce, tomato, grilled chicken breast, gouda, egg, homemade mayonnaise, classic salad"
+          },
+          "price": 21500,
+          "photoUrl": null,
+          "available": true,
+          "unavailableReason": null,
+          "availability": { "days": [1, 2, 3, 4, 5, 6, 7], "from": null, "until": null },
+          "suggestedExtraIds": [15, 10, 16],
+          "choiceGroups": [],
+          "noteHint": null,
+          "station": "kitchen",
+          "posCode": "251"
+        },
+        {
+          "id": 28,
+          "categoryId": 7,
+          "name": { "fr": "Crispy Chicken Burger", "en": "Crispy Chicken Burger" },
+          "description": {
+            "fr": "Crispy chicken, laitue, tomate, oignon, sweet chili sauce, cheddar, frites, salade classique et pickles",
+            "en": "Crispy chicken, lettuce, tomato, onion, sweet chili sauce, cheddar, fries, classic salad and pickles"
+          },
+          "price": 22000,
+          "photoUrl": null,
+          "available": true,
+          "unavailableReason": null,
+          "availability": { "days": [1, 2, 3, 4, 5, 6, 7], "from": null, "until": null },
+          "suggestedExtraIds": [15, 11, 12, 16],
+          "choiceGroups": [],
+          "noteHint": null,
+          "station": "kitchen",
+          "posCode": "252"
+        }
+      ]
+    },
+    {
+      "id": 8,
+      "name": { "fr": "Cakes & Sweets", "en": "Cakes & Sweets" },
+      "section": "food",
+      "display": "list",
+      "sortOrder": 8,
+      "items": [
+        {
+          "id": 29,
+          "categoryId": 8,
+          "name": { "fr": "Fondant au chocolat", "en": "Chocolate fondant" },
+          "description": {
+            "fr": "Chocolat noir, poudre d'amande, sucre brun",
+            "en": "Dark chocolate, almond flour, brown sugar"
+          },
+          "price": 11500,
+          "photoUrl": null,
+          "available": true,
+          "unavailableReason": null,
+          "availability": { "days": [1, 2, 3, 4, 5, 6, 7], "from": null, "until": null },
+          "suggestedExtraIds": [],
+          "choiceGroups": [],
+          "noteHint": null,
+          "station": "both",
+          "posCode": "253"
+        },
+        {
+          "id": 30,
+          "categoryId": 8,
+          "name": { "fr": "Carrot cake", "en": "Carrot cake" },
+          "description": {
+            "fr": "Carotte, noix, cannelle, noix de muscade, sucre brun, cream cheese",
+            "en": "Carrot, walnuts, cinnamon, nutmeg, brown sugar, cream cheese"
+          },
+          "price": 9500,
+          "photoUrl": null,
+          "available": true,
+          "unavailableReason": null,
+          "availability": { "days": [1, 2, 3, 4, 5, 6, 7], "from": null, "until": null },
+          "suggestedExtraIds": [],
+          "choiceGroups": [],
+          "noteHint": null,
+          "station": "both",
+          "posCode": "254"
+        },
+        {
+          "id": 31,
+          "categoryId": 8,
+          "name": { "fr": "Pancakes au caramel beurre salé", "en": "Salted caramel pancakes" },
+          "description": {
+            "fr": "Caramel beurre salé, chantilly, amandes effilées",
+            "en": "Salted caramel, whipped cream, flaked almonds"
+          },
+          "price": 20000,
+          "photoUrl": null,
+          "available": true,
+          "unavailableReason": null,
+          "availability": { "days": [1, 2, 3, 4, 5, 6, 7], "from": null, "until": null },
+          "suggestedExtraIds": [39],
+          "choiceGroups": [],
+          "noteHint": null,
+          "station": "kitchen",
+          "posCode": "256"
+        },
+        {
+          "id": 32,
+          "categoryId": 8,
+          "name": { "fr": "Pain perdu", "en": "French toast" },
+          "description": {
+            "fr": "Caramel beurre salé, chantilly, noisettes pralinées",
+            "en": "Salted caramel, whipped cream, praline hazelnuts"
+          },
+          "price": 13500,
+          "photoUrl": null,
+          "available": true,
+          "unavailableReason": null,
+          "availability": { "days": [1, 2, 3, 4, 5, 6, 7], "from": null, "until": null },
+          "suggestedExtraIds": [39],
+          "choiceGroups": [],
+          "noteHint": null,
+          "station": "kitchen",
+          "posCode": "257"
+        },
+        {
+          "id": 33,
+          "categoryId": 8,
+          "name": { "fr": "Granola", "en": "Granola" },
+          "description": {
+            "fr": "Yaourt grec, granola aux fruits secs, dattes, sirop de dattes",
+            "en": "Greek yogurt, dried fruit granola, dates, date syrup"
+          },
+          "price": 19000,
+          "photoUrl": null,
+          "available": true,
+          "unavailableReason": null,
+          "availability": { "days": [1, 2, 3, 4, 5, 6, 7], "from": null, "until": null },
+          "suggestedExtraIds": [],
+          "choiceGroups": [],
+          "noteHint": null,
+          "station": "both",
+          "posCode": "258"
+        },
+        {
+          "id": 34,
+          "categoryId": 8,
+          "name": { "fr": "Cookie chocolat", "en": "Chocolate cookie" },
+          "description": null,
+          "price": 5000,
+          "photoUrl": null,
+          "available": true,
+          "unavailableReason": null,
+          "availability": { "days": [1, 2, 3, 4, 5, 6, 7], "from": null, "until": null },
+          "suggestedExtraIds": [],
+          "choiceGroups": [],
+          "noteHint": null,
+          "station": "both",
+          "posCode": "306"
+        },
+        {
+          "id": 35,
+          "categoryId": 8,
+          "name": { "fr": "Cookie pomme cannelle", "en": "Apple cinnamon cookie" },
+          "description": null,
+          "price": 4500,
+          "photoUrl": null,
+          "available": true,
+          "unavailableReason": null,
+          "availability": { "days": [1, 2, 3, 4, 5, 6, 7], "from": null, "until": null },
+          "suggestedExtraIds": [],
+          "choiceGroups": [],
+          "noteHint": null,
+          "station": "both",
+          "posCode": "305"
+        }
+      ]
+    },
+    {
+      "id": 9,
+      "name": { "fr": "Extras sucrés", "en": "Sweet extras" },
+      "section": "food",
+      "display": "list",
+      "sortOrder": 9,
+      "items": [
+        {
+          "id": 36,
+          "categoryId": 9,
+          "name": { "fr": "Amandes effilées", "en": "Flaked almonds" },
+          "description": null,
+          "price": 5500,
+          "photoUrl": null,
+          "available": true,
+          "unavailableReason": null,
+          "availability": { "days": [1, 2, 3, 4, 5, 6, 7], "from": null, "until": null },
+          "suggestedExtraIds": [],
+          "choiceGroups": [],
+          "noteHint": null,
+          "station": "both",
+          "posCode": "260"
+        },
+        {
+          "id": 37,
+          "categoryId": 9,
+          "name": { "fr": "Caramel", "en": "Caramel" },
+          "description": null,
+          "price": 3000,
+          "photoUrl": null,
+          "available": true,
+          "unavailableReason": null,
+          "availability": { "days": [1, 2, 3, 4, 5, 6, 7], "from": null, "until": null },
+          "suggestedExtraIds": [],
+          "choiceGroups": [],
+          "noteHint": null,
+          "station": "both",
+          "posCode": "276"
+        },
+        {
+          "id": 38,
+          "categoryId": 9,
+          "name": { "fr": "Chantilly", "en": "Whipped cream" },
+          "description": null,
+          "price": 3500,
+          "photoUrl": null,
+          "available": true,
+          "unavailableReason": null,
+          "availability": { "days": [1, 2, 3, 4, 5, 6, 7], "from": null, "until": null },
+          "suggestedExtraIds": [],
+          "choiceGroups": [],
+          "noteHint": null,
+          "station": "both",
+          "posCode": "262"
+        },
+        {
+          "id": 39,
+          "categoryId": 9,
+          "name": { "fr": "Pommes cannelle caramélisées", "en": "Caramelized cinnamon apples" },
+          "description": null,
+          "price": 4500,
+          "photoUrl": null,
+          "available": true,
+          "unavailableReason": null,
+          "availability": { "days": [1, 2, 3, 4, 5, 6, 7], "from": null, "until": null },
+          "suggestedExtraIds": [],
+          "choiceGroups": [],
+          "noteHint": null,
+          "station": "both",
+          "posCode": "261"
+        }
+      ]
+    },
+    {
+      "id": 10,
+      "name": { "fr": "Kids Menu", "en": "Kids Menu" },
+      "section": "food",
+      "display": "list",
+      "sortOrder": 10,
+      "items": [
+        {
+          "id": 40,
+          "categoryId": 10,
+          "name": { "fr": "Kids Menu (Cookie)", "en": "Kids Menu (Cookie)" },
+          "description": {
+            "fr": "Mini Burger + frites + Cookie + Jus de saison",
+            "en": "Mini burger + fries + cookie + seasonal juice"
+          },
+          "price": 30500,
+          "photoUrl": null,
+          "available": true,
+          "unavailableReason": null,
+          "availability": { "days": [1, 2, 3, 4, 5, 6, 7], "from": null, "until": null },
+          "suggestedExtraIds": [],
+          "choiceGroups": ["seasonal_juice"],
+          "noteHint": null,
+          "station": "both",
+          "posCode": "264"
+        },
+        {
+          "id": 41,
+          "categoryId": 10,
+          "name": { "fr": "Kids Menu (Pancakes)", "en": "Kids Menu (Pancakes)" },
+          "description": {
+            "fr": "Mini Burger + frites + Pancakes au chocolat + Jus de saison",
+            "en": "Mini burger + fries + chocolate pancakes + seasonal juice"
+          },
+          "price": 27000,
+          "photoUrl": null,
+          "available": true,
+          "unavailableReason": null,
+          "availability": { "days": [1, 2, 3, 4, 5, 6, 7], "from": null, "until": null },
+          "suggestedExtraIds": [],
+          "choiceGroups": ["seasonal_juice"],
+          "noteHint": null,
+          "station": "both",
+          "posCode": "263"
+        },
+        {
+          "id": 42,
+          "categoryId": 10,
+          "name": { "fr": "Croque-monsieur", "en": "Croque-monsieur" },
+          "description": {
+            "fr": "Jambon de dinde, béchamel, gouda, frites",
+            "en": "Turkey ham, béchamel, gouda, fries"
+          },
+          "price": 18500,
+          "photoUrl": null,
+          "available": true,
+          "unavailableReason": null,
+          "availability": { "days": [1, 2, 3, 4, 5, 6, 7], "from": null, "until": null },
+          "suggestedExtraIds": [],
+          "choiceGroups": [],
+          "noteHint": null,
+          "station": "kitchen",
+          "posCode": null
+        },
+        {
+          "id": 43,
+          "categoryId": 10,
+          "name": { "fr": "Pancakes au chocolat", "en": "Chocolate pancakes" },
+          "description": null,
+          "price": 9500,
+          "photoUrl": null,
+          "available": true,
+          "unavailableReason": null,
+          "availability": { "days": [1, 2, 3, 4, 5, 6, 7], "from": null, "until": null },
+          "suggestedExtraIds": [],
+          "choiceGroups": [],
+          "noteHint": null,
+          "station": "kitchen",
+          "posCode": null
+        }
+      ]
+    },
+    {
+      "id": 11,
+      "name": { "fr": "Plat de la semaine", "en": "Dish of the week" },
+      "section": "food",
+      "display": "list",
+      "sortOrder": 11,
+      "items": []
+    },
+    {
+      "id": 12,
+      "name": { "fr": "Jus", "en": "Juices" },
+      "section": "drinks",
+      "display": "list",
+      "sortOrder": 12,
+      "items": [
+        {
+          "id": 45,
+          "categoryId": 12,
+          "name": { "fr": "Grenade", "en": "Pomegranate" },
+          "description": null,
+          "price": 11000,
+          "photoUrl": null,
+          "available": true,
+          "unavailableReason": null,
+          "availability": { "days": [1, 2, 3, 4, 5, 6, 7], "from": null, "until": null },
+          "suggestedExtraIds": [],
+          "choiceGroups": [],
+          "noteHint": null,
+          "station": "bar",
+          "posCode": "334"
+        },
+        {
+          "id": 46,
+          "categoryId": 12,
+          "name": { "fr": "Fraise", "en": "Strawberry" },
+          "description": null,
+          "price": 9500,
+          "photoUrl": null,
+          "available": true,
+          "unavailableReason": null,
+          "availability": { "days": [1, 2, 3, 4, 5, 6, 7], "from": null, "until": null },
+          "suggestedExtraIds": [],
+          "choiceGroups": [],
+          "noteHint": null,
+          "station": "bar",
+          "posCode": "201"
+        },
+        {
+          "id": 47,
+          "categoryId": 12,
+          "name": { "fr": "Mangue", "en": "Mango" },
+          "description": null,
+          "price": 11000,
+          "photoUrl": null,
+          "available": true,
+          "unavailableReason": null,
+          "availability": { "days": [1, 2, 3, 4, 5, 6, 7], "from": null, "until": null },
+          "suggestedExtraIds": [],
+          "choiceGroups": [],
+          "noteHint": null,
+          "station": "bar",
+          "posCode": "203"
+        },
+        {
+          "id": 48,
+          "categoryId": 12,
+          "name": { "fr": "Fruit de la passion", "en": "Passion fruit" },
+          "description": null,
+          "price": 14500,
+          "photoUrl": null,
+          "available": true,
+          "unavailableReason": null,
+          "availability": { "days": [1, 2, 3, 4, 5, 6, 7], "from": null, "until": null },
+          "suggestedExtraIds": [],
+          "choiceGroups": [],
+          "noteHint": null,
+          "station": "bar",
+          "posCode": "205"
+        },
+        {
+          "id": 49,
+          "categoryId": 12,
+          "name": { "fr": "Fruits rouges", "en": "Red berries" },
+          "description": null,
+          "price": 16500,
+          "photoUrl": null,
+          "available": true,
+          "unavailableReason": null,
+          "availability": { "days": [1, 2, 3, 4, 5, 6, 7], "from": null, "until": null },
+          "suggestedExtraIds": [],
+          "choiceGroups": [],
+          "noteHint": null,
+          "station": "bar",
+          "posCode": "206"
+        },
+        {
+          "id": 50,
+          "categoryId": 12,
+          "name": { "fr": "Mangue Passion", "en": "Mango Passion" },
+          "description": null,
+          "price": 13500,
+          "photoUrl": null,
+          "available": true,
+          "unavailableReason": null,
+          "availability": { "days": [1, 2, 3, 4, 5, 6, 7], "from": null, "until": null },
+          "suggestedExtraIds": [],
+          "choiceGroups": [],
+          "noteHint": null,
+          "station": "bar",
+          "posCode": "204"
+        },
+        {
+          "id": 51,
+          "categoryId": 12,
+          "name": { "fr": "Orange", "en": "Orange" },
+          "description": null,
+          "price": 11500,
+          "photoUrl": null,
+          "available": true,
+          "unavailableReason": null,
+          "availability": { "days": [1, 2, 3, 4, 5, 6, 7], "from": null, "until": null },
+          "suggestedExtraIds": [],
+          "choiceGroups": [],
+          "noteHint": null,
+          "station": "bar",
+          "posCode": null
+        }
+      ]
+    },
+    {
+      "id": 13,
+      "name": { "fr": "Fresh Blends", "en": "Fresh Blends" },
+      "section": "drinks",
+      "display": "list",
+      "sortOrder": 13,
+      "items": [
+        {
+          "id": 52,
+          "categoryId": 13,
+          "name": { "fr": "Citrus Boost", "en": "Citrus Boost" },
+          "description": {
+            "fr": "Pomme, carotte, gingembre, orange",
+            "en": "Apple, carrot, ginger, orange"
+          },
+          "price": 10500,
+          "photoUrl": null,
+          "available": true,
+          "unavailableReason": null,
+          "availability": { "days": [1, 2, 3, 4, 5, 6, 7], "from": null, "until": null },
+          "suggestedExtraIds": [],
+          "choiceGroups": [],
+          "noteHint": null,
+          "station": "bar",
+          "posCode": "208"
+        },
+        {
+          "id": 53,
+          "categoryId": 13,
+          "name": { "fr": "Mint Lemonade", "en": "Mint Lemonade" },
+          "description": {
+            "fr": "Citron, menthe, lait d'amande",
+            "en": "Lemon, mint, almond milk"
+          },
+          "price": 12500,
+          "photoUrl": null,
+          "available": true,
+          "unavailableReason": null,
+          "availability": { "days": [1, 2, 3, 4, 5, 6, 7], "from": null, "until": null },
+          "suggestedExtraIds": [],
+          "choiceGroups": [],
+          "noteHint": null,
+          "station": "bar",
+          "posCode": "209"
+        },
+        {
+          "id": 54,
+          "categoryId": 13,
+          "name": { "fr": "Beetroot", "en": "Beetroot" },
+          "description": {
+            "fr": "Betterave, pomme, carotte, gingembre, citron",
+            "en": "Beetroot, apple, carrot, ginger, lemon"
+          },
+          "price": 14500,
+          "photoUrl": null,
+          "available": true,
+          "unavailableReason": null,
+          "availability": { "days": [1, 2, 3, 4, 5, 6, 7], "from": null, "until": null },
+          "suggestedExtraIds": [],
+          "choiceGroups": [],
+          "noteHint": null,
+          "station": "bar",
+          "posCode": "228"
+        },
+        {
+          "id": 55,
+          "categoryId": 13,
+          "name": { "fr": "Green Detox", "en": "Green Detox" },
+          "description": { "fr": "Pomme, concombre, céleri", "en": "Apple, cucumber, celery" },
+          "price": 14500,
+          "photoUrl": null,
+          "available": true,
+          "unavailableReason": null,
+          "availability": { "days": [1, 2, 3, 4, 5, 6, 7], "from": null, "until": null },
+          "suggestedExtraIds": [],
+          "choiceGroups": [],
+          "noteHint": null,
+          "station": "bar",
+          "posCode": "227"
+        }
+      ]
+    },
+    {
+      "id": 14,
+      "name": { "fr": "Thé & Infusion", "en": "Tea & Infusions" },
+      "section": "drinks",
+      "display": "list",
+      "sortOrder": 14,
+      "items": [
+        {
+          "id": 56,
+          "categoryId": 14,
+          "name": { "fr": "Iced black tea", "en": "Iced black tea" },
+          "description": null,
+          "price": 7500,
+          "photoUrl": null,
+          "available": true,
+          "unavailableReason": null,
+          "availability": { "days": [1, 2, 3, 4, 5, 6, 7], "from": null, "until": null },
+          "suggestedExtraIds": [],
+          "choiceGroups": [],
+          "noteHint": null,
+          "station": "bar",
+          "posCode": "336"
+        },
+        {
+          "id": 57,
+          "categoryId": 14,
+          "name": { "fr": "Iced green tea", "en": "Iced green tea" },
+          "description": null,
+          "price": 10500,
+          "photoUrl": null,
+          "available": true,
+          "unavailableReason": null,
+          "availability": { "days": [1, 2, 3, 4, 5, 6, 7], "from": null, "until": null },
+          "suggestedExtraIds": [],
+          "choiceGroups": [],
+          "noteHint": null,
+          "station": "bar",
+          "posCode": "337"
+        },
+        {
+          "id": 58,
+          "categoryId": 14,
+          "name": { "fr": "Hibiscus", "en": "Hibiscus" },
+          "description": {
+            "fr": "Pomme, hibiscus, gingembre, pétales de rose",
+            "en": "Apple, hibiscus, ginger, rose petals"
+          },
+          "price": 14000,
+          "photoUrl": null,
+          "available": true,
+          "unavailableReason": null,
+          "availability": { "days": [1, 2, 3, 4, 5, 6, 7], "from": null, "until": null },
+          "suggestedExtraIds": [],
+          "choiceGroups": [],
+          "noteHint": null,
+          "station": "bar",
+          "posCode": "220"
+        },
+        {
+          "id": 59,
+          "categoryId": 14,
+          "name": { "fr": "Lemon grove", "en": "Lemon grove" },
+          "description": {
+            "fr": "Thé noir, fenouil, bâton de cannelle, anis étoilé, citron",
+            "en": "Black tea, fennel, cinnamon stick, star anise, lemon"
+          },
+          "price": 6500,
+          "photoUrl": null,
+          "available": true,
+          "unavailableReason": null,
+          "availability": { "days": [1, 2, 3, 4, 5, 6, 7], "from": null, "until": null },
+          "suggestedExtraIds": [],
+          "choiceGroups": [],
+          "noteHint": null,
+          "station": "bar",
+          "posCode": "219"
+        },
+        {
+          "id": 60,
+          "categoryId": 14,
+          "name": { "fr": "Ginger calm", "en": "Ginger calm" },
+          "description": {
+            "fr": "Gingembre, camomille, menthe, citron",
+            "en": "Ginger, chamomile, mint, lemon"
+          },
+          "price": 6500,
+          "photoUrl": null,
+          "available": true,
+          "unavailableReason": null,
+          "availability": { "days": [1, 2, 3, 4, 5, 6, 7], "from": null, "until": null },
+          "suggestedExtraIds": [],
+          "choiceGroups": [],
+          "noteHint": null,
+          "station": "bar",
+          "posCode": "221"
+        },
+        {
+          "id": 61,
+          "categoryId": 14,
+          "name": { "fr": "Chai Latte", "en": "Chai Latte" },
+          "description": {
+            "fr": "Thé noir, lait d'amande vanillé, cannelle, gingembre, miel, cardamome, anis étoilé",
+            "en": "Black tea, vanilla almond milk, cinnamon, ginger, honey, cardamom, star anise"
+          },
+          "price": 14500,
+          "photoUrl": null,
+          "available": true,
+          "unavailableReason": null,
+          "availability": { "days": [1, 2, 3, 4, 5, 6, 7], "from": null, "until": null },
+          "suggestedExtraIds": [],
+          "choiceGroups": [],
+          "noteHint": null,
+          "station": "bar",
+          "posCode": "222"
+        },
+        {
+          "id": 62,
+          "categoryId": 14,
+          "name": { "fr": "Golden Latte", "en": "Golden Latte" },
+          "description": {
+            "fr": "Lait d'amande, curcuma, cannelle, miel, écorce d'orange, gingembre, fenouil, poivre noir, anis étoilé",
+            "en": "Almond milk, turmeric, cinnamon, honey, orange peel, ginger, fennel, black pepper, star anise"
+          },
+          "price": 19000,
+          "photoUrl": null,
+          "available": true,
+          "unavailableReason": null,
+          "availability": { "days": [1, 2, 3, 4, 5, 6, 7], "from": null, "until": null },
+          "suggestedExtraIds": [],
+          "choiceGroups": [],
+          "noteHint": null,
+          "station": "bar",
+          "posCode": "223"
+        },
+        {
+          "id": 63,
+          "categoryId": 14,
+          "name": { "fr": "Verveine", "en": "Verbena" },
+          "description": { "fr": "Verveine, menthe, citron", "en": "Verbena, mint, lemon" },
+          "price": 6500,
+          "photoUrl": null,
+          "available": true,
+          "unavailableReason": null,
+          "availability": { "days": [1, 2, 3, 4, 5, 6, 7], "from": null, "until": null },
+          "suggestedExtraIds": [],
+          "choiceGroups": [],
+          "noteHint": null,
+          "station": "bar",
+          "posCode": "217"
+        },
+        {
+          "id": 64,
+          "categoryId": 14,
+          "name": { "fr": "Camomille", "en": "Chamomile" },
+          "description": null,
+          "price": 6500,
+          "photoUrl": null,
+          "available": true,
+          "unavailableReason": null,
+          "availability": { "days": [1, 2, 3, 4, 5, 6, 7], "from": null, "until": null },
+          "suggestedExtraIds": [],
+          "choiceGroups": [],
+          "noteHint": null,
+          "station": "bar",
+          "posCode": "218"
+        }
+      ]
+    },
+    {
+      "id": 15,
+      "name": { "fr": "Cafés", "en": "Coffees" },
+      "section": "drinks",
+      "display": "list",
+      "sortOrder": 15,
+      "items": [
+        {
+          "id": 65,
+          "categoryId": 15,
+          "name": { "fr": "Espresso", "en": "Espresso" },
+          "description": null,
+          "price": 6500,
+          "photoUrl": null,
+          "available": true,
+          "unavailableReason": null,
+          "availability": { "days": [1, 2, 3, 4, 5, 6, 7], "from": null, "until": null },
+          "suggestedExtraIds": [],
+          "choiceGroups": [],
+          "noteHint": null,
+          "station": "bar",
+          "posCode": "210"
+        },
+        {
+          "id": 66,
+          "categoryId": 15,
+          "name": { "fr": "Espresso premium", "en": "Espresso premium" },
+          "description": null,
+          "price": 9500,
+          "photoUrl": null,
+          "available": true,
+          "unavailableReason": null,
+          "availability": { "days": [1, 2, 3, 4, 5, 6, 7], "from": null, "until": null },
+          "suggestedExtraIds": [],
+          "choiceGroups": [],
+          "noteHint": null,
+          "station": "bar",
+          "posCode": "318"
+        },
+        {
+          "id": 67,
+          "categoryId": 15,
+          "name": { "fr": "Décaféiné premium", "en": "Decaf premium" },
+          "description": null,
+          "price": 9500,
+          "photoUrl": null,
+          "available": true,
+          "unavailableReason": null,
+          "availability": { "days": [1, 2, 3, 4, 5, 6, 7], "from": null, "until": null },
+          "suggestedExtraIds": [],
+          "choiceGroups": [],
+          "noteHint": null,
+          "station": "bar",
+          "posCode": "319"
+        },
+        {
+          "id": 68,
+          "categoryId": 15,
+          "name": { "fr": "Espresso macchiato", "en": "Espresso macchiato" },
+          "description": { "fr": "Shot express, mousse de lait", "en": "Espresso shot, milk foam" },
+          "price": 7500,
+          "photoUrl": null,
+          "available": true,
+          "unavailableReason": null,
+          "availability": { "days": [1, 2, 3, 4, 5, 6, 7], "from": null, "until": null },
+          "suggestedExtraIds": [],
+          "choiceGroups": [],
+          "noteHint": null,
+          "station": "bar",
+          "posCode": "226"
+        },
+        {
+          "id": 69,
+          "categoryId": 15,
+          "name": { "fr": "Latte macchiato", "en": "Latte macchiato" },
+          "description": { "fr": "Lait, shot express", "en": "Milk, espresso shot" },
+          "price": 6500,
+          "photoUrl": null,
+          "available": true,
+          "unavailableReason": null,
+          "availability": { "days": [1, 2, 3, 4, 5, 6, 7], "from": null, "until": null },
+          "suggestedExtraIds": [],
+          "choiceGroups": [],
+          "noteHint": null,
+          "station": "bar",
+          "posCode": "214"
+        },
+        {
+          "id": 70,
+          "categoryId": 15,
+          "name": { "fr": "Iced Latte", "en": "Iced Latte" },
+          "description": { "fr": "Double shot express, lait", "en": "Double espresso shot, milk" },
+          "price": 10500,
+          "photoUrl": null,
+          "available": true,
+          "unavailableReason": null,
+          "availability": { "days": [1, 2, 3, 4, 5, 6, 7], "from": null, "until": null },
+          "suggestedExtraIds": [],
+          "choiceGroups": [],
+          "noteHint": null,
+          "station": "bar",
+          "posCode": "304"
+        },
+        {
+          "id": 71,
+          "categoryId": 15,
+          "name": { "fr": "Capuccino", "en": "Cappuccino" },
+          "description": {
+            "fr": "Shot express, chocolat, lait",
+            "en": "Espresso shot, chocolate, milk"
+          },
+          "price": 8500,
+          "photoUrl": null,
+          "available": true,
+          "unavailableReason": null,
+          "availability": { "days": [1, 2, 3, 4, 5, 6, 7], "from": null, "until": null },
+          "suggestedExtraIds": [],
+          "choiceGroups": [],
+          "noteHint": null,
+          "station": "bar",
+          "posCode": "267"
+        },
+        {
+          "id": 72,
+          "categoryId": 15,
+          "name": { "fr": "Americano", "en": "Americano" },
+          "description": null,
+          "price": 7000,
+          "photoUrl": null,
+          "available": true,
+          "unavailableReason": null,
+          "availability": { "days": [1, 2, 3, 4, 5, 6, 7], "from": null, "until": null },
+          "suggestedExtraIds": [],
+          "choiceGroups": [],
+          "noteHint": null,
+          "station": "bar",
+          "posCode": "268"
+        },
+        {
+          "id": 73,
+          "categoryId": 15,
+          "name": { "fr": "Iced Americano", "en": "Iced Americano" },
+          "description": { "fr": "Double shot express", "en": "Double espresso shot" },
+          "price": 12000,
+          "photoUrl": null,
+          "available": true,
+          "unavailableReason": null,
+          "availability": { "days": [1, 2, 3, 4, 5, 6, 7], "from": null, "until": null },
+          "suggestedExtraIds": [],
+          "choiceGroups": [],
+          "noteHint": null,
+          "station": "bar",
+          "posCode": "326"
+        },
+        {
+          "id": 74,
+          "categoryId": 15,
+          "name": { "fr": "Mochaccino", "en": "Mochaccino" },
+          "description": null,
+          "price": 11000,
+          "photoUrl": null,
+          "available": true,
+          "unavailableReason": null,
+          "availability": { "days": [1, 2, 3, 4, 5, 6, 7], "from": null, "until": null },
+          "suggestedExtraIds": [],
+          "choiceGroups": [],
+          "noteHint": null,
+          "station": "bar",
+          "posCode": "292"
+        },
+        {
+          "id": 75,
+          "categoryId": 15,
+          "name": { "fr": "Flat white", "en": "Flat white" },
+          "description": {
+            "fr": "Double shot express, lait, mousse de lait",
+            "en": "Double espresso shot, milk, milk foam"
+          },
+          "price": 11500,
+          "photoUrl": null,
+          "available": true,
+          "unavailableReason": null,
+          "availability": { "days": [1, 2, 3, 4, 5, 6, 7], "from": null, "until": null },
+          "suggestedExtraIds": [],
+          "choiceGroups": [],
+          "noteHint": null,
+          "station": "bar",
+          "posCode": "269"
+        },
+        {
+          "id": 76,
+          "categoryId": 15,
+          "name": { "fr": "Macchiato Caramel", "en": "Macchiato Caramel" },
+          "description": {
+            "fr": "Lait, shot express, caramel",
+            "en": "Milk, espresso shot, caramel"
+          },
+          "price": 14500,
+          "photoUrl": null,
+          "available": true,
+          "unavailableReason": null,
+          "availability": { "days": [1, 2, 3, 4, 5, 6, 7], "from": null, "until": null },
+          "suggestedExtraIds": [],
+          "choiceGroups": [],
+          "noteHint": null,
+          "station": "bar",
+          "posCode": "271"
+        },
+        {
+          "id": 77,
+          "categoryId": 15,
+          "name": { "fr": "Iced Macchiato Caramel", "en": "Iced Macchiato Caramel" },
+          "description": {
+            "fr": "Lait, double shot express, caramel",
+            "en": "Milk, double espresso shot, caramel"
+          },
+          "price": 11500,
+          "photoUrl": null,
+          "available": true,
+          "unavailableReason": null,
+          "availability": { "days": [1, 2, 3, 4, 5, 6, 7], "from": null, "until": null },
+          "suggestedExtraIds": [],
+          "choiceGroups": [],
+          "noteHint": null,
+          "station": "bar",
+          "posCode": "329"
+        }
+      ]
+    },
+    {
+      "id": 16,
+      "name": { "fr": "Matcha", "en": "Matcha" },
+      "section": "drinks",
+      "display": "list",
+      "sortOrder": 16,
+      "items": [
+        {
+          "id": 78,
+          "categoryId": 16,
+          "name": { "fr": "Matcha Latte", "en": "Matcha Latte" },
+          "description": null,
+          "price": 14500,
+          "photoUrl": null,
+          "available": true,
+          "unavailableReason": null,
+          "availability": { "days": [1, 2, 3, 4, 5, 6, 7], "from": null, "until": null },
+          "suggestedExtraIds": [],
+          "choiceGroups": [],
+          "noteHint": null,
+          "station": "bar",
+          "posCode": "224"
+        },
+        {
+          "id": 79,
+          "categoryId": 16,
+          "name": { "fr": "Iced Matcha Latte", "en": "Iced Matcha Latte" },
+          "description": null,
+          "price": 13500,
+          "photoUrl": null,
+          "available": true,
+          "unavailableReason": null,
+          "availability": { "days": [1, 2, 3, 4, 5, 6, 7], "from": null, "until": null },
+          "suggestedExtraIds": [],
+          "choiceGroups": [],
+          "noteHint": null,
+          "station": "bar",
+          "posCode": "224"
+        },
+        {
+          "id": 80,
+          "categoryId": 16,
+          "name": { "fr": "Matcha Mangue", "en": "Mango Matcha" },
+          "description": {
+            "fr": "Matcha, mangue, lait d'amande",
+            "en": "Matcha, mango, almond milk"
+          },
+          "price": 13500,
+          "photoUrl": null,
+          "available": true,
+          "unavailableReason": null,
+          "availability": { "days": [1, 2, 3, 4, 5, 6, 7], "from": null, "until": null },
+          "suggestedExtraIds": [],
+          "choiceGroups": [],
+          "noteHint": null,
+          "station": "bar",
+          "posCode": "225"
+        },
+        {
+          "id": 81,
+          "categoryId": 16,
+          "name": { "fr": "Matcha fruits rouges", "en": "Red berry Matcha" },
+          "description": {
+            "fr": "Matcha, fruits rouges, lait d'amande",
+            "en": "Matcha, red berries, almond milk"
+          },
+          "price": 16000,
+          "photoUrl": null,
+          "available": true,
+          "unavailableReason": null,
+          "availability": { "days": [1, 2, 3, 4, 5, 6, 7], "from": null, "until": null },
+          "suggestedExtraIds": [],
+          "choiceGroups": [],
+          "noteHint": null,
+          "station": "bar",
+          "posCode": "328"
+        }
+      ]
+    },
+    {
+      "id": 17,
+      "name": { "fr": "Healthy Shots", "en": "Healthy Shots" },
+      "section": "drinks",
+      "display": "list",
+      "sortOrder": 17,
+      "items": [
+        {
+          "id": 82,
+          "categoryId": 17,
+          "name": { "fr": "Ginger shot", "en": "Ginger shot" },
+          "description": { "fr": "Gingembre, citron, miel", "en": "Ginger, lemon, honey" },
+          "price": 7000,
+          "photoUrl": null,
+          "available": true,
+          "unavailableReason": null,
+          "availability": { "days": [1, 2, 3, 4, 5, 6, 7], "from": null, "until": null },
+          "suggestedExtraIds": [],
+          "choiceGroups": [],
+          "noteHint": null,
+          "station": "bar",
+          "posCode": "277"
+        },
+        {
+          "id": 83,
+          "categoryId": 17,
+          "name": { "fr": "Beet shot", "en": "Beet shot" },
+          "description": { "fr": "Betterave, pomme, menthe", "en": "Beetroot, apple, mint" },
+          "price": 5500,
+          "photoUrl": null,
+          "available": true,
+          "unavailableReason": null,
+          "availability": { "days": [1, 2, 3, 4, 5, 6, 7], "from": null, "until": null },
+          "suggestedExtraIds": [],
+          "choiceGroups": [],
+          "noteHint": null,
+          "station": "bar",
+          "posCode": "278"
+        },
+        {
+          "id": 84,
+          "categoryId": 17,
+          "name": { "fr": "Green shot", "en": "Green shot" },
+          "description": {
+            "fr": "Concombre, persil, citron, miel",
+            "en": "Cucumber, parsley, lemon, honey"
+          },
+          "price": 5000,
+          "photoUrl": null,
+          "available": true,
+          "unavailableReason": null,
+          "availability": { "days": [1, 2, 3, 4, 5, 6, 7], "from": null, "until": null },
+          "suggestedExtraIds": [],
+          "choiceGroups": [],
+          "noteHint": null,
+          "station": "bar",
+          "posCode": "279"
+        }
+      ]
+    },
+    {
+      "id": 18,
+      "name": { "fr": "Eau", "en": "Water" },
+      "section": "drinks",
+      "display": "list",
+      "sortOrder": 18,
+      "items": [
+        {
+          "id": 85,
+          "categoryId": 18,
+          "name": { "fr": "Carafe eau 1L", "en": "Water carafe 1L" },
+          "description": null,
+          "price": 5500,
+          "photoUrl": null,
+          "available": true,
+          "unavailableReason": null,
+          "availability": { "days": [1, 2, 3, 4, 5, 6, 7], "from": null, "until": null },
+          "suggestedExtraIds": [],
+          "choiceGroups": [],
+          "noteHint": null,
+          "station": "bar",
+          "posCode": "211"
+        },
+        {
+          "id": 86,
+          "categoryId": 18,
+          "name": { "fr": "Carafe eau 0,5L", "en": "Water carafe 0.5L" },
+          "description": null,
+          "price": 2500,
+          "photoUrl": null,
+          "available": true,
+          "unavailableReason": null,
+          "availability": { "days": [1, 2, 3, 4, 5, 6, 7], "from": null, "until": null },
+          "suggestedExtraIds": [],
+          "choiceGroups": [],
+          "noteHint": null,
+          "station": "bar",
+          "posCode": "212"
+        }
+      ]
+    }
+  ],
+  "choiceGroups": [
+    {
+      "key": "eggs",
+      "name": { "fr": "Omelette ou œufs brouillés", "en": "Omelette or scrambled eggs" },
+      "optionIds": [5, 4]
+    },
+    {
+      "key": "eggs_with_benedict",
+      "name": { "fr": "Vos œufs", "en": "Your eggs" },
+      "optionIds": [5, 4, 6]
+    },
+    {
+      "key": "hot_drink",
+      "name": { "fr": "Café ou thé", "en": "Coffee or tea" },
+      "optionIds": [59, 60, 63, 64, 65, 68, 69, 71, 72]
+    },
+    {
+      "key": "seasonal_juice",
+      "name": { "fr": "Jus de saison", "en": "Seasonal juice" },
+      "optionIds": [45]
+    }
+  ]
+}

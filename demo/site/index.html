@@ -1,0 +1,230 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Café Olivine — live demo</title>
+    <meta
+      name="description"
+      content="QR ordering at the table, a staff app and POS automation — live demo with fictional data."
+    />
+    <link rel="icon" href="%BASE%assets/icon.png" />
+    <style>
+      :root {
+        --paper: #f4efe6;
+        --ink: #23241a;
+        --muted: #5d5f4c;
+        --olive: #3d3f2b;
+        --accent: #b8562f;
+        --card: #fffdf8;
+        --line: #ddd5c6;
+      }
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --paper: #17180f;
+          --ink: #f1ecdf;
+          --muted: #b9b6a3;
+          --olive: #c9cfa2;
+          --accent: #f0a274;
+          --card: #212216;
+          --line: #3a3b2c;
+        }
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        background: var(--paper);
+        color: var(--ink);
+        font:
+          16px/1.5 system-ui,
+          -apple-system,
+          'Segoe UI',
+          sans-serif;
+      }
+      .banner {
+        background: #1d3b33;
+        color: #f4efe6;
+        font-size: 13px;
+        padding: 6px 16px;
+        text-align: center;
+      }
+      header,
+      main {
+        max-width: 1120px;
+        margin: 0 auto;
+        padding: 0 16px;
+      }
+      header {
+        padding-top: 32px;
+      }
+      h1 {
+        font-size: clamp(1.7rem, 4vw, 2.4rem);
+        line-height: 1.15;
+        margin: 0 0 8px;
+      }
+      .lead {
+        color: var(--muted);
+        max-width: 44rem;
+        margin: 0;
+      }
+      .steps {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 12px;
+        margin: 24px 0;
+        padding: 0;
+        list-style: none;
+        counter-reset: step;
+      }
+      .steps li {
+        background: var(--card);
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        padding: 12px 14px;
+        font-size: 15px;
+      }
+      .steps li::before {
+        counter-increment: step;
+        content: counter(step);
+        display: inline-grid;
+        place-items: center;
+        width: 22px;
+        height: 22px;
+        margin-right: 8px;
+        border-radius: 50%;
+        background: var(--olive);
+        color: var(--paper);
+        font-size: 12px;
+        font-weight: 700;
+      }
+      code {
+        font-family: ui-monospace, 'Cascadia Code', Menlo, monospace;
+        font-size: 0.92em;
+      }
+      .phones {
+        display: flex;
+        gap: 32px;
+        justify-content: center;
+        flex-wrap: wrap;
+        margin: 8px 0 40px;
+      }
+      figure {
+        margin: 0;
+        text-align: center;
+      }
+      figcaption {
+        font-weight: 600;
+        margin-bottom: 10px;
+      }
+      figcaption a {
+        color: var(--accent);
+        font-weight: 500;
+        margin-left: 6px;
+        font-size: 14px;
+      }
+      .phone {
+        width: 375px;
+        height: 760px;
+        border: 10px solid #111;
+        border-radius: 44px;
+        overflow: hidden;
+        background: #111;
+        box-shadow: 0 18px 50px rgb(0 0 0 / 0.18);
+      }
+      .phone iframe {
+        width: 100%;
+        height: 100%;
+        border: 0;
+        border-radius: 34px;
+        background: var(--paper);
+      }
+      .links {
+        display: none;
+        gap: 12px;
+        flex-direction: column;
+        margin: 8px 0 40px;
+      }
+      .links a {
+        display: block;
+        padding: 14px 16px;
+        border-radius: 14px;
+        background: var(--olive);
+        color: var(--paper);
+        text-decoration: none;
+        font-weight: 600;
+        text-align: center;
+      }
+      @media (max-width: 820px) {
+        .phones {
+          display: none;
+        }
+        .links {
+          display: flex;
+        }
+      }
+      footer {
+        max-width: 1120px;
+        margin: 0 auto;
+        padding: 16px 16px 40px;
+        color: var(--muted);
+        font-size: 14px;
+      }
+      footer a {
+        color: inherit;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="banner">
+      Demo — fictional café, fictional data. Everything runs in your browser.
+    </div>
+    <header>
+      <h1>Café Olivine: order from the table, run the floor from a phone</h1>
+      <p class="lead">
+        The customer scans the table's QR code and orders; waiters confirm on their phones; the bar
+        and kitchen see what to prepare. In production a Windows agent then types each order into
+        the café's existing till. Interfaces are in French (staff) and French / English (menu).
+      </p>
+    </header>
+    <main>
+      <ol class="steps">
+        <li>Order from <strong>table 7</strong> on the left phone.</li>
+        <li>
+          On the right, the waiter <strong>Sara</strong> gets it in <em>Commandes</em>: confirm.
+        </li>
+        <li>
+          Log out, sign in as <code>barista</code> or <code>cuisinier</code> (password
+          <code>demo</code>) and tap <strong>Prêt</strong>.
+        </li>
+      </ol>
+      <div class="phones">
+        <figure>
+          <figcaption>
+            Customer menu <a href="%BASE%menu/" target="_blank" rel="noopener">open ↗</a>
+          </figcaption>
+          <div class="phone">
+            <iframe src="%BASE%menu/" title="Customer menu (table 7)"></iframe>
+          </div>
+        </figure>
+        <figure>
+          <figcaption>
+            Staff app <a href="%BASE%staff/" target="_blank" rel="noopener">open ↗</a>
+          </figcaption>
+          <div class="phone">
+            <iframe src="%BASE%staff/" title="Staff app"></iframe>
+          </div>
+        </figure>
+      </div>
+      <div class="links">
+        <a href="%BASE%menu/">Open the customer menu (table 7)</a>
+        <a href="%BASE%staff/">Open the staff app (login: serveur / demo)</a>
+      </div>
+    </main>
+    <footer>
+      © 2026 Fares Jebali &amp; Idriss Rebah — All rights reserved. Portfolio demo: no real café, no
+      backend, no data leaves your browser.
+    </footer>
+  </body>
+</html>
